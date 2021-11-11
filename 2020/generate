@@ -1,0 +1,82 @@
+#!/bin/bash
+
+if [[ $# != 1 ]]; then
+  echo "Usage: generate packagename"
+  exit 1
+fi
+
+package="$1"
+basedir="$(dirname "$0")/${package}"
+day="$(echo "${package}" | tr -d -c 0-9)"
+main="$(tr '[a-z]' '[A-Z]' <<< ${package:0:1})${package:1}"
+mkdir -p "${basedir}"
+touch "${basedir}/input.example.txt" "${basedir}/input.actual.txt"
+cat > "${basedir}/${package}.kt" <<EOKOTLIN
+// Copyright 2021 Google LLC
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+package ${package}
+
+import kotlin.time.ExperimentalTime
+import kotlin.time.TimeSource
+import kotlin.time.measureTimedValue
+
+object Part1 {
+  fun solve(input: Sequence<String>): String {
+    return TODO("Implement part 1")
+  }
+}
+
+object Part2 {
+  fun solve(input: Sequence<String>): String {
+    return TODO("Implement part 2")
+  }
+}
+
+@ExperimentalTime
+@Suppress("UNUSED_PARAMETER")
+fun main(args: Array<String>) {
+  val lines = generateSequence(::readLine).toList()
+  println("Part 1:")
+  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
+    println(it.value)
+    println("Completed in \${it.duration}")
+  }
+  println("Part 2:")
+  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
+    println(it.value)
+    println("Completed in \${it.duration}")
+  }
+}
+EOKOTLIN
+cat > "${basedir}/Makefile" <<EOBUILD
+# Copyright 2021 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# https://adventofcode.com/2020/day/${day}
+
+KOTLIN = kotlin
+KOTLINC = kotlinc
+CLASSES = classes
+PACKAGE = ${package}
+MAIN_CLASS = ${main}Kt
+
+compile: \$(CLASSES)/\$(PACKAGE)/\$(MAIN_CLASS).class
+
+\$(CLASSES)/\$(PACKAGE)/\$(MAIN_CLASS).class: \$(PACKAGE).kt
+	@mkdir -p \$(CLASSES)
+	\$(KOTLINC) -d \$(CLASSES) \$(PACKAGE).kt
+
+output.%.txt: input.%.txt compile
+	\$(KOTLIN) -cp \$(CLASSES) \$(PACKAGE).\$(MAIN_CLASS) < \$< | tee \$@
+
+out: output.example.txt output.actual.txt
+
+clean:
+	rm -r \$(CLASSES)
+EOBUILD
