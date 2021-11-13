@@ -1,0 +1,34 @@
+#!/bin/zsh
+# Copyright 2021 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Watch an AoC directory; rerun the solver when program or input files change.
+# Uses https://github.com/emcrisostomo/fswatch
+
+if [ $# -eq 0 ]; then
+  echo "Usage: watch day1"
+  exit 1
+fi
+DIR=$1
+PROGRAM="${DIR:a:t}.raku"
+DATEFMT='%Y%m%d-%H%M%S'
+cd $DIR
+mkdir -p out
+
+function runscript {
+  outfile="out/$(date +$DATEFMT).log"
+  cmd=(raku "$PROGRAM" input.example* input.actual.txt)
+  echo "$cmd > $outfile"
+  echo
+  $cmd 2>&1 | tee "$outfile"
+  echo
+}
+
+runscript
+
+fswatch -0 -o *.raku input.* | while read -d "" event ; do
+  runscript
+done
