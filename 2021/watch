@@ -12,23 +12,14 @@ if [ $# -eq 0 ]; then
   echo "Usage: watch day1"
   exit 1
 fi
-DIR=$1
-PROGRAM="${DIR:a:t}.raku"
-DATEFMT='%Y%m%d-%H%M%S'
-cd $DIR
-mkdir -p out
-
-function runscript {
-  outfile="out/$(date +$DATEFMT).log"
-  cmd=(raku "$PROGRAM" input.example* input.actual.txt)
-  echo "$cmd > $outfile"
-  echo
-  $cmd 2>&1 | tee "$outfile"
-  echo
-}
-
-runscript
-
+DIR="${0:h}/$1"
+if [[ ! -d "$DIR" ]]; then
+  echo "No such directory: $DIR"
+  exit 1
+fi
+cd "${0:h}/$1"
+CMD=("../runday" "$1")
+$CMD
 fswatch -0 -o *.raku input.* | while read -d "" event ; do
-  runscript
+  $CMD
 done

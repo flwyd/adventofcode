@@ -1,0 +1,34 @@
+#!/bin/zsh
+# Copyright 2021 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Run the AoC solution for a day on all of its input, saving logs to out/
+# Run an each change with ./watch day1 or watchexec ./runday day1
+
+if [ $# -eq 0 ]; then
+  echo "Usage: runday day1"
+  exit 1
+fi
+BASEDIR="${0:h}"
+DAYDIR="$BASEDIR/$1"
+if [[ ! -d "$DAYDIR" ]]; then
+  echo "No such directory: $DAYDIR"
+  exit 1
+fi
+cd "$DAYDIR"
+PROGRAM="$1.raku"
+if [[ ! -f "$PROGRAM" ]]; then
+  echo "Missing file: $PROGRAM"
+  exit 1
+fi
+DATEFMT='%Y%m%d-%H%M%S'
+mkdir -p out
+OUTFILE="out/$(date +$DATEFMT).log"
+CMD=(raku "$PROGRAM" input.example*.txt input.actual.txt)
+echo
+echo "$CMD > $OUTFILE"
+echo
+$CMD 2>&1 | tee "$OUTFILE"
