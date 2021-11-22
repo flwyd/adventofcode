@@ -6,16 +6,27 @@
 # https://opensource.org/licenses/MIT.
 #
 # https://adventofcode.com/2021/day/__DAY_NUM__
+use v6.d;
+
+grammar InputFormat {
+  rule TOP { .* }
+}
+
+class FormatActions {
+  method TOP($/) { }
+}
 
 class __CLASS_NAME__ {
   has $.input is required;
-  has $.input-lines = $!input.lines;
+  has @.input-lines = $!input.lines;
+  has @.parsed-lines = $!input.lines.map:
+      { InputFormat.parse($_, :actions(FormatActions.new)) };
 
-  method solve-part1() of Str(Cool) {
+  method solve-part1( --> Str(Cool)) {
     "TODO";
   }
 
-  method solve-part2() of Str(Cool) {
+  method solve-part2( --> Str(Cool)) {
     "TODO";
   }
 }
@@ -29,11 +40,10 @@ class RunContext {
     my $expected = $.expected«$part» // '';
     say "Running __CLASS_NAME__ part $part on $!input-file expecting '$expected'";
     my $solver = __CLASS_NAME__.new(:$!input);
-    my $method = $solver.^find_method("solve-part$part").assuming: $solver;
     my $start = now;
-    my $result = $method();
+    my $result = $solver."solve-part$part"();
     my $end = now;
-    say $result;
+    put $result;
     "Part $part took %.3fms\n".printf(($end - $start) * 1000);
     if $expected {
       if $expected eq $result {
