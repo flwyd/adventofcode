@@ -1,0 +1,36 @@
+#!/bin/zsh
+# Copyright 2021 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Fetch the personal input file for an Advent of Code day if the time has come.
+# Requires a copy of the session cookie in a .cookie-jar file.
+
+set -e
+if [ $# -lt 2 ]; then
+  print -u 2 "Usage: fetchinput year day"
+  exit 1
+fi
+BASEDIR="${0:h}"
+YEAR="${1//[^0-9]}"
+DAY="${2//[^0-9]}"
+if [[ -z "$DAY" ]]; then
+  print -u 2 "Non-numeric year/day $1/$2"
+  exit 1
+fi
+COOKIES="$BASEDIR/.cookie-jar"
+if [[ ! -s "$COOKIES" ]]; then
+  print -u 2 "Who stole the cookies from ${COOKIES}?"
+  exit 1
+fi
+TARGETDAY="$YEAR-12-${(l:2::0:)DAY}"
+SERVERDAY=$(TZ=America/New_York date +'%Y-%m-%d')
+if [[ "$SERVERDAY" < "$TARGETDAY" ]]; then
+  print -u 2 "It's not $TARGETDAY yet, it's $SERVERDAY"
+  exit 2
+fi
+URL="https://adventofcode.com/$YEAR/day/$DAY/input"
+print -u "Fetching $URL"
+curl -f -b "$COOKIES" "$URL"

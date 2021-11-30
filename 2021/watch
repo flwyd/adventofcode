@@ -9,12 +9,12 @@
 # Uses https://github.com/emcrisostomo/fswatch
 
 if [ $# -eq 0 ]; then
-  echo "Usage: watch day1"
+  print -u 2 "Usage: watch day1"
   exit 1
 fi
 DIR="${0:h}/$1"
 if [[ ! -d "$DIR" ]]; then
-  echo "No such directory: $DIR"
+  print -u 2 "No such directory: $DIR"
   exit 1
 fi
 cd "${0:h}/$1"

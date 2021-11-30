@@ -8,27 +8,31 @@
 # Run the AoC solution for a day on all of its input, saving logs to out/
 # Run an each change with ./watch day1 or watchexec ./runday day1
 
+YEAR="2021"
 if [ $# -eq 0 ]; then
-  echo "Usage: runday day1"
+  print -u 2 "Usage: runday day1"
   exit 1
 fi
-BASEDIR="${0:h}"
+BASEDIR="${0:h:a}"
 DAYDIR="$BASEDIR/$1"
 if [[ ! -d "$DAYDIR" ]]; then
-  echo "No such directory: $DAYDIR"
+  print -u 2 "No such directory: $DAYDIR"
   exit 1
 fi
 cd "$DAYDIR"
 PROGRAM="$1.raku"
 if [[ ! -f "$PROGRAM" ]]; then
-  echo "Missing file: $PROGRAM"
+  print -u 2 "Missing file: $PROGRAM"
   exit 1
 fi
 DATEFMT='%Y%m%d-%H%M%S'
 mkdir -p out
 OUTFILE="out/$(date +$DATEFMT).log"
+if [[ -s "$BASEDIR/.cookie-jar" && ! -s input.actual.txt ]]; then
+  "$BASEDIR/fetchinput" "$YEAR" "$1" >| input.actual.txt
+fi
 CMD=(raku "$PROGRAM" input.example*.txt input.actual.txt)
-echo
-echo "$CMD > $OUTFILE"
-echo
+print -u 2
+print -u 2 "$CMD > $OUTFILE"
+print -u 2
 $CMD 2>&1 | tee "$OUTFILE"
