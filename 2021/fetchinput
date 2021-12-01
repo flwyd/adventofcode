@@ -32,5 +32,5 @@ if [[ "$SERVERDAY" < "$TARGETDAY" ]]; then
   exit 2
 fi
 URL="https://adventofcode.com/$YEAR/day/$DAY/input"
-print -u "Fetching $URL"
+print -u 2 "Fetching $URL"
 curl -f -b "$COOKIES" "$URL"
