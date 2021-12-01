@@ -12,6 +12,7 @@ class Day1 {
   has $.input is required;
   has @.input-lines = $!input.lines;
 
+  # Count the number of lines which are greater than the previous one.
   method solve-part1( --> Str(Cool)) {
     my $increases = 0;
     my $prev;
@@ -22,6 +23,8 @@ class Day1 {
     return $increases;
   }
 
+  # Count the number of lines whose 3-line sliding window is in sum larger than
+  # the previous line's 3-line sliding window.
   method solve-part2( --> Str(Cool)) {
     my $increases = 0;
     for 1..(@.input-lines - 3) -> $i {
