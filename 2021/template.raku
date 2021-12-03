@@ -9,24 +9,40 @@
 use v6.d;
 
 grammar InputFormat {
-  rule TOP { .* }
+  rule TOP { <line>+ }
+  rule line { ^^.*?$$ }
 }
 
-class FormatActions {
-  method TOP($/) { }
+class BaseActions {
+  method TOP($/) { make $<line>».made }
+  method line($/) { make $/.chomp }
 }
 
-class __CLASS_NAME__ {
-  has $.input is required;
-  has @.input-lines = $!input.lines;
-  has @.parsed-lines = $!input.lines.map:
-      { InputFormat.parse($_, :actions(FormatActions.new)) };
+class Solver {
+  has Str $.input is required;
+  has $.parsed = InputFormat.parse($!input, :actions(self.new-actions)) || die 'Parse failed';
 
-  method solve-part1( --> Str(Cool)) {
-    "TODO";
+  submethod new-actions( --> BaseActions) { !!! }
+}
+
+class Part1 is Solver {
+  class Actions is BaseActions {
   }
 
-  method solve-part2( --> Str(Cool)) {
+  submethod new-actions() { Actions.new }
+
+  method solve( --> Str(Cool)) {
+    "TODO";
+  }
+}
+
+class Part2 is Solver {
+  class Actions is BaseActions {
+  }
+
+  submethod new-actions() { Actions.new }
+
+  method solve( --> Str(Cool)) {
     "TODO";
   }
 }
@@ -36,15 +52,16 @@ class RunContext {
   has $.input;
   has %.expected is rw;
 
-  method run-part(Int $part) {
-    my $expected = $.expected«$part» // '';
-    say "Running __CLASS_NAME__ part $part on $!input-file expecting '$expected'";
-    my $solver = __CLASS_NAME__.new(:$!input);
+  method run-part(Solver:U $part) {
+    my $num = $part.^name.comb(/\d+/).head;
+    my $expected = $.expected«$num» // '';
+    say "Running __CLASS_NAME__ part $num on $!input-file expecting '$expected'";
     my $start = now;
-    my $result = $solver."solve-part$part"();
+    my $solver = $part.new(:$!input);
+    my $result = $solver.solve();
     my $end = now;
     put $result;
-    "Part $part took %.3fms\n".printf(($end - $start) * 1000);
+    "Part $num took %.3fms\n".printf(($end - $start) * 1000);
     if $expected {
       if $expected eq $result {
         say "\c[CHECK MARK] PASS with expected value '$result'";
@@ -64,9 +81,9 @@ sub MAIN(*@input-files) {
           $context.expected«$0» = $1.trim if m/part (\d+) \: \s* (.*)/;
         }
       }
-      $context.run-part(1);
+      $context.run-part(Part1);
       say '';
-      $context.run-part(2);
+      $context.run-part(Part2);
     } else {
       say "EMPTY INPUT FILE: $input-file";
     }
