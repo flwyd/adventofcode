@@ -10,11 +10,13 @@ use v6.d;
 
 grammar InputFormat {
   rule TOP { <line>+ }
+  token num { \d+ }
   rule line { ^^.*?$$ }
 }
 
 class BaseActions {
   method TOP($/) { make $<line>».made }
+  method num($/) { make $/.Int }
   method line($/) { make $/.chomp }
 }
 
