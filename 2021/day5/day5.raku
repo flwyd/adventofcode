@@ -22,15 +22,13 @@ class Line {
 
 grammar InputFormat {
   rule TOP { <line>+ }
-  token x { \d+ }
-  token y { \d+ }
-  rule line { <x>\,<y> \-\> <x>\,<y> }
+  token num { \d+ }
+  rule line { <x=num>\,<y=num> \-\> <x=num>\,<y=num> }
 }
 
 class Actions {
   method TOP($/) { make $<line>».made }
-  method x($/) { make $/.Int }
-  method y($/) { make $/.Int }
+  method num($/) { make $/.Int }
   method line($/) {
     make Line.new(:x1($<x>[0].made), :y1($<y>[0].made), :x2($<x>[1].made), :y2($<y>[1].made))
   }
