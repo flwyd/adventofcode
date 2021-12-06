@@ -43,22 +43,22 @@ class Solver {
 # Count points with at least 2 horizontal or vertical lines intersecting.
 class Part1 is Solver {
   method solve( --> Str(Cool)) {
-    my %grid;
+    my $grid = BagHash.new;
     for $.parsed.made.grep(*.straight) -> $line {
-      %grid{$_}++ for |$line.points();
+      $grid.add($_) for |$line.points();
     }
-    %grid.values.grep(* > 1).elems;
+    $grid.values.grep(* > 1).elems;
   }
 }
 
 # Now include diagonal lines (always a 45° angle) too.
 class Part2 is Solver {
   method solve( --> Str(Cool)) {
-    my %grid;
+    my $grid = BagHash.new;
     for $.parsed.made -> $line {
-      %grid{$_}++ for |$line.points();
+      $grid.add($_) for |$line.points();
     }
-    %grid.values.grep(* > 1).elems
+    $grid.values.grep(* > 1).elems
   }
 }
 
