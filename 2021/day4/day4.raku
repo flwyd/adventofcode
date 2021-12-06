@@ -7,6 +7,7 @@
 #
 # https://adventofcode.com/2021/day/4
 use v6.d;
+use fatal;
 
 class Board {
   has @.nums;

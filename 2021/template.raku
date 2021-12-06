@@ -7,6 +7,7 @@
 #
 # https://adventofcode.com/2021/day/__DAY_NUM__
 use v6.d;
+use fatal;
 
 grammar InputFormat {
   rule TOP { <line>+ }

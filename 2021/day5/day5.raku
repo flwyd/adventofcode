@@ -7,6 +7,7 @@
 #
 # https://adventofcode.com/2021/day/5
 use v6.d;
+use fatal;
 
 sub sequence($a, $b) {
   my $res = minmax($a, $b);

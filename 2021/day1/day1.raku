@@ -7,6 +7,7 @@
 #
 # https://adventofcode.com/2021/day/1
 use v6.d;
+use fatal;
 
 class Day1 {
   has $.input is required;

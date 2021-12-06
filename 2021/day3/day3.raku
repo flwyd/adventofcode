@@ -7,6 +7,7 @@
 #
 # https://adventofcode.com/2021/day/3
 use v6.d;
+use fatal;
 
 grammar InputFormat {
   rule TOP { <line>+ }
