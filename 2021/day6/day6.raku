@@ -17,7 +17,7 @@ class Solver {
 
   method grow-fish($days) {
     my $fish = $.parsed.Bag;
-    $fish = ($fish.pairs.map: {cycle($_.key) => $_.value}).Bag ⊎ (8 => +$fish{0},).Bag for ^$days;
+    $fish = ($fish.pairs.map: {cycle(.key) => .value}).Bag ⊎ (8 => +$fish{0},).Bag for ^$days;
     $fish.total;
   }
 }
