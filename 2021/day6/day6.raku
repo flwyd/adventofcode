@@ -22,8 +22,11 @@ class Solver {
   }
 }
 
+# Fish spawn every 7 days, with 2 extra days when first born.
+# How many fish after 80 days?
 class Part1 is Solver { method solve( --> Str(Cool)) { self.grow-fish(80) } }
 
+# Same setup, but 256 days.
 class Part2 is Solver { method solve( --> Str(Cool)) { self.grow-fish(256) } }
 
 class RunContext {
