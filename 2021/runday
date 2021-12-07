@@ -35,4 +35,4 @@ CMD=(raku "$PROGRAM" input.example*.txt input.actual.txt)
 print -u 2
 print -u 2 "$CMD > $OUTFILE"
 print -u 2
-$CMD 2>&1 | tee "$OUTFILE"
+time $CMD 2>&1 | tee "$OUTFILE"
