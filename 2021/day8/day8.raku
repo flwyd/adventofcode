@@ -36,33 +36,30 @@ class Solver {
 # Count the number of unique digits (length 2, 3, 4, 7) in the 4-digit numbers.
 class Part1 is Solver {
   method solve( --> Str(Cool)) {
-    [+] ($_<second>.grep(so *.chars == any(2,3,4,7)).elems for $.parsed.made);
+    [+] ($_<second>.grep(so *.chars == 2|3|4|7).elems for $.parsed.made)
   }
 }
 
 # Sum all of the 4-digit numbers.
 class Part2 is Solver {
   method solve( --> Str(Cool)) {
-    my $allopts = ('a'..'g').Set;
+    my $allopts = set('a'..'g');
     my $sum = 0;
     # Segments for each digit 0-9 with correct wiring
     my @segments = (<a b c e f g>, <c f>, <a c d e g>, <a c d f g>, <b c d f>,
         <a b d f g>, <a b d e f g>, <a c f>, <a b c d e f g>, <a b c d f g>);
     # Look up a digit by the sorted set of segments
-    my %byname = @segments.pairs.map: { $_.value.sort.join => $_.key };
+    my %byname = @segments.pairs.map: { .value.sort.join => .key };
     # Digits (values) with a unique number of segments (key)
-    # my %uniques = 2 => 1, 3 => 7, 4 => 4;
-    # my %uniques = %byname.map({ $_.key.chars => $_.value }).
-    my %uniques = %byname.map({ $_.key.chars => $_.value })
-        .classify(*.key, :as{$_.value})
+    my %uniques = %byname.map({ .key.chars => .value })
+        .classify(*.key, :as{.value})
         .grep(*.value.elems == 1)
-        .map({$_.key => $_.value.head});
+        .map({.key => .value.head});
     # Which segments are possible matches for "missing" characters, by number of segments
-    # my %holes = 6 => <c d e>, 5 => <b c e f>, 4 => <a e g>, 3 => <b d e g>, 2 => <a b d e g>;
     my %holes = %byname.keys.grep(*.chars < 7)
-        .map({ $_.chars => $allopts ∖ $_.comb })
-        .categorize(*.key, :as{|$_.value})
-        .map({$_.key => [∪] $_.value});
+        .map({ .chars => $allopts ∖ .comb })
+        .categorize(*.key, :as{|.value})
+        .map({.key => [∪] .value});
     for $.parsed.made -> $line {
       # Each letter starts unconstrained
       my %possible = ($_ => $allopts for 'a'..'g');
@@ -88,7 +85,7 @@ class Part2 is Solver {
       }
       die "Non-unique chars from $line\n{%possible}" unless all(%possible.values.map(*.elems)) == 1;
       # Transform miswired segments into 4-digit numbers
-      $sum += $line<second>.map({ %byname{%possible{$_.comb}.map(*.pick).sort.join} }).join;
+      $sum += $line<second>.map({ %byname{%possible{.comb}.map(*.pick).sort.join} }).join;
     }
     return $sum;
   }
