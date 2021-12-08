@@ -11,8 +11,9 @@ use fatal;
 
 grammar InputFormat {
   rule TOP { <line>+ }
+  token ws { <!ww>\h* }
   token num { \d+ }
-  rule line { ^^.*?$$ }
+  rule line { ^^ .*? $$ \n }
 }
 
 class BaseActions {
@@ -24,6 +25,7 @@ class BaseActions {
 class Solver {
   has Str $.input is required;
   has $.parsed = InputFormat.parse($!input, :actions(self.new-actions)) || die 'Parse failed';
+  has @.lines = $!parsed<line>;
 
   submethod new-actions( --> BaseActions) { !!! }
 }
