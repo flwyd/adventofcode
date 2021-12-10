@@ -25,7 +25,7 @@ class BaseActions {
 class Solver {
   has Str $.input is required;
   has $.parsed = InputFormat.parse($!input, :actions(self.new-actions)) || die 'Parse failed';
-  has @.lines = $!parsed<line>;
+  has @.lines = $!parsed<line>».made;
 
   submethod new-actions( --> BaseActions) { !!! }
 }
