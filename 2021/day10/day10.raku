@@ -17,7 +17,7 @@ class Solver {
 # Sum of scores for the first closing punctuation that doesn't match its opener.
 class Part1 is Solver {
   method solve( --> Str(Cool)) {
-    my %scores = ')' => 3, ']' => 57, '}' => 1197, '⟩' => 25137;
+    my %scores = <) 3 ] 57 } 1197 ⟩ 25137>;
     my $score = 0;
     for @.lines -> $line {
       my @stack;
@@ -42,7 +42,7 @@ class Part1 is Solver {
 # on left-to-right order of dangling open punctuation.
 class Part2 is Solver {
   method solve( --> Str(Cool)) {
-    my %scores = ')' => 1, ']' => 2, '}' => 3, '⟩' => 4;
+    my %scores = <) 1 ] 2 } 3 ⟩ 4>;
     my @scores;
     LINE: for @.lines -> $line {
       my @stack;
