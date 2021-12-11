@@ -15,6 +15,7 @@ idiomatic, efficient, or readable way.
 Year           | Language
 -------------- | --------
 [2020](./2020) | [Kotlin](https://kotlinlang.org/)
+[2021](./2021) | [Raku](https://raku.org/)
 
 This code is made available under an [MIT-style license](./LICENSE). I do not
 accept pull requests to this repo, but you’re welcome to point out anything you
