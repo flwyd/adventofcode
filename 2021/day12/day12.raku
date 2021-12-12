@@ -17,98 +17,58 @@ grammar InputFormat {
 }
 
 class Actions {
-  method TOP($/) { say "Parsed {$<line>.elems} lines"; make $<line>».made }
+  method TOP($/) { make $<line>».made }
   method word($/) { make $/.Str }
   method line($/) { make $<word>[0].made => $<word>[1].made }
 }
 
+sub big($name) { $name ~~ /^<:Lu>+$/ }
+sub small($name) { $name eq none('start', 'end') && $name ~~ /^<:Ll>+$/ }
+
+# Input is an undirected graph with nodes separated by hyphen.  Upper case are
+# "big rooms", lower case are "small rooms", start and end are special.
 class Solver {
   has Str $.input is required;
   has $.parsed = InputFormat.parse($!input, :actions(Actions.new)) || die 'Parse failed';
-  has @.lines = $!parsed<line>».made;
+  has Array %.graph = $!parsed.made.map({$_, .antipair}).flat.classify(*.value, :as(*.key));
+  has Bag $.default-budget =
+      (%!graph.keys.map: { when &big { $_ => 1000 }; default { $_ => 1 } }).Bag;
+  has Int %.dfsmemo; # keyed by the whole budget to catch all small room variants
+  has Int $.memosaved = 0;
+
+  method dfs(Str $to, Str $from, Bag $budget --> Int) {
+    return 1 if $from eq $to;
+    my $key = "$from:{$budget.sort.join('@')}";
+    if (my $memo = %.dfsmemo{$key}) && $memo.defined {
+      $!memosaved += $memo;
+      return $memo;
+    }
+    my $new-budget = self.new-budget($budget, $from);
+    my $revisitable = '_revisit' ∈ $new-budget;
+    my $res = [+] do for %.graph{$from}.grep({$_ ∈ $new-budget || $revisitable && small($_)}) {
+      self.dfs($to, $_, $new-budget)
+    }
+    $.dfsmemo{$key} = $res;
+    $res;
+  }
+
+  submethod new-budget(Bag $budget, Str $cur --> Bag) { ??? }
 }
 
+# Count the paths from start to end; each small room can only traverse once.
 class Part1 is Solver {
-  method dfs(%g, $vs, $vb, $x --> Int) {
-    # say "'$x' small $vs big $vb";
-    # say %g{$x};
-    return 0 unless $x;
-    given $x {
-      when 'end' { return 1 }
-      when /^<[a..z]>+/ {
-        # say "small '$x'";
-        return 0 unless %g{$x};
-        return 0 if $x (elem) $vs;
-        return [+] (self.dfs(%g, $vs (^) $x, $vb, $_) for |%g{$x});
-      }
-      when /^<[A..Z]>+/ {
-        # say "big '$x'";
-        return 0 unless %g{$x};
-        # my $p = "$vb#$x";
-        # return 0 if $x (elem) $vb;
-        my $c = 0;
-        for |%g{$x} {
-          my $p = "$x#$_";
-          $c += self.dfs(%g, $vs, $vb (^) $p, $_) unless $p (elem) $vb;
-        }
-        return $c;
-        # return [+] dfs(%g, $vs, $vb (^) $p, $x) for |%g{$x};
-      }
-      default { die "wtf '$x'" }
-    }
-  }
+  method solve( --> Str(Cool)) { self.dfs('end', 'start', $.default-budget); }
 
-  method solve( --> Str(Cool)) {
-    my %g ;
-    for |$.parsed.made -> $p {
-      %g{$p.key} //= [];
-      %g{$p.key}.push: $p.value;
-      %g{$p.value} //= [];
-      %g{$p.value}.push: $p.key;
-    }
-    self.dfs(%g, Set.new, Set.new, 'start');
-  }
+  submethod new-budget(Bag $budget, Str $cur --> Bag) { $budget ∖ $cur }
 }
 
+# Count the paths from start to end; at most one small room can be used twice.
 class Part2 is Solver {
-  method dfs(%g, Set $vs, Set $vb, Str $small, Str $seen, Str $x --> List) {
-    return 0 unless $x;
-    my $seen2 = $seen eq '' ?? $x !! "$seen,$x";
-    given $x {
-      when 'end' { return ($seen2,) }
-      when /^<[a..z]>+/ {
-        return () unless %g{$x};
-        return () if $x (elem) $vs && ($small ne '' || $x eq 'start');
-        my $small2 = $x (elem) $vs ?? $x !! $small;
-        return (self.dfs(%g, $vs (^) $x, $vb, $small2, $seen2, $_) if $_ ne $small for |%g{$x}).flat.List;
-      }
-      when /^<[A..Z]>+/ {
-        return 0 unless %g{$x};
-        return (self.dfs(%g, $vs, $vb , $small, $seen2, $_) if $_ ne $small for |%g{$x}).flat.List;
-      }
-      default { die "wtf '$x'" }
-    }
-  }
+  method solve( --> Str(Cool)) { self.dfs('end', 'start', $.default-budget ⊎ (_revisit => 1)); }
 
-  method valid(Str $res --> Bool) {
-    $res ne '' && $res.split(',').Bag.pairs.grep({.key ~~ /^<[a..z]>+$/ && .value > 1}).elems <= 1
-  }
-
-  method solve( --> Str(Cool)) {
-    my %g ;
-    for |$.parsed.made -> $p {
-      %g{$p.key} //= [];
-      %g{$p.key}.push: $p.value;
-      %g{$p.value} //= [];
-      %g{$p.value}.push: $p.key;
-    }
-    my $res = self.dfs(%g, Set.new, Set.new, '', '', 'start').Set.keys.List;
-    # say "Before filter {+$res}";
-    # say $res.sort.join("\n");
-    $res .= grep({self.valid($_)});
-    # say "After filter {+$res}";
-    # say $res.sort.join("\n");
-    $res.elems
+  submethod new-budget(Bag $budget, Str $cur --> Bag) {
+    return $budget ∖ '_revisit' if small($cur) && $cur ∉ $budget && '_revisit' ∈ $budget;
+    return $budget ∖ $cur;
   }
 }
 
@@ -127,6 +87,7 @@ class RunContext {
     my $end = now;
     put $result;
     "Part $num took %.3fms\n".printf(($end - $start) * 1000);
+    say "Memoization of {+$solver.dfsmemo} items saved {$solver.memosaved} paths";
     if $expected {
       if $expected eq $result {
         say "\c[CHECK MARK] PASS with expected value '$result'";
