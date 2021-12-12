@@ -21,7 +21,7 @@ class Solver {
 
   method neighbors($key) {
     my ($x, $y) = $key.split(',');
-    (($x-1..$x+1) X ($y-1..$y+1)).grep(-> ($a, $b) { $a != $x || $b != $y})».join(',')
+    (($x-1..$x+1) X ($y-1..$y+1)).grep(-> ($a, $b) { $a ≠ $x || $b ≠ $y})».join(',')
   }
 
   method increment($grid --> Map) { $grid.pairs.map({ .key => .value + 1 }).Map }
@@ -29,7 +29,7 @@ class Solver {
   method flash(Map $grid, SetHash $flashed --> List) {
     my $count = 0;
     my %res = $grid.Hash;
-    for $grid.pairs.grep({.value > 9 && .key !(elem) $flashed}) -> $p {
+    for $grid.pairs.grep({.value > 9 && .key ∉ $flashed}) -> $p {
       $flashed.set($p.key);
       $count++;
       for self.neighbors($p.key).grep({$grid{$_}:exists}) {
