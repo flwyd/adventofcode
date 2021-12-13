@@ -9,6 +9,9 @@
 use v6.d;
 use fatal;
 
+# Input is a series of x,y points with x going left to right and y top to bottom.
+# After a blank line, "fold along [xy]=1" lines indicate a series of folds to
+# make along row or column of the paper, overlaying points on top of grid spaces.
 grammar InputFormat {
   rule TOP { <point> + <fold> + }
   token num { \d+ }
@@ -48,12 +51,15 @@ sub split-point($p) {
   (x => @s[0].Int, y => @s[1].Int).Map;
 }
 
+# Answer is the number of points on the paper after the first fold.
 class Part1 is Solver {
   method solve( --> Str(Cool)) {
     self.perform-folds($.parsed.made<points>.Set, $.parsed.made<folds>[0..0]).elems;
   }
 }
 
+# Output is ASCII art of the result of all folds, interpreted as capital letters.
+# The letters are challenging to read if you swap x and y :-/
 class Part2 is Solver {
   method solve( --> Str(Cool)) {
     my $points = self.perform-folds($.parsed.made<points>.Set, $.parsed.made<folds>);
