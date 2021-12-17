@@ -15,7 +15,7 @@ class Solver {
   has Str $.input is required;
   has @.binary = $!input.chomp.parse-base(16).base(2).comb;
 
-  submethod TWEAK { @!binary.unshift(0) if $!input.substr(0, 1) lt '8' }
+  submethod TWEAK { @!binary.prepend(0 xx $!input.chomp.chars * 4 - +@!binary) }
 
   method parse-and-eval( --> List) {
     my $version-sum = 0;
