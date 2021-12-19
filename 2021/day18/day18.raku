@@ -104,7 +104,11 @@ class Part1 is Solver { method solve( --> Str(Cool)) { magnitude(@.lines.reduce:
 # Determine the maximum magnitude of adding any two pairs in the input, noting that addition is
 # not commutative.
 class Part2 is Solver {
-  method solve( --> Str(Cool)) { (@.lines X @.lines).map({magnitude(add-pair($_[0], $_[1]))}).max }
+  method solve( --> Str(Cool)) {
+    (^@.lines X ^@.lines).grep({.head != .tail})
+        .map({magnitude(add-pair(@.lines[.head], $.lines[.tail]))})
+        .max
+  }
 }
 
 class RunContext {
