@@ -37,7 +37,6 @@ class Part1 is Solver {
     my @players = @.lines.map({(player => $_<player>, pos => $_<start>, score => 0).Hash});
     my @rolls = 1..100;
     my $turn = 0;
-    my $i = 1;
     my $rollcount = 0;
     while @players.map(*<score>).all < 1000 {
       my $roll = ((++$rollcount - 1) % 100 + 1 for ^3).sum;
