@@ -76,6 +76,8 @@ class RunContext {
         say "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
       }
     }
+    $*OUT.flush;
+    $*ERR.flush;
   }
 }
 
