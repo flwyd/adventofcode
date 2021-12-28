@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 type Direction int
@@ -284,16 +285,25 @@ func runFile(fname string) {
 		d.orientations = d.pointset.allOrientations()
 	}
 	fmt.Printf("Running Part 1 on %s\n", fname)
+	start := time.Now()
 	res1 := part1(devices)
-	log.Printf("Part 1 got %d\n", res1)
+	dur := time.Since(start)
+	fmt.Printf("Part 1 got %d\n", res1)
+	fmt.Printf("Part 1 took %s\n", dur)
 	fmt.Printf("Running Part 2 on %s\n", fname)
+	start = time.Now()
 	res2 := part2(devices)
-	log.Printf("Part 2 got %d\n", res2)
+	dur = time.Since(start)
+	fmt.Printf("Part 2 got %d\n", res2)
+	fmt.Printf("Part 2 took %s\n", dur)
 }
 
 func main() {
 	for _, fname := range os.Args[1:] {
-		log.Printf("Running day19 on %s\n", fname)
+		fmt.Printf("Running day19 on %s\n", fname)
+		start := time.Now()
 		runFile(fname)
+		dur := time.Since(start)
+		fmt.Printf("%s took %s\n", fname, dur)
 	}
 }
