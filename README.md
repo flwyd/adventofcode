@@ -5,7 +5,9 @@ This is a repository containing solutions for
 and the solution for each day is in its own subdirectory. Each day also has
 `input.example.txt`, taken from the problem description and the same for all
 participants, and `input.actual.txt`, specific to my AoC user. If you’d like to
-compare my output to yours, make sure to use the same input file for both.
+compare my output to yours, make sure to use the same input file for both. Each
+day’s solution is generally a standalone program which takes input either on
+standard input (2020) or one or more input files on the command line (2021).
 
 I generally use Advent of Code as an opportunity to get experience with a
 language that I don’t yet know well. You’re welcome to take inspiration from the
@@ -15,7 +17,7 @@ idiomatic, efficient, or readable way.
 Year           | Language
 -------------- | --------
 [2020](./2020) | [Kotlin](https://kotlinlang.org/)
-[2021](./2021) | [Raku](https://raku.org/)
+[2021](./2021) | [Raku](https://raku.org/) plus [Go](https://go.dev/) when Raku was too slow
 
 This code is made available under an [MIT-style license](./LICENSE). I do not
 accept pull requests to this repo, but you’re welcome to point out anything you
