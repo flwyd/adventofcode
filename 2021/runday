@@ -32,7 +32,10 @@ if [[ -s "$BASEDIR/.cookie-jar" && ! -s input.actual.txt ]]; then
   "$BASEDIR/fetchinput" "$YEAR" "$1" >| input.actual.txt
 fi
 CMD=(raku "$PROGRAM" input.example*.txt input.actual.txt)
+TIMEFMT="$PROGRAM > $OUTFILE %U user %S system %P cpu %*E total"
 print -u 2
 print -u 2 "$CMD > $OUTFILE"
 print -u 2
-time $CMD 2>&1 | tee "$OUTFILE"
+time ($CMD 2>&1 | tee "$OUTFILE" ; exit ${pipestatus[1]})
+res=$?
+exit $res

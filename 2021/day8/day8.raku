@@ -95,6 +95,7 @@ class RunContext {
   has $.input-file;
   has $.input;
   has %.expected is rw;
+  has @.passed;
 
   method run-part(Solver:U $part) {
     my $num = $part.^name.comb(/\d+/).head;
@@ -106,6 +107,7 @@ class RunContext {
     my $end = now;
     put $result;
     "Part $num took %.3fms\n".printf(($end - $start) * 1000);
+    @!passed.push($result eq 'TODO' || $expected && $expected eq $result);
     if $expected {
       if $expected eq $result {
         say "\c[CHECK MARK] PASS with expected value '$result'";
@@ -117,6 +119,7 @@ class RunContext {
 }
 
 sub MAIN(*@input-files) {
+  my $exit = all();
   for @input-files -> $input-file {
     if $input-file.IO.slurp -> $input {
       my $context = RunContext.new(:$input, :$input-file);
@@ -128,9 +131,11 @@ sub MAIN(*@input-files) {
       $context.run-part(Part1);
       say '';
       $context.run-part(Part2);
+      $exit &= all($context.passed);
     } else {
       say "EMPTY INPUT FILE: $input-file";
     }
     say '=' x 40;
   }
+  exit $exit ?? 0 !! 1;
 }
