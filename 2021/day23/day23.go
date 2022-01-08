@@ -109,6 +109,7 @@ type BoardKey string
 type Board struct {
 	pods        []Amphipod
 	depth, cost int
+	k           BoardKey
 }
 
 func newBoard(cost int, depth int, pods ...Amphipod) *Board {
@@ -118,11 +119,10 @@ func newBoard(cost int, depth int, pods ...Amphipod) *Board {
 }
 
 func (b *Board) key() BoardKey {
-	parts := make([]string, len(b.pods))
-	for i, a := range b.pods {
-		parts[i] = a.pos.String()
+	if b.k == BoardKey("") {
+		b.k = BoardKey(b.String())
 	}
-	return BoardKey(strings.Join(parts, ";"))
+	return b.k
 }
 
 func (b *Board) validMoves() []*Board {
