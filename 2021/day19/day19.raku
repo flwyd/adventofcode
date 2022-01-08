@@ -145,7 +145,6 @@ class Solver {
       my $found-this-loop = 0;
       UNFOUND: for @all-nums -> $i {
         next if %found{$i};
-        say "Checking $i";
         my $target = %scanners{$i};
         for @all-nums -> $j {
           next if $i == $j || !%found{$j};
@@ -157,7 +156,6 @@ class Solver {
             next unless $match;
             %found{$i} = $match;
             $found-this-loop++;
-            say "$j overlaps with $i at {$match.origin}";
             next UNFOUND;
           }
         }
