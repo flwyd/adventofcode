@@ -14,45 +14,24 @@ class Position {
   has Int $.room = 0;
   has Int $.room-slot = 0;
 
-  method WHICH(Position:D:) { self.Str }
+  method WHICH(Position:D:) { ValueObjAt.new("Position|{$!hall + $!room}/$!room-slot") }
+
   method Str(Position:D:) {
     return "hall:$!hall" if $.hall;
     return "room:$!room/$!room-slot";
   }
 
+  method x(Position:D: --> Int) { $!room || $!hall }
+
   method dist(Position:D: Position:D $other --> Int) {
-    return $.room-slot + abs($.room - $other.hall) if $.room > 0 && $other.hall > 0;
-    return $other.room-slot + abs($other.room - $.hall) if $other.room > 0 && $.hall > 0;
-    return $.room-slot + $other.room-slot + abs($.room - $other.room) if $.room > 0 && $other.room > 0;
-    return abs($.hall - $other.hall) if $.hall > 0 && $other.hall > 0;
-    die "Unexpected position pair: {self} and $other";
+    return abs($.x - $other.x) + $.room-slot + $other.room-slot;
   }
 
   method in-way(Position:D: Position:D $dest, Position:D $other --> Bool) {
-    if $.hall > 0 && $dest.hall > 0 {
-      return $.hall <= $other.hall <= $dest.hall || $.hall >= $other.hall >= $dest.hall;
-    }
-    if $.room > 0 && $dest.hall > 0 {
-      return False unless $other.hall;
-      return $other.hall <= $.room && $other.hall >= $dest.hall if $.room >= $dest.hall;
-      return $other.hall >= $.room && $other.hall <= $dest.hall;
-    }
-    if $dest.room > 0 && $.hall > 0 {
-      return False unless $other.hall || $other.room == $dest.room;
-      return $other.room-slot <= $dest.room-slot if $other.room == $dest.room;
-      return $other.hall <= $dest.room && $other.hall >= $.hall if $dest.room >= $.hall;
-      return $other.hall >= $dest.room && $other.hall <= $.hall;
-    }
-    if $other.hall {
-      return min($.room, $dest.room) <= $other.hall <= max($.room, $dest.room);
-    }
-    if $other.room == $.room {
-      return $other.room-slot < $.room-slot;
-    }
-    if $other.room == $dest.room {
-      return $other.room-slot < $dest.room-slot;
-    }
-    return False;
+    return min($.x, $dest.x) ≤ $other.hall ≤ max($.x, $dest.x) if $other.hall > 0;
+    return False if $other.room != $!room && $other.room != $dest.room;
+    return $other.room-slot < $!room-slot if $other.room == $!room;
+    return $other.room-slot < $dest.room-slot;
   }
 }
 
@@ -60,19 +39,20 @@ class Amphipod {
   has Str $.type;
   has Position $.pos;
   has Int $.target-room;
-  has $!which-cache = "$!type/$!target-room/{$!pos.WHICH}";
+  has $.step-cost = 10 ** ($!type.ord - 'A'.ord);
+  has $!which-cache = ValueObjAt.new("Amphipod|$!type:$!pos");
 
   method WHICH(Amphipod:D:) { $!which-cache }
 
   method Str(Amphipod:D:) { "<$.type wants $.target-room currently $.pos>" }
 
-  method satisfied { $.target-room == $.pos.room }
+  method satisfied { $!target-room == $!pos.room }
 
-  method step-cost( --> Int) { 10 ** ($.type.ord - 'A'.ord) }
+  method move-cost(Position $dest --> Int) { $!step-cost * $.pos.dist($dest) }
 
-  method move-cost(Position $dest --> Int) { self.step-cost * $.pos.dist($dest) }
-
-  method move(Position $dest --> Amphipod) { Amphipod.new(:$.type, :pos($dest), :$.target-room) }
+  method move(Position $dest --> Amphipod) {
+    Amphipod.new(:$!type, :pos($dest), :$!target-room, :$!step-cost)
+  }
 }
 
 class Board {
@@ -82,8 +62,9 @@ class Board {
   has Int $.depth = @!pods.map(*.pos.room-slot).max;
   has Int $.cost = 0;
   has Board @.parents;
+  has $!which-cache = ValueObjAt.new("Board|" ~ @!pods».WHICH.sort.join(';'));
 
-  method WHICH(Board:D:) { @.pods».WHICH.join('!') }
+  method WHICH(Board:D:) { $!which-cache }
 
   method Str(Board:D:) { "Board($.hall-length @.pods[])" }
 
@@ -131,12 +112,19 @@ class Board {
       my @in-slot = |(%in-rooms{$pod.target-room} // ());
       if @in-slot.all.type eq $pod.type {
         my $dest = Position.new(:room($pod.target-room), :room-slot($!depth - @in-slot));
-        @res.push((self.move($pod, $dest), $pod.move-cost($dest))) unless $pod.pos.in-way($dest, any(@in-hall».pos));
+        my $hall-ok = True; # any junction does unnecessary work, so do it manually
+        for @in-hall {
+          if $pod.pos.in-way($dest, .pos) {
+            $hall-ok = False;
+            last;
+          }
+        }
+        @res.push((self.move($pod, $dest), $pod.move-cost($dest))) if $hall-ok;
       }
-      for 1..$.hall-length {
+      HALL: for 1..$.hall-length {
         next if @.room-nums.grep($_);
         my $dest = Position.new(:hall($_));
-        next if $pod.pos.in-way($dest, any(@in-hall».pos));
+        next HALL if $pod.pos.in-way($dest, $_.pos) for @in-hall;
         @res.push((self.move($pod, $dest), $pod.move-cost($dest)));
       }
     }
@@ -146,7 +134,7 @@ class Board {
   method move(Amphipod $pod, Position $dest --> Board) {
     my $moved = $pod.move($dest);
     Board.new(:$.hall-length, :@.room-nums, :pods(@.pods.map({$_ eqv $pod ?? $moved !! $_})),
-      :cost($.cost + $pod.move-cost($dest)), :parents(|@.parents, self))
+        :cost($.cost + $pod.move-cost($dest)), :parents(|@.parents, self), :$.depth)
   }
 
   method min-remaining-cost( --> Int) {
@@ -212,7 +200,7 @@ class Solver {
     @q[0].push($initial);
     my $min = 0;
     my $last-said = -1;
-    my $last-noted = -100;
+    my $last-noted = 0;
     my %seen = $initial => 0;
     my $dupes = 0;
     my $total-size = 1;
@@ -227,8 +215,9 @@ class Solver {
       --$total-size;
       $last-said = $min;
       if $board.satisfied {
-        say "Winning board at $min: $board from\n{$board.parents».ascii.join(qq|\n\n|)}";
-        say "\n" ~ $board.ascii;
+        say "Found winning board at min: $min size: $total-size dupes: $dupes of {+%seen}";
+        # say "Winning board at $min: $board from\n{$board.parents».ascii.join(qq|\n\n|)}";
+        # say "\n" ~ $board.ascii;
         return $board.cost;
       }
       for $board.valid-moves {
@@ -252,6 +241,7 @@ class Part1 is Solver {
   method solve( --> Str(Cool)) { self.cheapest-solution() }
 }
 
+# Part 2 adds two extra lines in the middle of the rooms part of the board.
 class Part2 is Solver {
   submethod modify-input($input --> Str) {
     my @lines = $input.lines;
