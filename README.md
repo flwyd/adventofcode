@@ -14,10 +14,10 @@ language that I don’t yet know well. You’re welcome to take inspiration from
 way I solved a problem, but please don’t assume that I’ve solved it in the most
 idiomatic, efficient, or readable way.
 
-Year           | Language
--------------- | --------
-[2020](./2020) | [Kotlin](https://kotlinlang.org/)
-[2021](./2021) | [Raku](https://raku.org/) plus [Go](https://go.dev/) when Raku was too slow
+Year           | Language | Thoughts
+-------------- | -------- | --------
+[2020](./2020) | [Kotlin](https://kotlinlang.org/) | [Blog post](https://flwyd.dreamwidth.org/396527.html)
+[2021](./2021) | [Raku](https://raku.org/) plus [Go](https://go.dev/) when Raku was too slow | [Blog post](https://flwyd.dreamwidth.org/400979.html)
 
 This code is made available under an [MIT-style license](./LICENSE). I do not
 accept pull requests to this repo, but you’re welcome to point out anything you
