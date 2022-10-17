@@ -1,0 +1,25 @@
+#!/bin/zsh
+# Copyright 2022 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Watch an AoC directory; rerun the solver when program or input files change.
+# Uses https://github.com/emcrisostomo/fswatch
+
+if [ $# -eq 0 ]; then
+  print -u 2 "Usage: watch day1"
+  exit 1
+fi
+DIR="${0:h}/$1"
+if [[ ! -d "$DIR" ]]; then
+  print -u 2 "No such directory: $DIR"
+  exit 1
+fi
+cd "${0:h}/$1"
+CMD=("../runday" "$1")
+$CMD
+fswatch -0 -o *.exs input.* | while read -d "" event ; do
+  $CMD
+done

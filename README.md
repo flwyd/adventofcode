@@ -7,7 +7,10 @@ and the solution for each day is in its own subdirectory. Each day also has
 participants, and `input.actual.txt`, specific to my AoC user. If you’d like to
 compare my output to yours, make sure to use the same input file for both. Each
 day’s solution is generally a standalone program which takes input either on
-standard input (2020) or one or more input files on the command line (2021).
+standard input (2020) or one or more input files on the command line (2021,
+2022). 2022 introduced a separate solution runner library rather than including
+a few dozen lines of orchestration code in the template, but they still run as
+standalone scripts with more spartan output.
 
 I generally use Advent of Code as an opportunity to get experience with a
 language that I don’t yet know well. You’re welcome to take inspiration from the
@@ -18,6 +21,7 @@ Year           | Language | Thoughts
 -------------- | -------- | --------
 [2020](./2020) | [Kotlin](https://kotlinlang.org/) | [Blog post](https://flwyd.dreamwidth.org/396527.html)
 [2021](./2021) | [Raku](https://raku.org/) plus [Go](https://go.dev/) when Raku was too slow | [Blog post](https://flwyd.dreamwidth.org/400979.html)
+[2022](./2022) | [Elixir](https://elixir-lang.org/)
 
 This code is made available under an [MIT-style license](./LICENSE). I do not
 accept pull requests to this repo, but you’re welcome to point out anything you
