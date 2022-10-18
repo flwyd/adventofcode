@@ -1,0 +1,11 @@
+#!/bin/sh
+
+if [[ $# != 1 ]]; then
+  echo "Usage: $0 day0"
+  exit 1
+fi
+
+cd $1
+export ERL_AFLAGS="-kernel shell_history enabled"
+export ELIXIR_EDITOR="echo"
+iex

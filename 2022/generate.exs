@@ -9,20 +9,24 @@
 
 defmodule Generate do
   @template Path.dirname(__ENV__.file) |> Path.join("template.exs.eex")
+  @iex Path.dirname(__ENV__.file) |> Path.join("iex.exs.eex")
 
   def into(daydir) do
-    if !File.exists?(@template), do: Generate.abort("#{@template} not found")
+    if !File.exists?(@template), do: abort("#{@template} not found")
     [daynum] = Regex.run(~r/\d+$/, daydir, capture: :first)
     exsfile = Path.join(daydir, "day#{daynum}.exs")
+    iexfile = Path.join(daydir, ".iex.exs")
     if File.exists?(exsfile), do: abort("#{exsfile} already exists")
     File.mkdir_p!(daydir)
     File.write!(exsfile, EEx.eval_file(@template, day_num: daynum))
     File.chmod!(exsfile, 0o755)
+    if !File.exists?(iexfile), do: File.write!(iexfile, EEx.eval_file(@iex, day_num: daynum))
 
     for base <- ~w[input.example input.actual] do
-      for ext <- ~w[.txt .expected] do
-        File.touch!(Path.join(daydir, base <> ext))
-      end
+      txt = Path.join(daydir, base <> ".txt")
+      if !File.exists?(txt), do: File.touch!(txt)
+      expect = Path.join(daydir, base <> ".expected")
+      if !File.exists?(expect), do: File.write!(expect, "part1:\npart2:\n")
     end
   end
 

@@ -8,64 +8,96 @@
 # Usage: elixir -r runner.ex day0/day0.exs day0/input*.txt
 
 defmodule Runner do
+  defmodule Result do
+    defstruct outcome: :unknown, got: "", want: "", time_usec: 0
+
+    def ok?(%Result{outcome: :fail}), do: false
+    def ok?(%Result{}), do: true
+
+    def message(result) do
+      case result do
+        %Result{outcome: :success, got: got} -> "SUCCESS got #{got}"
+        %Result{outcome: :fail, got: got, want: want} -> "FAIL got #{got}, want #{want}"
+        %Result{outcome: :unknown, got: got} -> "UNKNOWN got #{got}"
+        %Result{outcome: :todo, want: ""} -> "TODO implement it"
+        %Result{outcome: :todo, want: want} -> "TODO implement it, want #{want}"
+      end
+    end
+  end
+
   @doc """
   Reads input from file and passes it to :part1 and :part2 functions in
   daymodule.  Prints results.  Also checks for a companion .expected file and
-  prints SUCCESS if the result matches, FAIL if it does not, MAYBE if the
-  expected value is not yet set, and TODO if the function returned TODO.
+  prints "SUCCESS" if the result matches, FAIL if it does not, "UNKNOWN" if the
+  expected value is not yet set, and "TODO" if the function returned :todo.
   Returns true if no expected match failed, false otherwise.
 
   ## Examples
 
     iex> Runner.run(Day0, "day0/input.example.txt")
   """
+  @spec run(module, String.t()) :: boolean
   def run(daymodule, file) do
-    input =
-      File.stream!(file)
-      |> Stream.map(&String.trim_trailing(&1, "\n"))
-      |> Enum.to_list()
-
+    input = read_lines(file)
     expected = read_expected(file)
 
     outcomes =
       for part <- [:part1, :part2] do
         IO.puts("Running #{daymodule} #{part} on #{file}")
-        {usec, res} = :timer.tc(daymodule, part, [input])
-        IO.inspect(res)
-
-        {got, want} = {to_string(res), Map.get(expected, part, "")}
-
-        {outcome, message} =
-          cond do
-            got == want -> {true, "SUCCESS"}
-            res == :todo -> {true, "TODO implement #{part}"}
-            want == "" -> {true, "MAYBE"}
-            true -> {false, "FAIL want #{want}"}
-          end
-
-        IO.puts(message)
-        IO.puts("#{part} took #{usec}μs on #{file}")
+        res = run_part(daymodule, part, input, Map.get(expected, part, ""))
+        IO.inspect(res.got)
+        IO.puts(Result.message(res))
+        IO.puts("#{part} took #{res.time_usec}μs on #{file}")
         IO.puts(String.duplicate("=", 40))
-        outcome
+        Result.ok?(res)
       end
 
     Enum.all?(outcomes)
   end
 
-  defp read_expected(input_file) do
-    file = Path.rootname(input_file, ".txt") <> ".expected"
+  @doc """
+  Runs function part of daymodule with the given iput and returns a
+  Runner.Result based on the function's output and whether it matches want.
 
-    # .expected files have lines like "part1: value".  This is valid YAML, but
-    # parsing YAML would require an external dependency to read a simple file.
-    case File.read(file) do
-      {:ok, data} ->
-        Regex.scan(~r/(?<part>part\d+):\s*(?<value>.*)/, data, capture: :all_but_first)
-        |> Enum.map(&List.to_tuple/1)
-        |> Enum.map(fn {part, value} -> {String.to_atom(part), value} end)
-        |> Map.new()
+  ## Examples
+      iex> Runner.run_part(Day0, :part1, ["123", "foo"], "42")
+  """
+  @spec run_part(module, atom, [String.t()], String.t()) :: Result.t()
+  def run_part(daymodule, part, input, want) do
+    {usec, got} = :timer.tc(daymodule, part, [input])
 
-      {:error, _err} ->
-        %{}
+    outcome =
+      cond do
+        to_string(got) == to_string(want) -> :success
+        got == :todo -> :todo
+        want == "" -> :unknown
+        true -> :fail
+      end
+
+    %Result{outcome: outcome, got: got, want: want, time_usec: usec}
+  end
+
+  @doc """
+  Reads a file and splits it into a list of lines without trailing line breaks.
+  """
+  @spec read_lines(String.t()) :: [String.t()]
+  def read_lines(file) do
+    File.stream!(file)
+    |> Stream.map(&String.trim_trailing(&1, "\n"))
+    |> Enum.to_list()
+  end
+
+  def read_expected(input_file) do
+    file = IO.inspect(Path.rootname(input_file, ".txt") <> ".expected")
+
+    if File.exists?(file) do
+      for line <- read_lines(file), String.starts_with?(line, "part") do
+        [part, value] = String.split(line, ~r/:\s*/, parts: 2)
+        {String.to_atom(part), value}
+      end
+      |> Map.new()
+    else
+      %{}
     end
   end
 end
