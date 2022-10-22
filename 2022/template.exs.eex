@@ -22,7 +22,7 @@ if !Enum.empty?(System.argv()) do
     if function_exported?(Runner, :__info__, 1) do
       Runner.run(Day<%= day_num %>, f)
     else
-      input = File.stream!(f) |> Stream.map(&Striing.trim_trailing(&1, "\n")) |> Enum.to_list()
+      input = File.stream!(f) |> Stream.map(&String.trim_trailing(&1, "\n")) |> Enum.to_list()
       IO.puts("#{f} part1: #{Day<%= day_num %>.part1(input)}")
       IO.puts("#{f} part2: #{Day<%= day_num %>.part2(input)}")
       true

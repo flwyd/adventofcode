@@ -8,8 +8,8 @@
 # Usage: generate.exs day42
 
 defmodule Generate do
-  @template Path.dirname(__ENV__.file) |> Path.join("template.exs.eex")
-  @iex Path.dirname(__ENV__.file) |> Path.join("iex.exs.eex")
+  @template Path.join(__DIR__, "template.exs.eex")
+  @iex Path.join(__DIR__, "iex.exs.eex")
 
   def into(daydir) do
     if !File.exists?(@template), do: abort("#{@template} not found")
