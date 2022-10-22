@@ -25,6 +25,30 @@ defmodule Runner do
     end
   end
 
+  @doc"""
+  Parses argv as a command line and runs part1 and part2 of daymodule on each
+  file in argv, or standard input if no files are given or any file is "-".
+  Returns true if all parts  match their expected values for all files,
+  otherwise returns false.  If `--verbose` or `-v` is present in argv,
+  additional information like filenames, expected values, and timing will be
+  printed to standard error.
+
+  ## Examples:
+
+    # Run against multiple files, print extra output
+    iex> Runner.main(Day0, ~w[--verbose input.example.txt input.actual.txt])
+    # Run against standard input, no extra output
+    iex> Runner.main(Day0, [])
+  """
+  @spec main(module, [String.t]) :: boolean
+  def main(daymodule, argv) do
+    {args, files} =
+      OptionParser.parse!(argv, strict: [verbose: :boolean], aliases: [v: :verbose])
+    verbose = Keyword.get(args, :verbose, false)
+    files = if Enum.empty?(files), do: ["-"], else: files
+    Enum.all?(Enum.map(files, &run(daymodule, &1, verbose)))
+  end
+
   @doc """
   Reads input from file and passes it to :part1 and :part2 functions in
   daymodule.  Prints results.  Also checks for a companion .expected file and
@@ -36,19 +60,28 @@ defmodule Runner do
 
     iex> Runner.run(Day0, "day0/input.example.txt")
   """
-  @spec run(module, String.t()) :: boolean
-  def run(daymodule, file) do
+  @spec run(module, String.t(), boolean) :: boolean
+  def run(daymodule, file, verbose \\ true) do
     input = read_lines(file)
     expected = read_expected(file)
 
     outcomes =
       for part <- [:part1, :part2] do
-        IO.puts("Running #{daymodule} #{part} on #{file}")
+        if verbose, do: IO.puts(:stderr, "Running #{daymodule} #{part} on #{file}")
         res = run_part(daymodule, part, input, Map.get(expected, part, ""))
-        IO.inspect(res.got)
-        IO.puts(Result.message(res))
-        IO.puts("#{part} took #{res.time_usec}μs on #{file}")
-        IO.puts(String.duplicate("=", 40))
+
+        try do
+          IO.puts("#{part}: #{res.got}")
+        rescue
+          Protocol.UndefinedError -> IO.inspect(res, label: part)
+        end
+
+        if verbose do
+          IO.puts(:stderr, Result.message(res))
+          IO.puts(:stderr, "#{part} took #{res.time_usec}μs on #{file}")
+          IO.puts(:stderr, String.duplicate("=", 40))
+        end
+
         Result.ok?(res)
       end
 
@@ -79,16 +112,21 @@ defmodule Runner do
 
   @doc """
   Reads a file and splits it into a list of lines without trailing line breaks.
+  If file is "-" reads from stdio.
   """
   @spec read_lines(String.t()) :: [String.t()]
   def read_lines(file) do
-    File.stream!(file)
+    case file do
+      "" -> raise ArgumentError, "empty filename"
+      "-" -> IO.stream()
+      _ -> File.stream!(file)
+    end
     |> Stream.map(&String.trim_trailing(&1, "\n"))
     |> Enum.to_list()
   end
 
   def read_expected(input_file) do
-    file = IO.inspect(Path.rootname(input_file, ".txt") <> ".expected")
+    file = Path.rootname(input_file, ".txt") <> ".expected"
 
     if File.exists?(file) do
       for line <- read_lines(file), String.starts_with?(line, "part") do

@@ -1,5 +1,7 @@
 import_file("../.iex.exs")
-c("day<%= day_num %>.exs")
+c("day<%= day_num %>.ex")
 daymod = Day<%= day_num %>
 exampletxt = "input.example.txt"
 actualtxt = "input.actual.txt"
+IO.puts("Run on #{exampletxt}: Runner.run(Day<%= day_num %>, exampletxt)")
+IO.puts("Run on #{actualtxt}: Runner.run(Day<%= day_num %>, actualtxt)")

@@ -1,0 +1,17 @@
+#!/usr/bin/env elixir
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+#
+# https://adventofcode.com/2022/day/<%= day_num %>
+
+unless function_exported?(Day<%= day_num %>, :__info__, 1),
+  do: Code.compile_file(Path.join(__DIR__, "day<%= day_num %>.ex"))
+
+unless function_exported?(Runner, :__info__, 1),
+  do: Code.compile_file(Path.join(__DIR__, "../runner.ex"))
+
+success = Runner.main(Day<%= day_num %>, System.argv())
+exit({:shutdown, if(success, do: 0, else: 1)})
+

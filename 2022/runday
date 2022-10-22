@@ -20,7 +20,7 @@ if [[ ! -d "$DAYDIR" ]]; then
   exit 1
 fi
 cd "$DAYDIR"
-PROGRAM="$1.exs"
+PROGRAM="run.exs"
 if [[ ! -f "$PROGRAM" ]]; then
   print -u 2 "Missing file: $PROGRAM"
   exit 1
@@ -36,7 +36,7 @@ if [[ -s "$BASEDIR/.cookie-jar" && ! -s input.actual.txt ]]; then
     echo "$input" >| input.actual.txt
   fi
 fi
-CMD=(elixir -r "$BASEDIR/runner.ex" "$PROGRAM" input.example*.txt input.actual.txt)
+CMD=(elixir -r "$BASEDIR/runner.ex" "$PROGRAM" -v input.example*.txt input.actual.txt)
 TIMEFMT="$PROGRAM > $OUTFILE %U user %S system %P cpu %*E total"
 print -u 2
 print -u 2 "$CMD > $OUTFILE"
