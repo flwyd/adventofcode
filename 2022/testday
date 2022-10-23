@@ -1,0 +1,64 @@
+#!/bin/zsh
+# Copyright 2022 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# TAP (testanything.org) runner for Advent of Code days.  Runs all days if none
+# are provided on the command line.
+# Assumes dayXX/run.exs < dayXX/input.foo.txt produces output which can be
+# diffed with dayXX/input.foo.expected
+
+indent() {
+  pr -to $1
+}
+
+BASEDIR=${0:h}
+if [[ $# -eq 0 ]]; then
+  DAYS=($BASEDIR/day*)
+else
+  DAYS=($@)
+fi
+
+echo "TAP version 14"
+((indent=0))
+((daycount=0))
+((dayfails=0))
+for day in $DAYS ; do
+  daycount+=1
+  ((filecount=0))
+  ((fails=0))
+  echo "# Subtest: $day"
+  indent+=4
+  for input in $day/input.*.txt ; do
+    filecount+=1
+    desc="$filecount - $input"
+    out=$($day/run.exs < $input | diff - ${input:r}.expected)
+    if [[ -z "$out" ]]; then
+      echo "ok $desc" | indent $indent
+    else
+      fails+=1
+      echo "not ok $desc" | indent $indent
+      echo "---" | indent $(($indent + 2))
+      echo "diff: |" | indent $(($indent + 2))
+      echo $out | indent $(($indent + 4))
+      echo "..." | indent $(($indent + 2))
+    fi
+  done
+  echo "1..$filecount" | indent $indent
+  indent+=-4
+  desc="$daycount - $day"
+  if [[ $fails -gt 0 ]]; then
+    dayfails+=1
+    echo "not ok $desc"
+  else
+    echo "ok $desc"
+  fi
+done
+echo "1..$daycount"
+if [[ $dayfails -gt 0 ]]; then
+  exit 1
+fi
+exit 0
+fi
