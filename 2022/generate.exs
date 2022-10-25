@@ -8,21 +8,18 @@
 # Usage: generate.exs day42
 
 defmodule Generate do
-  @template Path.join(__DIR__, "template.ex.eex")
-  @run Path.join(__DIR__, "run.exs.eex")
+  @template Path.join(__DIR__, "template.exs.eex")
   @iex Path.join(__DIR__, "iex.exs.eex")
 
   def into(daydir) do
     if !File.exists?(@template), do: abort("#{@template} not found")
     [daynum] = Regex.run(~r/\d+$/, daydir, capture: :first)
-    exsfile = Path.join(daydir, "day#{daynum}.ex")
-    runfile = Path.join(daydir, "run.exs")
+    exsfile = Path.join(daydir, "day#{daynum}.exs")
     iexfile = Path.join(daydir, ".iex.exs")
     if File.exists?(exsfile), do: abort("#{exsfile} already exists")
     File.mkdir_p!(daydir)
     File.write!(exsfile, EEx.eval_file(@template, day_num: daynum))
-    File.write!(runfile, EEx.eval_file(@run, day_num: daynum))
-    File.chmod!(runfile, 0o755)
+    File.chmod!(exsfile, 0o755)
     File.write!(iexfile, EEx.eval_file(@iex, day_num: daynum))
 
     for base <- ~w[input.example input.actual] do

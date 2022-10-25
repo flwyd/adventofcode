@@ -6,9 +6,10 @@
 # https://opensource.org/licenses/MIT.
 
 # TAP (testanything.org) runner for Advent of Code days.  Runs all days if none
-# are provided on the command line.
-# Assumes dayXX/run.exs < dayXX/input.foo.txt produces output which can be
-# diffed with dayXX/input.foo.expected
+# are provided on the command line.  Assumes
+#   dayXX/dayXX.exs < dayXX/input.foo.txt
+# produces output which can be diffed with dayXX/input.foo.expected (where
+# "foo" is usually "expected" or "actual").
 
 indent() {
   pr -to $1
@@ -34,7 +35,7 @@ for day in $DAYS ; do
   for input in $day/input.*.txt ; do
     filecount+=1
     desc="$filecount - $input"
-    out=$($day/run.exs < $input | diff - ${input:r}.expected)
+    out=$($day/$day.exs < $input | diff - ${input:r}.expected)
     if [[ -z "$out" ]]; then
       echo "ok $desc" | indent $indent
     else

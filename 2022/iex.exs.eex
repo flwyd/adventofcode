@@ -1,5 +1,5 @@
 import_file("../.iex.exs")
-c("day<%= day_num %>.ex")
+c("day<%= day_num %>.exs")
 daymod = Day<%= day_num %>
 exampletxt = "input.example.txt"
 actualtxt = "input.actual.txt"

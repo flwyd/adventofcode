@@ -1,0 +1,26 @@
+#!/usr/bin/env elixir
+# Copyright 2022 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+#
+# https://adventofcode.com/2022/day/<%= day_num %>
+
+defmodule Day<%= day_num %> do
+  def part1(input) do
+    :todo
+  end
+
+  def part2(input) do
+    :todo
+  end
+
+  def main() do
+    unless function_exported?(Runner, :main, 1), do: Code.compile_file("../runner.ex", __DIR__)
+    success = Runner.main(Day<%= day_num %>, System.argv())
+    exit({:shutdown, if(success, do: 0, else: 1)})
+  end
+end
+
+if Path.absname(:escript.script_name()) == Path.absname(__ENV__.file), do: Day<%= day_num %>.main()
