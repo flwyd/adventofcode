@@ -25,7 +25,7 @@ defmodule Runner do
     end
   end
 
-  @doc"""
+  @doc """
   Parses argv as a command line and runs part1 and part2 of daymodule on each
   file in argv, or standard input if no files are given or any file is "-".
   Returns true if all parts  match their expected values for all files,
