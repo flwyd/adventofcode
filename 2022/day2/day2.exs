@@ -41,16 +41,7 @@ defmodule Day2 do
       end
   end
 
-  defp choose_move({theirs, outcome}) do
-    addmod = &Integer.mod(&1 + &2, 3)
-
-    {theirs,
-     case outcome do
-       ?X -> addmod.(theirs, -1)
-       ?Y -> theirs
-       ?Z -> addmod.(theirs, +1)
-     end}
-  end
+  defp choose_move({theirs, outcome}), do: {theirs, Integer.mod(theirs + (outcome - ?Y), 3)}
 
   def main() do
     unless function_exported?(Runner, :main, 1), do: Code.compile_file("../runner.ex", __DIR__)
