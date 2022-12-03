@@ -14,22 +14,28 @@ defmodule Runner do
     def ok?(%Result{outcome: :fail}), do: false
     def ok?(%Result{}), do: true
 
+    @outcome_colors %{
+      success: :light_green_background,
+      fail: :light_red_background,
+      unknown: :light_yellow_background,
+      todo: :cyan_background
+    }
+    @outcome_signs %{success: "✅", fail: "❌", unknown: "❓", todo: "❗"}
     def message(result) do
-      background = case result.outcome do
-        :success -> :light_green_background
-        :fail -> :light_red_background
-        :unknown -> :light_yellow_background
-        :todo -> :cyan_background
-      end
-      outcome = Atom.to_string(result.outcome) |> String.upcase
-      msg = case result do
-        %Result{outcome: :success, got: got} -> "got #{got}"
-        %Result{outcome: :fail, got: got, want: want} -> "got #{got}, want #{want}"
-        %Result{outcome: :unknown, got: got} -> "got #{got}"
-        %Result{outcome: :todo, want: ""} -> "implement it"
-        %Result{outcome: :todo, want: want} -> "implement it, want #{want}"
-      end
-      IO.ANSI.format([background, :black, outcome, :reset, " ", msg])
+      outcome = Atom.to_string(result.outcome) |> String.upcase()
+      sign = @outcome_signs[result.outcome]
+      background = @outcome_colors[result.outcome]
+
+      msg =
+        case result do
+          %Result{outcome: :success, got: got} -> "got #{got}"
+          %Result{outcome: :fail, got: got, want: want} -> "got #{got}, want #{want}"
+          %Result{outcome: :unknown, got: got} -> "got #{got}"
+          %Result{outcome: :todo, want: ""} -> "implement it"
+          %Result{outcome: :todo, want: want} -> "implement it, want #{want}"
+        end
+
+      IO.ANSI.format([sign, " ", background, :black, outcome, :reset, " ", msg])
     end
   end
 
@@ -48,10 +54,9 @@ defmodule Runner do
     # Run against standard input, no extra output
     iex> Runner.main(Day0, [])
   """
-  @spec main(module, [String.t]) :: boolean
+  @spec main(module, [String.t()]) :: boolean
   def main(daymodule, argv) do
-    {args, files} =
-      OptionParser.parse!(argv, strict: [verbose: :boolean], aliases: [v: :verbose])
+    {args, files} = OptionParser.parse!(argv, strict: [verbose: :boolean], aliases: [v: :verbose])
     verbose = Keyword.get(args, :verbose, false)
     files = if Enum.empty?(files), do: ["-"], else: files
     Enum.all?(Enum.map(files, &run(daymodule, &1, verbose)))
@@ -86,7 +91,7 @@ defmodule Runner do
 
         if verbose do
           IO.puts(:stderr, Result.message(res))
-          IO.puts(:stderr, "#{part} took #{res.time_usec}μs on #{file}")
+          IO.puts(:stderr, "#{part} took #{format_usec(res.time_usec)} on #{file}")
           IO.puts(:stderr, String.duplicate("=", 40))
         end
 
@@ -146,4 +151,10 @@ defmodule Runner do
       %{}
     end
   end
+
+  defp format_usec(0), do: "0μs"
+  defp format_usec(usec) when usec < 1000, do: "#{usec}μs"
+  defp format_usec(usec) when usec < 1_000_000, do: "#{usec / 1000}ms"
+  defp format_usec(usec) when usec < 60_000_000, do: "#{Float.round(usec / 1_000_000, 3)}s"
+  defp format_usec(usec), do: "#{div(usec, 60_000_000)}:#{rem(div(usec, 1_000_000), 60)}"
 end
