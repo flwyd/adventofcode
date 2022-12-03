@@ -41,6 +41,6 @@ TIMEFMT="$PROGRAM > $OUTFILE %U user %S system %P cpu %*E total"
 print -u 2
 print -u 2 "$CMD > $OUTFILE"
 print -u 2
-time ($CMD 2>&1 | tee "$OUTFILE" ; exit ${pipestatus[1]})
+time (unbuffer $CMD 2>&1 | tee "$OUTFILE" ; exit ${pipestatus[1]})
 res=$?
 exit $res

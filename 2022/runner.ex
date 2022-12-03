@@ -15,13 +15,21 @@ defmodule Runner do
     def ok?(%Result{}), do: true
 
     def message(result) do
-      case result do
-        %Result{outcome: :success, got: got} -> "SUCCESS got #{got}"
-        %Result{outcome: :fail, got: got, want: want} -> "FAIL got #{got}, want #{want}"
-        %Result{outcome: :unknown, got: got} -> "UNKNOWN got #{got}"
-        %Result{outcome: :todo, want: ""} -> "TODO implement it"
-        %Result{outcome: :todo, want: want} -> "TODO implement it, want #{want}"
+      background = case result.outcome do
+        :success -> :light_green_background
+        :fail -> :light_red_background
+        :unknown -> :light_yellow_background
+        :todo -> :cyan_background
       end
+      outcome = Atom.to_string(result.outcome) |> String.upcase
+      msg = case result do
+        %Result{outcome: :success, got: got} -> "got #{got}"
+        %Result{outcome: :fail, got: got, want: want} -> "got #{got}, want #{want}"
+        %Result{outcome: :unknown, got: got} -> "got #{got}"
+        %Result{outcome: :todo, want: ""} -> "implement it"
+        %Result{outcome: :todo, want: want} -> "implement it, want #{want}"
+      end
+      IO.ANSI.format([background, :black, outcome, :reset, " ", msg])
     end
   end
 
