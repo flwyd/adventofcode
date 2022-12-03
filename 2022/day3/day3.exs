@@ -36,7 +36,7 @@ defmodule Day3 do
   end
 
   defp common([solo]), do: MapSet.new(solo)
-  defp common([hd | tl]), do: MapSet.new(hd) |> MapSet.intersection(common(tl))
+  defp common([head | tail]), do: MapSet.new(head) |> MapSet.intersection(common(tail))
 
   defp only_element(set) do
     case MapSet.size(set) do
