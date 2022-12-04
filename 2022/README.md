@@ -15,10 +15,10 @@ solution for the day.  **WARNING: Spoilers below.**
 
 ## Table of Contents
 
-[Day 1](#day-1)
-[Day 2](#day-2)
-[Day 3](#day-3)
-[Day 4](#day-4)
+* [Day 1](#day-1)
+* [Day 2](#day-2)
+* [Day 3](#day-3)
+* [Day 4](#day-4)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
