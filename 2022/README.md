@@ -13,6 +13,12 @@ This page presents recasts each day’s Advent of Code problem as an elixir (the
 beverage) and shares some insights into Elixir (the language) as used in my
 solution for the day.  **WARNING: Spoilers below.**
 
+## Table of Contents
+
+[Day 1](#day-1)
+[Day 2](#day-2)
+[Day 3](#day-3)
+
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
 
@@ -50,7 +56,7 @@ accumulator is a list of integers and the chunk values are the sum of those
 integers.  I could’ve also used `0` as the initial accumulator value and added
 each number to the sum as it came in, saving memory space.  To avoid
 implementing separate functions, my “after function” was the same as my
-“chunk function” with an empty string (blank line) curried as the first
+“chunk function” with an empty string (implied blank line) curried as the first
 argument.
 
 ```elixir
@@ -83,9 +89,9 @@ the ASCII-ordering of the input text to do modular arithmetic on letters.
 I also discovered that Elixir has two modulus functions: `Kernel.rem(a, b)`
 keeps the sign of `a` while `Integer.mod(c, d)` keeps the sign of `d`, allowing
 `Integer.mod(mine - theirs, 3)` to represent ties as `0`, wins as `1`, and
-losses as `2`.  (I realized from someone else’s solution that `Integer.mod(mine
-- theirs + 1, 3) * 3` would compute the score, rather than my `case` lookup
-table.)
+losses as `2`.  (I realized from someone else’s solution that
+`Integer.mod(mine - theirs + 1, 3) * 3` would compute the score more concisely
+than my `case` lookup table.)
 
 ```elixir
 input
@@ -93,8 +99,7 @@ input
 |> Enum.map(&score/1)
 |> Enum.sum()
 defp score({theirs, mine}) do
-  mine + 1 +
-    case Integer.mod(mine - theirs, 3) do
+  mine + 1 + case Integer.mod(mine - theirs, 3) do
       0 -> 3
       1 -> 6
       2 -> 0
