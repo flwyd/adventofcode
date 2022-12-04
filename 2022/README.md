@@ -132,3 +132,29 @@ realized this could be simplified as
 defp common([solo]), do: MapSet.new(solo)
 defp common([head | tail]), do: MapSet.new(head) |> MapSet.intersection(common(tail))
 ```
+
+## Day 4
+
+[Code](day4/day4.exs) - [Problem description](https://adventofcode.com/2022/day/4)
+
+It’s Saturday night, so it’s time for sake bombs.  Part 1 wants to know if the
+shot of sake is completely contained in the glass of beer (or if a very small
+glass of beer ended up entirely within a cup of sake).  Part 2 wants to know if
+any of the sake got in the beer, or vice versa.
+
+Elixir’s [Range](https://hexdocs.pm/elixir/Range.html) API is pretty anemic;
+it doesn’t have anything like `contains?`.  So I first solved part 1 using
+`MapSet.subset?` while part 2 got to use `Range.disjoint?`.  Enumerating an
+two entire ranges just to find out if one is a subset of the other seemed
+wasteful, so I implemented `range_subset?` to compare the endpoints.  I thought
+that a natural sort of Range values would let me do a single comparison, but
+discovered that misses cases where the first have the same value, since `4..6`
+sorts less than `4..8`.
+
+```elixir
+defp range_subset?({first, second}) do
+  # sort by Range start, ties go to the longer range
+  [a, b] = sort_by([first, second], fn lo .. hi -> {lo, -hi} end)
+  a.last >= b.last
+end
+```
