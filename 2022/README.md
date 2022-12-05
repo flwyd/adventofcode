@@ -19,6 +19,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 2](#day-2)
 * [Day 3](#day-3)
 * [Day 4](#day-4)
+* [Day 5](#day-5)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -159,3 +160,89 @@ defp range_subset?({first, second}) do
   a.last >= b.last
 end
 ```
+
+## Day 5
+
+[Code](day5/day5.exs) - [Problem description](https://adventofcode.com/2022/day/5)
+
+We planned ahead for smoothies by chopping and freezing delicious fruits in the
+summer.  As winter approaches we pull out our frozen fruit cubes and put them in
+glasses.  We allow the fruit to melt a little into the cups while we follow a
+recipe that looks like a shell game, moving pieces of fruit from the top of one
+cup onto another cup.  The first round moves each fruit cube individually; on
+the second round we just pick up a whole stack and move it over.
+
+This was the first program where my stroll through the official Elixir tutorial
+and Advent infrastructure coding exercise from October left me missing important
+language semantics.  This problem leads itself to iterative updates to a data
+structure.  I knew that Elixir’s data structures were all immutable, but local
+variables can be reassigned.  So I started with code like
+
+```elixir
+stack_indices = … # 1 through max stack, parsed from input
+stacks = Map.new(stack_indices, fn i -> {i, []}) # each stack starts empty
+for line <- header |> Enum.reverse() do
+  for i <- stack_indices do
+    crate = String.at(line, (i - 1)*4 + 1) # character in stack i
+    if crate != nil && crate != " " do
+      cur = stacks[i]
+      stacks = Map.put(stacks, i, [c | cur])
+    end
+  end
+end
+```
+
+but at the end my `stacks` map was always empty.  I think what’s happening is
+the `do/end` blocks in `for` and `if` are turned into closures (anonymous
+functions) which cannot modify the variable in the “outer” scope.  But instead
+of an error about trying to clobber an outer-scope variable, Elixir just creates
+a new variable within the “block scope” that shadows the outer one.
+
+I therefore had to convert this imperative-style programming to rely heavily on
+`Enum.reduce` and accumulators.
+
+```elixir
+stacks = Map.new(stack_indices, fn i -> {i, parse_stack(stack_header, i)} end)
+defp parse_stack(lines, index) do
+  for line <- lines do
+    String.at(line, (index - 1)*4 + 1)
+  end |> Enum.filter(&(&1 != nil && &1 != " "))
+end
+```
+
+One interesting mental effect is that this switched parsing from line-oriented
+to column-oriented: I iterate through all the lines for each stack rather than
+iterating through each stack on each line, because the output is a map of
+index to stack.
+
+After copy/pasting part 1 to part 2 with a slight change I set about
+refactoring.  On the first pass, input parsing was about half of my code.
+
+```elixir
+{header, moves} = Enum.split_while(input, &(&1 != ""))
+moves = tl(moves)
+stack_indices = List.last(header) |> String.trim() |> String.split(~r/ +/) |> map(&to_integer/1)
+stack_header = Enum.take(header, Enum.count(header) - 1)
+stacks = Map.new(stack_indices, fn i -> {i, parse_stack(stack_header, i)} end)
+stacks = Enum.reduce(moves, stacks, fn line, stacks ->
+  ["move", n, "from", first, "to", second] = String.split(line, " ", trim: true)
+… end)
+```
+
+This has the Advent benefit of being fairly quick to implement, but I wasn’t
+fond of the fact that I was flipping lists around, pulling things off the head
+and tail, and iterating through them several times.  I decided to create an
+`Input` struct that would be parsed as a single scan of the input.  This turned
+out to be mentally tricky to get everything right, but I think is closer to the
+functional programming spirit.  Using string prefix for function signature
+matching was interesting, though I’m not satisfied with it as a general parsing
+solution, since it can’t handle something like a variable-length number as the
+first value.  The other thing I lost in this parsing switch was accumulating a
+list by inserting at the head, then reversing it at the end.  I’m not sure if
+Elixir has some optimization to make list concatenation (`++`) efficient.
+
+I’m aware that an [`Agent` or `GenServer`](https://elixir-lang.org/getting-started/mix-otp/agent.html)
+would make my iterative map updating a lot smoother.  I figured I would
+implement it without any concurrency today so that I really internalize the
+awkward way of doing it, so that I will appreciate concurrent state abstraction
+in Elixir that much more.
