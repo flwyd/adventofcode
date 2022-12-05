@@ -77,10 +77,11 @@ defmodule Runner do
   def run(daymodule, file, verbose \\ true) do
     input = read_lines(file)
     expected = read_expected(file)
+    len = Enum.count(input)
 
     outcomes =
       for part <- [:part1, :part2] do
-        if verbose, do: IO.puts(:stderr, "Running #{daymodule} #{part} on #{file}")
+        if verbose, do: IO.puts(:stderr, "Running #{daymodule} #{part} on #{file} (#{len} lines)")
         res = run_part(daymodule, part, input, Map.get(expected, part, ""))
 
         try do
