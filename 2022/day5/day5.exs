@@ -68,7 +68,7 @@ defmodule Day5 do
   def part2(input), do: solve(input, &Function.identity/1)
 
   defp solve(input, order_crates) do
-    %Input{stacks: stacks, count: count, moves: moves} = Input.parse(input)
+    %Input{stacks: stacks, count: _count, moves: moves} = Input.parse(input)
 
     moves
     |> reduce(stacks, &move_crates(&1, &2, order_crates))
