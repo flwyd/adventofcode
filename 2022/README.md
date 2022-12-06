@@ -20,6 +20,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 3](#day-3)
 * [Day 4](#day-4)
 * [Day 5](#day-5)
+* [Day 6](#day-6)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -246,3 +247,75 @@ would make my iterative map updating a lot smoother.  I figured I would
 implement it without any concurrency today so that I really internalize the
 awkward way of doing it, so that I will appreciate concurrent state abstraction
 in Elixir that much more.
+
+## Day 6
+
+[Code](day6/day6.exs) - [Problem description](https://adventofcode.com/2022/day/6)
+
+We’re making whiskey with a trombone for a still.  Our mash has all sorts of
+wonderful grains in it: barley, rye, wheat, corn, sorghum, rice, millet…
+We boil four (then fourteen) grains of mash at a time.  Each time we move our
+trombone’s slide (used as the condenser in the still) one position forward.
+When vapor from four (fourteen) distinct types of grain emerge from the
+trombone’s horn we’ve found the sweet spot for our whiskey distillation process
+and we mark it on the slide.
+
+To test my Elixir Advent of Code infrastructure I’d done an implementation of
+[2021 day 1](https://adventofcode.com/2021/day/1) using
+`List.zip([tl(tl(input)), tl(input), input])` to iterate through the list three
+at a time.  I solved part 1 with a similar approach, converting the input string
+to a charlist, Erlang’s representation of a string as a list of integers.
+
+```elixir
+chars = to_charlist(List.first(input))
+List.zip([chars, tl(chars), tl(tl(chars)), tl(tl(tl(chars)))])
+|> Enum.find_index(fn list -> Enum.uniq(Tuple.to_list(list)) |> Enum.count() == 4 end)
+|> then(&(&1 + 4))
+```
+
+This worked well, and quickly found the answer.  In part 2 I didn’t want to
+write `tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(chars))))))))))))))` and its
+13 younger siblings so I tried to generate that list programmatically,
+generating a 14-element list by repeatedly calling `Enum.drop`.  Unfortunately
+I neglected to wrap that result in `Enum.zip` so I was just iterating through
+the first 14 characters of the string, which never yielded a successful result.
+A working solution for that approach is interesting
+
+```elixir
+chars = to_charlist(str)
+Enum.zip(Enum.reduce(0..13, [], fn x, acc -> acc ++ [Enum.drop(chars, x)] end))
+|> Enum.find_index(fn sub -> Enum.uniq(Tuple.to_list(sub)) |> Enum.count == 14 end)
+|> IO.inspect
+|> then(&(&1 + 14))
+```
+
+Since I couldn’t find my bug, I implemented a second solution using `Stream`,
+calling `String.slice` at each step.  This code is not particularly beautiful,
+and feels more awkward than an imperative language which would just return
+from within a for loop when the result was found.  `Stream.with_index(14)` to
+avoid adding the offset at the end was kind of clever, though.
+
+```elixir
+Stream.map(0..(String.length(str) - 1), fn i ->
+  String.slice(str, i, 14) |> to_charlist |> Enum.uniq() |> Enum.count()
+end)
+|> Stream.with_index(14)
+|> Stream.filter(fn {len, _i} -> len == 14 end)
+|> Stream.take(1)
+|> Enum.to_list()
+|> List.first()
+|> elem(1)
+```
+
+Once I submitted the answer from the Stream solution I implemented a recursive
+solution which is both much more elegant and is also 100 times faster(!) than
+the streams-and-substrings solution, and twice as fast as the `zip` one.
+This again relies on charlists being a `[char | tail]` list of characters,
+just waiting for recursion.
+
+```elixir
+def solve(length, {i, chars}) do
+  prefix = Enum.take(chars, length)
+  if Enum.uniq(prefix) |> Enum.count == length, do: i, else: solve(length, {i + 1, tl(chars)})
+end
+```
