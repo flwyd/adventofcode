@@ -356,21 +356,29 @@ doesn’t affect the current working directory or the files, just returning the
 `FileSys` accumulator.
 
 ```elixir
-defp process_line(<<"$ cd /">>, %FileSys{} = acc), do: Map.put(acc, :pwd, [""])
-defp process_line(<<"$ cd ..">>, %FileSys{pwd: pwd} = acc) do
-  Map.put(acc, :pwd, Enum.drop(pwd, -1))
-end
-defp process_line(<<"$ cd ", dir::binary>>, %FileSys{pwd: pwd} = acc) do
-  Map.put(acc, :pwd, Enum.concat(pwd, [dir]))
-end
-defp process_line(<<"$ ls">>, %FileSys{} = acc), do: acc
-defp process_line(<<"dir ", dir::binary>>, %FileSys{pwd: pwd} = acc) do
-  path = Enum.join(Enum.concat(pwd, [dir]), "/")
-  Map.update!(acc, :files, &Map.put(&1, path, 0))
-end
-defp process_line(line, %FileSys{pwd: pwd} = acc) do
-  [size, name] = String.split(line, " ")
-  path = Enum.join(Enum.concat(pwd, [name]), "/")
-  Map.update!(acc, :files, &Map.put(&1, path, String.to_integer(size)))
-end
+  defp parse_files(input),
+    do: input |> Enum.reduce(%FileSys{}, &process_line/2) |> Map.get(:files)
+
+  defp process_line(<<"$ cd /">>, %FileSys{} = sys), do: Map.put(sys, :pwd, [])
+
+  defp process_line(<<"$ cd ..">>, %FileSys{pwd: pwd} = sys),
+    do: Map.put(sys, :pwd, Enum.drop(pwd, -1))
+
+  defp process_line(<<"$ cd ", dir::binary>>, %FileSys{pwd: pwd} = sys),
+    do: Map.put(sys, :pwd, Enum.concat(pwd, [dir]))
+
+  defp process_line(<<"$ ls">>, %FileSys{} = sys), do: sys
+
+  defp process_line(<<"dir ", dir::binary>>, %FileSys{pwd: pwd} = sys),
+    do: Map.update!(sys, :files, &Map.put(&1, Enum.concat(pwd, [dir]), 0))
+
+  defp process_line(line, %FileSys{pwd: pwd} = sys) do
+    [size, name] = String.split(line, " ")
+    Map.update!(sys, :files, &Map.put(&1, Enum.concat(pwd, [name]), String.to_integer(size)))
+  end
 ```
+
+I originally used string keys for the files map.  Switching to lists of
+directories (skipping `Enum.join(pwd, "/")` and `name <> "/"`) saved about 30%
+on runtime.  Elixir string operations are definitely not as cheap as working
+directly with lists!

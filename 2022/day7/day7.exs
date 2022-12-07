@@ -27,7 +27,7 @@ defmodule Day7 do
   """
   def part2(input) do
     files = parse_files(input)
-    root_size = total_size(files, "/")
+    root_size = total_size(files, [])
     need = 30_000_000 - (70_000_000 - root_size)
     total_sizes_matching(files, &(&1 >= need)) |> Enum.min()
   end
@@ -35,23 +35,23 @@ defmodule Day7 do
   defp total_sizes_matching(files, predicate?) do
     files
     |> Enum.filter(fn {_, size} -> size == 0 end)
-    |> Enum.map(fn {name, _} -> total_size(files, name <> "/") end)
+    |> Enum.map(fn {path, _} -> total_size(files, path) end)
     |> Enum.filter(predicate?)
   end
 
   defp total_size(files, prefix) do
     files
-    |> Map.filter(fn {name, _} -> String.starts_with?(name, prefix) end)
+    |> Map.filter(fn {path, _} -> List.starts_with?(path, prefix) end)
     |> Map.values()
     |> Enum.sum()
   end
 
-  defmodule FileSys, do: defstruct(pwd: [], files: %{"/" => 0})
+  defmodule FileSys, do: defstruct(pwd: [], files: %{[] => 0})
 
   defp parse_files(input),
     do: input |> Enum.reduce(%FileSys{}, &process_line/2) |> Map.get(:files)
 
-  defp process_line(<<"$ cd /">>, %FileSys{} = sys), do: Map.put(sys, :pwd, [""])
+  defp process_line(<<"$ cd /">>, %FileSys{} = sys), do: Map.put(sys, :pwd, [])
 
   defp process_line(<<"$ cd ..">>, %FileSys{pwd: pwd} = sys),
     do: Map.put(sys, :pwd, Enum.drop(pwd, -1))
@@ -62,14 +62,12 @@ defmodule Day7 do
   defp process_line(<<"$ ls">>, %FileSys{} = sys), do: sys
 
   defp process_line(<<"dir ", dir::binary>>, %FileSys{pwd: pwd} = sys) do
-    path = Enum.join(Enum.concat(pwd, [dir]), "/")
-    Map.update!(sys, :files, &Map.put(&1, path, 0))
+    Map.update!(sys, :files, &Map.put(&1, Enum.concat(pwd, [dir]), 0))
   end
 
   defp process_line(line, %FileSys{pwd: pwd} = sys) do
     [size, name] = String.split(line, " ")
-    path = Enum.join(Enum.concat(pwd, [name]), "/")
-    Map.update!(sys, :files, &Map.put(&1, path, String.to_integer(size)))
+    Map.update!(sys, :files, &Map.put(&1, Enum.concat(pwd, [name]), String.to_integer(size)))
   end
 
   def main() do
