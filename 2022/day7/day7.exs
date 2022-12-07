@@ -61,9 +61,8 @@ defmodule Day7 do
 
   defp process_line(<<"$ ls">>, %FileSys{} = sys), do: sys
 
-  defp process_line(<<"dir ", dir::binary>>, %FileSys{pwd: pwd} = sys) do
-    Map.update!(sys, :files, &Map.put(&1, Enum.concat(pwd, [dir]), 0))
-  end
+  defp process_line(<<"dir ", dir::binary>>, %FileSys{pwd: pwd} = sys),
+    do: Map.update!(sys, :files, &Map.put(&1, Enum.concat(pwd, [dir]), 0))
 
   defp process_line(line, %FileSys{pwd: pwd} = sys) do
     [size, name] = String.split(line, " ")
