@@ -21,6 +21,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 4](#day-4)
 * [Day 5](#day-5)
 * [Day 6](#day-6)
+* [Day 7](#day-7)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -279,7 +280,7 @@ write `tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(tl(chars))))))))))))))` and its
 generating a 14-element list by repeatedly calling `Enum.drop`.  Unfortunately
 I neglected to wrap that result in `Enum.zip` so I was just iterating through
 the first 14 characters of the string, which never yielded a successful result.
-A working solution for that approach is interesting
+A working solution for that approach is interesting.
 
 ```elixir
 chars = to_charlist(str)
@@ -317,5 +318,59 @@ just waiting for recursion.
 def solve(length, {i, chars}) do
   prefix = Enum.take(chars, length)
   if Enum.uniq(prefix) |> Enum.count == length, do: i, else: solve(length, {i + 1, tl(chars)})
+end
+```
+
+## Day 7
+
+[Code](day7/day7.exs) - [Problem description](https://adventofcode.com/2022/day/7)
+
+We’re mixing a [coco loco](https://tipsybartender.com/recipe/coco-loco/).  But
+we’re not just pouring coconut milk and spirits into a coconut shell, adding a
+straw, and calling it done.  We start with half a coconut shell and put half a
+cored pineapple inside.  Inside the pineapple goes a passion fruit and inside
+_that_ goes a lychee.  Think of it as a tropical turducken smoothie.  To make
+sure none of the fruits tip over we’ll pack more nested fruit in the empty
+spaces: kumquats inside apples, grapes inside kiwis, starfruit in a mango in a
+papaya.  In the first part we need to find all the fruit clusters that have
+room anywhere inside them for 10 drams of spirits.  In the second part we
+realized we’ve got too much fruit to serve a full-strength drink so we need to
+find the size of the smallest sub-turducken that will let us fit 7000 drams
+anywhere within the coconut concoction.
+
+Since Elixir is a functional language and directory hierarchies are usually
+represented as trees, this problem screams “recursion!”  My tired brain found
+the recursive bookkeeping to be a little challenging, since we need to keep
+track of both the current working directory and the whole filesystem state.
+I got flustered when I realized that I needed to handle `$ cd ..` to return back
+to the parent directory but couldn’t just return subdirectories from recursive
+functions because the input doesn’t move all the way up to the root.  Instead of
+representing the filesystem as a recursive tree I realized the structure could
+just be embedded in absolute file paths in a map of path to file size.  Rather
+than computing a recursive total size I could just filter the whole filesystem
+by path prefix and sum the matching sizes.
+
+Since each type of line can be distinguished by a fixed-length prefix, parsing
+is clean and easy to follow.  I like how it highlights how the `$ ls` command
+doesn’t affect the current working directory or the files, just returning the
+`FileSys` accumulator.
+
+```elixir
+defp process_line(<<"$ cd /">>, %FileSys{} = acc), do: Map.put(acc, :pwd, [""])
+defp process_line(<<"$ cd ..">>, %FileSys{pwd: pwd} = acc) do
+  Map.put(acc, :pwd, Enum.drop(pwd, -1))
+end
+defp process_line(<<"$ cd ", dir::binary>>, %FileSys{pwd: pwd} = acc) do
+  Map.put(acc, :pwd, Enum.concat(pwd, [dir]))
+end
+defp process_line(<<"$ ls">>, %FileSys{} = acc), do: acc
+defp process_line(<<"dir ", dir::binary>>, %FileSys{pwd: pwd} = acc) do
+  path = Enum.join(Enum.concat(pwd, [dir]), "/")
+  Map.update!(acc, :files, &Map.put(&1, path, 0))
+end
+defp process_line(line, %FileSys{pwd: pwd} = acc) do
+  [size, name] = String.split(line, " ")
+  path = Enum.join(Enum.concat(pwd, [name]), "/")
+  Map.update!(acc, :files, &Map.put(&1, path, String.to_integer(size)))
 end
 ```
