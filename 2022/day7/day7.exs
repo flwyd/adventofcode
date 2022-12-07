@@ -51,22 +51,22 @@ defmodule Day7 do
   defp parse_files(input),
     do: input |> Enum.reduce(%FileSys{}, &process_line/2) |> Map.get(:files)
 
-  defp process_line(<<"$ cd /">>, %FileSys{} = sys), do: Map.put(sys, :pwd, [])
+  defp process_line("$ cd /", %FileSys{} = sys), do: Map.put(sys, :pwd, [])
 
-  defp process_line(<<"$ cd ..">>, %FileSys{pwd: pwd} = sys),
+  defp process_line("$ cd ..", %FileSys{pwd: pwd} = sys),
     do: Map.put(sys, :pwd, Enum.drop(pwd, -1))
 
-  defp process_line(<<"$ cd ", dir::binary>>, %FileSys{pwd: pwd} = sys),
-    do: Map.put(sys, :pwd, Enum.concat(pwd, [dir]))
+  defp process_line("$ cd " <> dir, %FileSys{pwd: pwd} = sys),
+    do: Map.put(sys, :pwd, pwd ++ [dir])
 
-  defp process_line(<<"$ ls">>, %FileSys{} = sys), do: sys
+  defp process_line("$ ls", %FileSys{} = sys), do: sys
 
-  defp process_line(<<"dir ", dir::binary>>, %FileSys{pwd: pwd} = sys),
-    do: Map.update!(sys, :files, &Map.put(&1, Enum.concat(pwd, [dir]), 0))
+  defp process_line("dir " <> dir, %FileSys{pwd: pwd} = sys),
+    do: Map.update!(sys, :files, &Map.put(&1, pwd ++ [dir], 0))
 
   defp process_line(line, %FileSys{pwd: pwd} = sys) do
     [size, name] = String.split(line, " ")
-    Map.update!(sys, :files, &Map.put(&1, Enum.concat(pwd, [name]), String.to_integer(size)))
+    Map.update!(sys, :files, &Map.put(&1, pwd ++ [name], String.to_integer(size)))
   end
 
   def main() do
