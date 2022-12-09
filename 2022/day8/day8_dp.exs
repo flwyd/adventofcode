@@ -12,16 +12,21 @@ defmodule Day8_DP do
   Input is a grid of numbers.  Visibility is possible in a cardinal direction
   if all intervening numbers are less than the subject number.
 
-  This is a dynamic programming variation on the main O(n^3-ish) day8.exs.
+  This is a dynamic programming variation on the main O(n^3-ish) implementation
+  in day8.exs.  Despite having techniccally loower complexity (something like
+  O(n^2 + 40n), n is small enough that this implementation is actually
+  _twice as slow_ as the other approach because n is pretty small.
   """
 
   @doc "Count the points visible from outside the grid."
   def part1(input) do
     {grid, maxrow, maxcol} = parse_grid(input)
+    {left, right, top, bottom} = build_lrtb(grid, maxrow, maxcol)
 
-    Enum.count(
-      for row <- 0..maxrow, col <- 0..maxcol, visible?({row, col}, maxrow, maxcol, grid), do: true
-    )
+    Enum.filter(grid, fn {{row, col}, val} ->
+      Enum.map([left, right, top, bottom], &(!Map.has_key?(&1[{row, col}], val))) |> Enum.any?()
+    end)
+    |> Enum.count()
   end
 
   @doc """
@@ -30,62 +35,52 @@ defmodule Day8_DP do
   """
   def part2(input) do
     {grid, maxrow, maxcol} = parse_grid(input)
-
-    #IO.puts("left")
-    left =
-      Enum.reduce(0..maxrow, %{}, fn row, acc ->
-        Map.merge(acc, build_highest_table(for(col <- 0..maxcol, do: {row, col}), grid, :col))
-      end) #|> IO.inspect
-
-    #IO.puts("right")
-    right =
-      Enum.reduce(0..maxrow, %{}, fn row, acc ->
-        Map.merge(acc, build_highest_table(for(col <- maxcol..0, do: {row, col}), grid, :col))
-      end) #|> IO.inspect
-
-    #IO.puts("top")
-    top =
-      Enum.reduce(0..maxcol, %{}, fn col, acc ->
-        Map.merge(acc, build_highest_table(for(row <- 0..maxrow, do: {row, col}), grid, :row))
-      end) #|> IO.inspect
-
-    #IO.puts("bottom")
-    bottom =
-      Enum.reduce(0..maxcol, %{}, fn col, acc ->
-        Map.merge(acc, build_highest_table(for(row <- maxrow..0, do: {row, col}), grid, :row))
-      end) #|> IO.inspect
+    {left, right, top, bottom} = build_lrtb(grid, maxrow, maxcol)
 
     for {{row, col}, value} <- grid do
-      top_score = row - Map.get(top[{row, col}], value, 0)
-      bottom_score = Map.get(bottom[{row, col}], value, maxrow) - row
-      left_score = col - Map.get(left[{row, col}], value, 0)
-      right_score = Map.get(right[{row, col}], value, maxcol) - col
-      result = Enum.product([left_score, right_score, top_score, bottom_score])
-      # IO.puts("{#{row},#{col}} scores #{left_score}*#{right_score}*#{top_score}*#{bottom_score} = #{result}")
-      result
+      Enum.product([
+        row - Map.get(top[{row, col}], value, 0),
+        Map.get(bottom[{row, col}], value, maxrow) - row,
+        col - Map.get(left[{row, col}], value, 0),
+        Map.get(right[{row, col}], value, maxcol) - col
+      ])
     end
     |> Enum.max()
+  end
 
-    # for row <- 1..(maxrow - 1), col <- 1..(maxcol - 1) do
-    #   score_visible({row, col}, maxrow, maxcol, grid)
-    # end
-    # |> Enum.max()
+  defp build_lrtb(grid, maxrow, maxcol) do
+    {
+      Enum.reduce(0..maxrow, %{}, fn row, acc ->
+        Map.merge(acc, build_highest_table(for(col <- 0..maxcol, do: {row, col}), grid, :col))
+      end),
+      Enum.reduce(0..maxrow, %{}, fn row, acc ->
+        Map.merge(acc, build_highest_table(for(col <- maxcol..0, do: {row, col}), grid, :col))
+      end),
+      Enum.reduce(0..maxcol, %{}, fn col, acc ->
+        Map.merge(acc, build_highest_table(for(row <- 0..maxrow, do: {row, col}), grid, :row))
+      end),
+      Enum.reduce(0..maxcol, %{}, fn col, acc ->
+        Map.merge(acc, build_highest_table(for(row <- maxrow..0, do: {row, col}), grid, :row))
+      end)
+    }
   end
 
   defp build_highest_table(points, grid, want) do
-    {table, _} = Enum.reduce(points, {%{}, %{}}, fn {row, col}, {res, acc} ->
-      {Map.put(res, {row, col}, acc),
-       Enum.reduce(grid[{row, col}]..0, acc, fn val, acc2 ->
-         Map.put(
-           acc2,
-           val,
-           case want do
-             :row -> row
-             :col -> col
-           end
-         )
-       end)}
-    end)
+    {table, _} =
+      Enum.reduce(points, {%{}, %{}}, fn {row, col}, {res, acc} ->
+        {Map.put(res, {row, col}, acc),
+         Enum.reduce(grid[{row, col}]..0, acc, fn val, acc2 ->
+           Map.put(
+             acc2,
+             val,
+             case want do
+               :row -> row
+               :col -> col
+             end
+           )
+         end)}
+      end)
+
     table
   end
 
@@ -105,32 +100,6 @@ defmodule Day8_DP do
     maxrow = Enum.count(input) - 1
     maxcol = String.length(List.first(input)) - 1
     {grid, maxrow, maxcol}
-  end
-
-  defp visible?({row, col}, maxrow, maxcol, grid) do
-    value = grid[{row, col}]
-
-    Enum.any?([
-      Enum.all?(0..(row - 1)//1, fn r -> grid[{r, col}] < value end),
-      Enum.all?(0..(col - 1)//1, fn c -> grid[{row, c}] < value end),
-      Enum.all?((row + 1)..maxrow//1, fn r -> grid[{r, col}] < value end),
-      Enum.all?((col + 1)..maxcol//1, fn c -> grid[{row, c}] < value end)
-    ])
-  end
-
-  defp score_visible({row, col}, maxrow, maxcol, grid) do
-    value = grid[{row, col}]
-
-    compare = fn r, c, acc ->
-      if grid[{r, c}] < value, do: {:cont, acc + 1}, else: {:halt, acc + 1}
-    end
-
-    Enum.product([
-      Enum.reduce_while((row - 1)..0//-1, 0, fn r, acc -> compare.(r, col, acc) end),
-      Enum.reduce_while((col - 1)..0//-1, 0, fn c, acc -> compare.(row, c, acc) end),
-      Enum.reduce_while((row + 1)..maxrow//1, 0, fn r, acc -> compare.(r, col, acc) end),
-      Enum.reduce_while((col + 1)..maxcol//1, 0, fn c, acc -> compare.(row, c, acc) end)
-    ])
   end
 
   def main() do
