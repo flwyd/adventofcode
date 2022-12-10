@@ -145,6 +145,7 @@ defmodule Runner do
     if File.exists?(file) do
       for line <- read_lines(file), String.starts_with?(line, "part") do
         [part, value] = String.split(line, ~r/:\s*/, parts: 2)
+        value = String.replace(value, "\\n", "\n", global: true)
         {String.to_atom(part), value}
       end
       |> Map.new()

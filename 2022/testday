@@ -17,7 +17,7 @@ indent() {
 
 BASEDIR=${0:h}
 if [[ $# -eq 0 ]]; then
-  DAYS=($BASEDIR/day*)
+  DAYS=($BASEDIR/day*(n))
 else
   DAYS=($@)
 fi
@@ -35,7 +35,14 @@ for day in $DAYS ; do
   for input in $day/input.*.txt ; do
     filecount+=1
     desc="$filecount - $input"
-    out=$($day/$day.exs < $input | diff - ${input:r}.expected)
+    expected="${input:r}.expected"
+    # Handle multi-line problem output, e.g. ASCII rasters
+    if grep --quiet '\\n' $expected ; then
+      tmpexpected=$(mktemp -t "$day_$(basename $expected).XXXXXX")
+      sed -e $'s/\\\\n/\\\n/g' $expected >| $tmpexpected
+      expected="$tmpexpected"
+    fi
+    out=$($day/$day.exs < $input | diff - $expected)
     if [[ -z "$out" ]]; then
       echo "ok $desc" | indent $indent
     else

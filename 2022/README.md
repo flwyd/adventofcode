@@ -22,6 +22,9 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 5](#day-5)
 * [Day 6](#day-6)
 * [Day 7](#day-7)
+* [Day 8](#day-8)
+* [Day 9](#day-9)
+* [Day 10](#day-10)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -382,3 +385,99 @@ I originally used string keys for the files map.  Switching to lists of
 directories (skipping `Enum.join(pwd, "/")` and `name <> "/"`) saved about 30%
 on runtime.  Elixir string operations are definitely not as cheap as working
 directly with lists!
+
+## Day 8
+
+[Code](day8/day8.exs) - [Problem description](https://adventofcode.com/2022/day/8)
+
+_Elixir thoughts coming soon._
+
+## Day 9
+
+[Code](day9/day9.exs) - [Problem description](https://adventofcode.com/2022/day/9)
+
+The elves are throwing a TGIF party with a beer bong made out of one of those
+[expandable plastic
+tubes](https://webstore.cdlusa.net/content/images/thumbs/0002247_clear-flexible-vacuum-hoses_550.jpeg).
+At first it's a really short path from the funnel, but then you pull on the
+hose and discover that it's pretty long. The elves wander around the room with
+the funnel, and you need to keep up. What path do you follow?
+
+_Elixir thoughts coming soon._
+
+## Day 10
+
+[Code](day10/day10.exs) - [Problem description](https://adventofcode.com/2022/day/10)
+
+We've got nearly 100 tea bags. It takes about two minutes for the flavor of a
+tea bag to steep into the hot water. The
+[camellia](https://en.wikipedia.org/wiki/Camellia_sinensis) bags add a varying
+level of bitterness: black teas are strong, green a little less bitter, the
+white teas are very delicate. The herbal
+[tisanes](https://en.wikipedia.org/wiki/Tisane) cut that bitterness. Sometimes
+we remove the bag and just let the tea sit for a minute. Over the course of
+four hours, while we swap these tea bags, we sip the mug once a minute and make
+a mark on graph paper if the bitterness level is just right or close enough.
+
+The output is an ASCII [raster](https://en.wikipedia.org/wiki/Raster_graphics),
+pixelated in the example with `#` and `.`.  The coder is then meant to squint
+at the output and identify a series of letters to submit to the Advent of Code
+website.  I was able to visually parse this just fine, but it presented a
+challenge for my runner infrastructure.  For each input file (example and
+actual) I save the desired output in a `.example` file with `part1: ` and
+`part2: ` prefixes.  Ideally I would like to store my program output, `EGLHBLFJ`
+in the `.expected` file, but the example output doesn’t form any letters that I
+recognize.  I opted to enhance my [runner program](./runner.exs) and
+[test harness](./testday) to replace `\n` in the expected output with real
+newlines.  That way the runner will print the ASCII raster on multiple lines
+while still doing simple equality checking to see if I got the values right.
+This let me learn how
+[Elixir protocols work](https://elixir-lang.org/getting-started/protocols.html)
+so that `to_string(result)` would print it as expected.
+
+```elixir
+defmodule Raster do
+  defstruct rows: [], on: ?#, off: ?.
+
+  def new(rows, {on, off} \\ {?#, ?.}),
+    do: %Raster{rows: rows, on: on, off: off}
+end
+
+defimpl String.Chars, for: Raster do
+  def to_string(%Raster{rows: rows, on: on, off: off}) do
+    rows
+    |> Enum.map(fn row -> Enum.map(row, &if(&1, do: on, else: off)) end)
+    |> Enum.join("\n")
+  end
+end
+```
+
+The `on` and `off` members of the struct let me play around with different
+display options in an interactive REPL session.  The `tl(rows)` strip the
+initial blank list which is used to force a newline when printing output.
+
+```
+iex> %Day10.Raster{rows: rows} = Day10.part2(Runner.read_lines("input.example.txt”))
+iex> IO.puts(Day10.Raster.new(tl(rows), {?@, ?\s})
+@@  @@  @@  @@  @@  @@  @@  @@  @@  @@
+@@@   @@@   @@@   @@@   @@@   @@@   @@@
+@@@@    @@@@    @@@@    @@@@    @@@@
+@@@@@     @@@@@     @@@@@     @@@@@
+@@@@@@      @@@@@@      @@@@@@      @@@@
+@@@@@@@       @@@@@@@       @@@@@@@
+# Thematic emoji:
+iex> %Day10.Raster{rows: rows} = Day10.part2(Runner.read_lines("input.actual.txt”))
+iex> IO.puts(Day10.Raster.new(tl(rows), {127876, 127775})
+🎄🎄🎄🎄🌟🌟🎄🎄🌟🌟🎄🌟🌟🌟🌟🎄🌟🌟🎄🌟🎄🎄🎄🌟🌟🎄🌟🌟🌟🌟🎄🎄🎄🎄🌟🌟🌟🎄🎄🌟
+🎄🌟🌟🌟🌟🎄🌟🌟🎄🌟🎄🌟🌟🌟🌟🎄🌟🌟🎄🌟🎄🌟🌟🎄🌟🎄🌟🌟🌟🌟🎄🌟🌟🌟🌟🌟🌟🌟🎄🌟
+🎄🎄🎄🌟🌟🎄🌟🌟🌟🌟🎄🌟🌟🌟🌟🎄🎄🎄🎄🌟🎄🎄🎄🌟🌟🎄🌟🌟🌟🌟🎄🎄🎄🌟🌟🌟🌟🌟🎄🌟
+🎄🌟🌟🌟🌟🎄🌟🎄🎄🌟🎄🌟🌟🌟🌟🎄🌟🌟🎄🌟🎄🌟🌟🎄🌟🎄🌟🌟🌟🌟🎄🌟🌟🌟🌟🌟🌟🌟🎄🌟
+🎄🌟🌟🌟🌟🎄🌟🌟🎄🌟🎄🌟🌟🌟🌟🎄🌟🌟🎄🌟🎄🌟🌟🎄🌟🎄🌟🌟🌟🌟🎄🌟🌟🌟🌟🎄🌟🌟🎄🌟
+🎄🎄🎄🎄🌟🌟🎄🎄🎄🌟🎄🎄🎄🎄🌟🎄🌟🌟🎄🌟🎄🎄🎄🌟🌟🎄🎄🎄🎄🌟🎄🌟🌟🌟🌟🌟🎄🎄🌟🌟
+# Try it out: this uses ANSI color escapes to print solid magenta blocks.
+iex> IO.puts(Day10.Raster.new(tl(rows),
+  {IO.ANSI.format([:magenta_background, :magenta, ?#]), ?\s}))
+```
+
+If I had more time it might be fun to write a letter parser using the Raster as
+input so I could just copy and paste the letters.
