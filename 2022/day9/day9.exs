@@ -23,17 +23,14 @@ defmodule Day9 do
 
   @origin {0, 0}
   defp record_path(input, num_tails) do
+    tails = List.duplicate(@origin, num_tails)
     moves = Enum.map(input, &expand_line/1) |> List.flatten()
 
-    Enum.reduce(
-      moves,
-      {@origin, List.duplicate(@origin, num_tails), MapSet.new([@origin])},
-      fn {drow, dcol}, {head, tail, acc} ->
-        newhead = move_head({drow, dcol}, head)
-        newtail = move_chain(newhead, tail)
-        {newhead, newtail, MapSet.put(acc, List.last(newtail))}
-      end
-    )
+    Enum.reduce(moves, {@origin, tails, MapSet.new([@origin])}, fn move, {head, tail, acc} ->
+      newhead = move_head(move, head)
+      newtail = move_chain(newhead, tail)
+      {newhead, newtail, MapSet.put(acc, List.last(newtail))}
+    end)
   end
 
   defp expand_line(<<dir, " ", amount::binary>>) do
@@ -71,8 +68,7 @@ defmodule Day9 do
       {2, 0} ->
         {tailrow + signum(rowdiff), tailcol}
 
-      # {2,1}, {1, 2}, {2,2} do the same; this also catches the impossible {3, 0}, {0, 4} etc.
-      {r, c} when r + c == 3 or r + c == 4 ->
+      {r, c} when (r == 2 or c == 2) and r * c != 0 ->
         {tailrow + signum(rowdiff), tailcol + signum(coldiff)}
     end
   end
@@ -83,8 +79,9 @@ defmodule Day9 do
 
   def print_path(device \\ :stderr, input) do
     {head, tail, points} = record_path(input, 9)
-    {minrow, maxrow} = Enum.min_max(Enum.map(Enum.concat([[head], tail, points]), &elem(&1, 0)))
-    {mincol, maxcol} = Enum.min_max(Enum.map(Enum.concat([[head], tail, points]), &elem(&1, 1)))
+    all_points = Enum.concat([[head], tail, points])
+    {minrow, maxrow} = Enum.min_max(Enum.map(all_points, &elem(&1, 0)))
+    {mincol, maxcol} = Enum.min_max(Enum.map(all_points, &elem(&1, 1)))
 
     for row <- minrow..maxrow do
       IO.puts(
