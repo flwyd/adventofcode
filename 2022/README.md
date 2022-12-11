@@ -25,6 +25,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 8](#day-8)
 * [Day 9](#day-9)
 * [Day 10](#day-10)
+* [Day 11](#day-11)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -481,3 +482,40 @@ iex> IO.puts(Day10.Raster.new(tl(rows),
 
 If I had more time it might be fun to write a letter parser using the Raster as
 input so I could just copy and paste the letters.
+
+## Day 11
+
+[Code](day11/day11.exs) - [Problem description](https://adventofcode.com/2022/day/11)
+
+An assembly line is making a smoothie with blueberries, pomegranate pips, oats,
+peanuts, chia seeds, and other tasty ingredients.  Each chef either adds more
+ingredients or multiplies the ingredients already in the cup, then passes it to
+another chef based on the number of goodies in the cup, then puts an ice cube in
+their blender.  They’re sloppy, so two thirds of the goodies fall out of the cup
+on each pass.  After 20 rounds of each chef taking a turn we multiply the number
+of ice cubes in the two fullest blenders.  In the second part the cooks are no
+longer sloppy and we realize we’ve used nearly ¾ million ice cubes.
+
+I modeled the -chefs- monkeys in this problem as a tuple of structs, rather than
+a list or map, because I knew I’d be repeatedly cycling through them in order.
+Although Elixir doesn’t have a lot of utility functions for operating on tuples,
+“updating” it in a reduce method wasn’t too bad.  I also learned about the
+[`struct!` function](https://hexdocs.pm/elixir/Kernel.html#struct!/2) which
+looks a lot nicer than what I was going to do with `Map.update!`.
+
+```elixir
+def play_turn(who, monkeys, worry_fun) do
+  Enum.reduce(elem(monkeys, who).items, monkeys, fn item, acc ->
+    m = elem(acc, who)
+    level = worry_fun.(m.op.(item))
+    next = if rem(level, m.divisor) == 0, do: m.yes, else: m.no
+    next_m = elem(acc, next)
+
+    put_elem(
+      put_elem(acc, next, struct!(next_m, items: next_m.items ++ [level])),
+      who,
+      struct!(m, times: m.times + 1, items: [])
+    )
+  end)
+end
+```
