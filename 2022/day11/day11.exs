@@ -36,8 +36,8 @@ defmodule Day11 do
         case oper do
           "old + old" -> &(&1 + &1)
           "old * old" -> &(&1 * &1)
-          "old + " <> arg -> &(&1 + to_integer(arg))
-          "old * " <> arg -> &(&1 * to_integer(arg))
+          "old + " <> arg -> with x = to_integer(arg), do: &(&1 + x)
+          "old * " <> arg -> with x = to_integer(arg), do: &(&1 * x)
         end
 
       %Monkey{
