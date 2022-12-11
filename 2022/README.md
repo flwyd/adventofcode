@@ -514,7 +514,7 @@ def play_turn(who, monkeys, worry_fun) do
     put_elem(
       put_elem(acc, next, struct!(next_m, items: next_m.items ++ [level])),
       who,
-      struct!(m, times: m.times + 1, items: [])
+      struct!(m, times: m.times + 1, items: tl(m.items))
     )
   end)
 end
