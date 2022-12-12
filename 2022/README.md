@@ -26,6 +26,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 9](#day-9)
 * [Day 10](#day-10)
 * [Day 11](#day-11)
+* [Day 12](#day-12)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -519,3 +520,66 @@ def play_turn(who, monkeys, worry_fun) do
   end)
 end
 ```
+
+## Day 12
+
+[Code](day12/day12.exs) - [Problem description](https://adventofcode.com/2022/day/12)
+
+We’re making a
+[champagne tower](https://richfulness.com/wp-content/uploads/2021/09/Champagne_tower.jpg)
+but instead of pouring from the top we’re pumping the bubbly up from the bottom.
+To make things even trickier, the glasses are different height.  We want to see
+how many glasses the elixir needs to climb or splash down to, starting from a
+specific glass on the table, to reach the top.  Then we want to know the fewest
+steps it takes from any glass sitting on the table.
+know the path
+
+I’ve written breadth-first search in imperative languages many times, including
+for Advent of Code problems.  I think this is the first time I’ve implemented
+it recursively, though I have a foggy memory of talking about recursive BFS in
+an artificial intelligence course 20 years ago.  The implementation took a
+little more careful work than I’m used to, since I can quickly dash off an
+imperative BFS implementation:
+
+```
+queue = [start]
+visited = {start}
+while queue is not empty:
+  cur = queue.shift
+  return cur.moves if cur.coord == target
+  for next in valid_moves(cur):
+    if next not in visited:
+      visited.add(next)
+      queue.push(next)
+```
+
+The recursive version ended up fairly short:
+
+```elixir
+defp bfs([], _grid, _target, _visited), do: :not_found
+defp bfs([{coord, moves} | _tail], _grid, coord, _visited), do: moves
+
+defp bfs([{coord, moves} | tail], grid, target, visited) do
+  next =
+    valid_moves(coord, grid)
+    |> Enum.filter(&(!MapSet.member?(visited, &1)))
+    |> Enum.map(&{&1, moves + 1})
+  queue = tail ++ next
+  bfs(queue, grid, target,
+    MapSet.union(visited, MapSet.new(next |> Enum.map(&elem(&1, 0)))))
+end
+```
+
+The downside is that `queue = tail ++ next` is an O(n) operation in Elixir
+(which follows functional languages back to Lisp in using singly linked
+[cons lists](https://en.wikipedia.org/wiki/Cons)).  Runtime on my personal input
+file is about one and a half seconds, the slowest solution in the first dozen
+days of AoC 2022.  I implemented a partial
+[array-based deque](https://en.wikipedia.org/wiki/Double-ended_queue#Implementations)
+to see if using dynamically resized tuples would be more efficient.  (I should
+also try it with Erlang’s
+[array module](https://www.erlang.org/doc/man/array.html).)  The refactored
+code, which lost the nice structural matching of the `bfs` function above, did
+not work when first introduced, so I’ll come back to that after a good night’s
+sleep.
+
