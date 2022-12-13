@@ -18,18 +18,14 @@ defmodule Day12 do
   @doc "Count the steps in the shortest path from start to end."
   def part1(input) do
     {grid, start, stop} = parse(input)
-    bfs([{start, 0}], grid, stop, MapSet.new([start]))
+    bfs(:queue.from_list([{start, 0}]), grid, stop, MapSet.new([start]))
   end
 
   @doc "Find the shorted path to end starting at any `a` position."
   def part2(input) do
     {grid, _start, stop} = parse(input)
-
-    Map.filter(grid, fn {_, height} -> height == ?a end)
-    |> Map.keys()
-    |> Enum.map(fn coord -> bfs([{coord, 0}], grid, stop, MapSet.new([coord])) end)
-    |> Enum.reject(&(&1 == :not_found))
-    |> Enum.min()
+    starts = Map.filter(grid, fn {_, height} -> height == ?a end) |> Map.keys()
+    bfs(:queue.from_list(Enum.map(starts, &{&1, 0})), grid, stop, MapSet.new(starts))
   end
 
   defp parse(input) do
@@ -50,18 +46,25 @@ defmodule Day12 do
     end)
   end
 
-  defp bfs([], _grid, _target, _visited), do: :not_found
+  defp bfs(queue, grid, target, visited) do
+    case :queue.out(queue) do
+      {:empty, _} ->
+        :not_found
 
-  defp bfs([{coord, moves} | _tail], _grid, coord, _visited), do: moves
+      {{:value, {^target, moves}}, _} ->
+        moves
 
-  defp bfs([{coord, moves} | tail], grid, target, visited) do
-    next =
-      valid_moves(coord, grid)
-      |> Enum.filter(&(!MapSet.member?(visited, &1)))
-      |> Enum.map(&{&1, moves + 1})
+      {{:value, {coord, moves}}, q} ->
+        with do
+          next =
+            valid_moves(coord, grid)
+            |> Enum.filter(&(!MapSet.member?(visited, &1)))
+            |> Enum.map(&{&1, moves + 1})
 
-    queue = tail ++ next
-    bfs(queue, grid, target, MapSet.union(visited, MapSet.new(next |> Enum.map(&elem(&1, 0)))))
+          q = Enum.reduce(next, q, &:queue.in(&1, &2))
+          bfs(q, grid, target, MapSet.union(visited, MapSet.new(next |> Enum.map(&elem(&1, 0)))))
+        end
+    end
   end
 
   defp valid_moves({row, col}, grid) do

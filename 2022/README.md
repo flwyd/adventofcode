@@ -532,7 +532,6 @@ To make things even trickier, the glasses are different height.  We want to see
 how many glasses the elixir needs to climb or splash down to, starting from a
 specific glass on the table, to reach the top.  Then we want to know the fewest
 steps it takes from any glass sitting on the table.
-know the path
 
 I’ve written breadth-first search in imperative languages many times, including
 for Advent of Code problems.  I think this is the first time I’ve implemented
@@ -583,3 +582,11 @@ code, which lost the nice structural matching of the `bfs` function above, did
 not work when first introduced, so I’ll come back to that after a good night’s
 sleep.
 
+_Update, after sleep:_ It turns out that Erlang has an efficient
+[queue module](https://www.erlang.org/doc/man/queue.html).  Switching to that
+was actually a few milliseconds slower than the list-based approach.  But when I
+also switched from “find the path to end from all lowest-level start positions”
+to “do a single BFS path with lowest-level start positions as the initial queue”
+the overall time dropped from about a second and a half to a little over 20 milliseconds.  The Erlang queue led to a roughly 15% performance improvement in part
+2 with the optimized algorithm.  Moving backwards from end to any valid start
+would probably be faster still, but require function structure changes.
