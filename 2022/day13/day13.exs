@@ -26,8 +26,7 @@ defmodule Day13 do
     |> Enum.reject(&(&1 == ""))
     |> Enum.map(fn line -> elem(Code.eval_string(line), 0) end)
     |> Enum.chunk_every(2)
-    |> Enum.map(&List.to_tuple/1)
-    |> Enum.map(&compare_pair/1)
+    |> Enum.map(fn [left, right] -> compare(left, right) end)
     |> Enum.with_index(1)
     |> Enum.filter(&(elem(&1, 0) == :correct))
     |> Enum.map(&elem(&1, 1))
@@ -39,7 +38,7 @@ defmodule Day13 do
     Enum.concat(["[[2]]", "[[6]]"], input)
     |> Enum.reject(&(&1 == ""))
     |> Enum.map(fn line -> elem(Code.eval_string(line), 0) end)
-    |> Enum.sort(fn a, b -> compare_pair({a, b}) != :wrong end)
+    |> Enum.sort(fn a, b -> compare(a, b) != :wrong end)
     |> Enum.with_index(1)
     |> Enum.filter(fn
       {[[2]], _} -> true
@@ -50,20 +49,20 @@ defmodule Day13 do
     |> Enum.product()
   end
 
-  defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l < r, do: :correct
-  defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l > r, do: :wrong
-  defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l == r, do: :continue
-  defp compare_pair({left, right}) when is_integer(left), do: compare_pair({[left], right})
-  defp compare_pair({left, right}) when is_integer(right), do: compare_pair({left, [right]})
+  defp compare(l, r) when is_integer(l) and is_integer(r) and l < r, do: :correct
+  defp compare(l, r) when is_integer(l) and is_integer(r) and l > r, do: :wrong
+  defp compare(l, r) when is_integer(l) and is_integer(r) and l == r, do: :continue
+  defp compare(left, right) when is_integer(left), do: compare([left], right)
+  defp compare(left, right) when is_integer(right), do: compare(left, [right])
 
-  defp compare_pair({left, right}) when is_list(left) and is_list(right) do
+  defp compare(left, right) when is_list(left) and is_list(right) do
     Enum.zip_reduce(Stream.concat(left, [:stop]), Stream.concat(right, [:stop]), :continue, fn
       _, _, :wrong -> :wrong
       _, _, :correct -> :correct
       :stop, :stop, _acc -> :continue
       :stop, _, _acc -> :correct
       _, :stop, _acc -> :wrong
-      l, r, :continue -> compare_pair({l, r})
+      l, r, :continue -> compare(l, r)
     end)
   end
 

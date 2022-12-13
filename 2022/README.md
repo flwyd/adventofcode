@@ -614,19 +614,19 @@ the end result is pretty elegant: every line is either an `Enum` operation or
 a pattern-matching function.
 
 ```elixir
-defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l < r, do: :correct
-defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l > r, do: :wrong
-defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l == r, do: :continue
-defp compare_pair({left, right}) when is_integer(left), do: compare_pair({[left], right})
-defp compare_pair({left, right}) when is_integer(right), do: compare_pair({left, [right]})
-defp compare_pair({left, right}) when is_list(left) and is_list(right) do
+defp compare_pair(l, r) when is_integer(l) and is_integer(r) and l < r, do: :correct
+defp compare_pair(l, r) when is_integer(l) and is_integer(r) and l > r, do: :wrong
+defp compare_pair(l, r) when is_integer(l) and is_integer(r) and l == r, do: :continue
+defp compare_pair(left, right) when is_integer(left), do: compare_pair([left], right)
+defp compare_pair(left, right) when is_integer(right), do: compare_pair(left, [right])
+defp compare_pair(left, right) when is_list(left) and is_list(right) do
   Enum.zip_reduce(Stream.concat(left, [:stop]), Stream.concat(right, [:stop]), :continue, fn
     _, _, :wrong -> :wrong
     _, _, :correct -> :correct
     :stop, :stop, _acc -> :continue
     :stop, _, _acc -> :correct
     _, :stop, _acc -> :wrong
-    l, r, :continue -> compare_pair({l, r})
+    l, r, :continue -> compare_pair(l, r)
   end)
 end
 ```
