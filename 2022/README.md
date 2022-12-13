@@ -27,6 +27,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 10](#day-10)
 * [Day 11](#day-11)
 * [Day 12](#day-12)
+* [Day 13](#day-13)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -590,3 +591,42 @@ to “do a single BFS path with lowest-level start positions as the initial queu
 the overall time dropped from about a second and a half to a little over 20 milliseconds.  The Erlang queue led to a roughly 15% performance improvement in part
 2 with the optimized algorithm.  Moving backwards from end to any valid start
 would probably be faster still, but require function structure changes.
+
+## Day 13
+
+[Code](day13/day13.exs) - [Problem description](https://adventofcode.com/2022/day/13)
+
+We’ve got a recipe for brewing beer, but the instructions are all out of order.
+It simply would not do to put the Irish moss in the water for 2 minutes, then
+grind ten pounds of malt barley, then pitch the yeast, then heat the water to
+150° F.  In the first part we figure out which pairs of instructions are in the
+right order between themselves-don’t sparge before you add the specialty
+grains to the pot-and add the positions of the well-ordered pairs.  In the second part we sort the whole list so it becomes a viable recipe.  We notice that the
+recipe left out hops, so we add some 2% alpha acid Hersbruck for bittering and
+some 6% AA Santiam for aroma.  Then multiply the hop positions together.
+
+This problem felt tailor-made for Elixir.  I used `Code.eval_string` to parse
+the lines into lists, since they were already valid Elixir syntax.  (This is
+dangerous, though: if someone slipped in a different input file they could
+delete everything on my disk or other nefarious tactics.  I’ll write a proper
+parser later.)  I still managed to add a bug to almost every line I wrote, but
+the end result is pretty elegant: every line is either an `Enum` operation or
+a pattern-matching function.
+
+```elixir
+defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l < r, do: :correct
+defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l > r, do: :wrong
+defp compare_pair({l, r}) when is_integer(l) and is_integer(r) and l == r, do: :continue
+defp compare_pair({left, right}) when is_integer(left), do: compare_pair({[left], right})
+defp compare_pair({left, right}) when is_integer(right), do: compare_pair({left, [right]})
+defp compare_pair({left, right}) when is_list(left) and is_list(right) do
+  Enum.zip_reduce(Stream.concat(left, [:stop]), Stream.concat(right, [:stop]), :continue, fn
+    _, _, :wrong -> :wrong
+    _, _, :correct -> :correct
+    :stop, :stop, _acc -> :continue
+    :stop, _, _acc -> :correct
+    _, :stop, _acc -> :wrong
+    l, r, :continue -> compare_pair({l, r})
+  end)
+end
+```
