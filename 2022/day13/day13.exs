@@ -36,7 +36,7 @@ defmodule Day13 do
 
   @doc "Insert `[[2]]` & `[[6]]`, sort the lines, and multiply 2 & 6 positions."
   def part2(input) do
-    (["[[2]]", "[[6]]"] ++ input)
+    Enum.concat(["[[2]]", "[[6]]"], input)
     |> Enum.reject(&(&1 == ""))
     |> Enum.map(fn line -> elem(Code.eval_string(line), 0) end)
     |> Enum.sort(fn a, b -> compare_pair({a, b}) != :wrong end)
