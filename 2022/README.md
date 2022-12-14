@@ -28,6 +28,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 11](#day-11)
 * [Day 12](#day-12)
 * [Day 13](#day-13)
+* [Day 14](#day-14)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -628,5 +629,54 @@ defp compare_pair(left, right) when is_list(left) and is_list(right) do
     _, :stop, _acc -> :wrong
     l, r, :continue -> compare_pair(l, r)
   end)
+end
+```
+
+## Day 14
+
+[Code](day14/day14.exs) - [Problem description](https://adventofcode.com/2022/day/14)
+
+We’re sitting patiently while [ice water drips over a sugar cube, through the
+slotted spoon, and into our glass of absinthe](https://en.wikipedia.org/wiki/Absinthe#Preparation).
+The absinthe compounds are oddly firm, and the water has unusually high tension.
+Each drop of sugar water stacks on the absinthe molecules and the bottom of the
+glass, forming a pyramid of absinthe at its
+[triple point](https://en.wikipedia.org/wiki/Triple_point).  In the first part
+we want to know how many drops it takes until the water hits the sides of the
+glass; in the second part we want to know when the absinthe rises up to the
+spoon.
+
+This problem provides a good example for a mix of `reduce` and recursion in
+Elixir.  Where an imperative language would use a `while` loop, breaking once
+the end condition is reached, Elixir can use `Enum.reduce_while` over a
+`Stream.cycle`, passing the state of the absinthe and water molecules to each
+subsequent step of the reduction, until `:halt` signals a stop.  This also
+illustrates that the `:cont` and `:halt` options from the reducer don’t need to
+return the same type: `{:cont, {newgrid, count + 1}}` keeps the two-part
+accumulator going, but we only need to return `{:halt, count}` at the end, since
+the state of the grid doesn’t matter to the answer.
+
+```elixir
+Enum.reduce_while(
+  Stream.cycle([{500, 0}]),
+  {start_grid, 0},
+  fn start, {grid, count} ->
+    if MapSet.member?(grid, start) do
+      {:halt, count}
+    else
+      {landed, newgrid} = drop(start, grid, max_y, part)
+      if landed, do: {:cont, {newgrid, count + 1}}, else: {:halt, count}
+    end
+  end
+)
+
+defp drop({_x, y}, grid, max_y, 1 = _part) when y > max_y, do: {false, grid}
+defp drop({x, y}, grid, max_y, 2 = _part) when y > max_y, do: {true, MapSet.put(grid, {x, y})}
+
+defp drop({x, y} = point, grid, max_y, part) do
+  case possible_moves(point, grid) do
+    [] -> {true, MapSet.put(grid, {x, y})}
+    [first | _] -> drop(first, grid, max_y, part)
+  end
 end
 ```
