@@ -18,13 +18,11 @@ defmodule Day13 do
   comparing a singleton list of that integer to the other list.
   """
 
-  # TODO write a parser instead of using eval_string
-
   @doc "Sum the positions of pairs which are in the correct order."
   def part1(input) do
     input
     |> Enum.reject(&(&1 == ""))
-    |> Enum.map(fn line -> elem(Code.eval_string(line), 0) end)
+    |> Enum.map(&parse_line/1)
     |> Enum.chunk_every(2)
     |> Enum.map(fn [left, right] -> compare(left, right) end)
     |> Enum.with_index(1)
@@ -37,7 +35,7 @@ defmodule Day13 do
   def part2(input) do
     Enum.concat(["[[2]]", "[[6]]"], input)
     |> Enum.reject(&(&1 == ""))
-    |> Enum.map(fn line -> elem(Code.eval_string(line), 0) end)
+    |> Enum.map(&parse_line/1)
     |> Enum.sort(fn a, b -> compare(a, b) != :wrong end)
     |> Enum.with_index(1)
     |> Enum.filter(fn
@@ -64,6 +62,32 @@ defmodule Day13 do
       _, :stop, _acc -> :wrong
       l, r, :continue -> compare(l, r)
     end)
+  end
+
+  defp parse_line(string) do
+    {list, []} = parse_list(to_charlist(string))
+    list
+  end
+
+  defp parse_list([?[ | rest]), do: parse_list_items(rest, [])
+
+  defp parse_int(chars) do
+    {digits, rest} = Enum.split_while(chars, fn x -> x in ?0..?9 end)
+    int = Enum.reduce(digits, 0, fn d, acc -> 10 * acc + d - ?0 end)
+    {int, rest}
+  end
+
+  defp parse_list_items([?[ | rest] = full, acc) do
+    {list, more} = parse_list(full)
+    parse_list_items(more, acc ++ [list])
+  end
+
+  defp parse_list_items([?] | rest], acc), do: {acc, rest}
+  defp parse_list_items([?, | rest], acc), do: parse_list_items(rest, acc)
+
+  defp parse_list_items(chars, acc) do
+    {int, rest} = parse_int(chars)
+    parse_list_items(rest, acc ++ [int])
   end
 
   def main() do
