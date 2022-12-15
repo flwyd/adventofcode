@@ -29,6 +29,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 12](#day-12)
 * [Day 13](#day-13)
 * [Day 14](#day-14)
+* [Day 15](#day-15)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -680,3 +681,53 @@ defp drop({x, y} = point, grid, max_y, part) do
   end
 end
 ```
+
+## Day 15
+
+[Code](day15/day15.exs) - [Problem description](https://adventofcode.com/2022/day/15)
+
+Oh no, we spilled tray of elixirs on the floor!  Each potion spreads in a circle
+until it encounters the nearest ice cube, then suddenly freezes solid.  But
+there’s one ice cube which isn’t touched by any liquid.  In the first part we
+figure out which positions along one board of the floor couldn’t have an ice
+cube because the center of the elixir drop is closer to that spot than to the
+ice cube it encountered.  In part 2 we find the untouched ice cube in the one
+spot in a large square area of floor.
+
+My initial brute force solution to the first problem was fairly simple,
+creating a list of all points along the given row which are within
+`distance(sensor, beacon) - distance(sensor, {sensor_x, row})` to the left or
+right of the sensor, then rejecting the position of any sensors or beacons on
+that row to get the count right.  This worked, but was pretty slow: 25 seconds
+for the millions-wide input file.  The efficient version merges ranges without
+expanding them and just adds the size, but looks uglier, at least after
+`mix format` is done with it.
+
+I made it all the way to day 15 before pulling out
+[Regex](https://hexdocs.pm/elixir/Regex.html).  This has mostly been because I’m
+an old hand at regular expressions, so playing with other forms of parsing has
+been a fun exercise.  Pulling four numbers out of a fixed-format sentence is
+easy with a regular expression and tedious with the prefix-matching code I’ve
+been writing.  The ability to include all the groups in a structured list result
+(which also means you get a clear error if you don’t get the expected number of
+groups) is petty nice.  Compare
+
+```elixir
+@pattern ~r/Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)/
+defp parse_line(line) do
+  [_, sx, sy, bx, by] = Regex.run(@pattern, line)
+  {{to_integer(sx), to_integer(sy)}, {to_integer(bx), to_integer(by)}}
+end
+```
+
+to
+
+```elixir
+defp parse_line(line) do
+  ["Sensor at x", sx, " y", sy, " closest beacon is at x", bx, " y", by]
+    = String.split(line, [",", ":", "="], trim: true)
+  {{to_integer(sx), to_integer(sy)}, {to_integer(bx), to_integer(by)}}
+end
+```
+
+The second may run slightly faster, though.
