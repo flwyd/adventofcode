@@ -28,6 +28,8 @@ defmodule Day16 do
       struct!(state, can_open: Enum.sort(state.can_open -- valves))
     end
 
+    def open(state, valve) when is_binary(valve), do: open(state, [valve])
+
     def move_explorer(state, exp, to, time_cost) do
       # struct!(state, [exp, Explorer.move(state[exp], to, time_cost)])
       struct!(
@@ -124,16 +126,104 @@ defmodule Day16 do
     table_name = "part2_#{Enum.count(input)}"
     cache_table = :ets.new(String.to_atom(table_name), [:set])
     best_cache = :ets.new(String.to_atom("best_#{table_name}"), [:set])
+    cache_stats = :ets.new(:cache_stats, [:set])
     # {best, path} = find_best_2(flows, compact, initial, cache_agent)
-    {best, path} = find_best_2(flows, compact, initial, cache_table, best_cache)
+    # {best, path} = find_best_2(flows, compact, initial, cache_table, best_cache)
+    {best, path} = find_best_2_alt(flows, compact, initial, cache_table, best_cache, cache_stats)
     cache_size = :ets.info(cache_table, :size)
     IO.puts("Final cache size #{cache_size}")
+    IO.puts("Cache hits: #{inspect(:ets.lookup(cache_stats, :hits))} misses: #{inspect(:ets.lookup(cache_stats, :misses))}")
     IO.puts("Best path gets #{best}")
     IO.inspect(path)
     # Agent.stop(cache_agent)
     :ets.delete(cache_table)
     :ets.delete(best_cache)
     best
+  end
+
+  defp find_best_2_alt(_, _, %State{can_open: []}, _, _, _), do: {0, []}
+
+  defp find_best_2_alt(
+         _,
+         _,
+         %State{explorers: [%Explorer{time: time_a}, %Explorer{time: time_b}]},
+         _,
+         _, _
+       )
+       when time_a <= 0 and time_b <= 0,
+       do: {0, []}
+
+  defp find_best_2_alt(flows, graph, state, cache_table, best_cache, cache_stats) do
+    case :ets.lookup(cache_table, state) do
+      [] ->
+        with do
+          :ets.update_counter(cache_stats, :misses, 1, {:misses, 0})
+          best_key = {Enum.map(state.explorers, & &1.time) |> Enum.sort(:desc), state.can_open}
+          # {Enum.sort([state.explorers[:first].time, state.explorers[:second].time]),
+
+          best_so_far =
+            case :ets.lookup(best_cache, best_key) do
+              [] -> 0
+              [{^best_key, so_far}] -> so_far
+            end
+
+          {best, path} =
+            for {move_a, value_a} <- valid_moves_alt(flows, graph, 0, state),
+                {move_b, value_b} <- valid_moves_alt(flows, graph, 1, move_a),
+                value_a + value_b + best_possible_value(flows, graph, state) > best_so_far do
+              {best, path} =
+                find_best_2_alt(flows, graph, State.normalize(move_b), cache_table, best_cache, cache_stats)
+
+              {best + value_a + value_b, [Enum.map(state.explorers, & &1.cur) | path]}
+              #  [[state.explorers[:first].cur, state.explorers[:second].cur] | path]}
+            end
+            |> Enum.max(fn -> {0, []} end)
+
+          cache_size = :ets.info(cache_table, :size)
+
+          if rem(cache_size, 1_000_000) == 0,
+            do: IO.puts("Cache size #{cache_size} state #{inspect(state)}")
+
+          :ets.insert(cache_table, {state, {best, path}})
+
+          for x <- Enum.at(state.explorers, 0).time..26,
+              y <- Enum.at(state.explorers, 1).time..26 do
+            key = {Enum.sort([x, y], :desc), state.can_open}
+
+            case :ets.lookup(best_cache, key) do
+              [] -> :ets.insert(best_cache, {key, best})
+              [{^key, so_far}] when best > so_far -> :ets.insert(best_cache, {key, best})
+              _ -> false
+            end
+          end
+
+          {best, path}
+        end
+
+      [{_, cached}] ->
+        with do
+          hits = :ets.update_counter(cache_stats, :hit, 1, {:hit, 0})
+          if rem(hits, 100_000) == 0, do: IO.puts("#{hits} cache hits")
+          cached
+        end
+    end
+  end
+
+  defp valid_moves_alt(flows, graph, exp, state) do
+    %Explorer{cur: cur, time: time} = Enum.at(state.explorers, exp)
+
+    case Enum.filter(graph[cur], fn {dest, cost} -> cost < time && dest in state.can_open end) do
+      [] ->
+        [{State.move_explorer(state, exp, cur, time), 0}]
+
+      list ->
+        list
+        |> Enum.sort_by(fn {x, cost} -> open_value(flows, x, time - cost) end, :desc)
+        |> Enum.map(fn {dest, cost} ->
+          {State.open(State.move_explorer(state, exp, dest, cost + 1), dest),
+           open_value(flows, dest, time - cost)}
+        end)
+    end
   end
 
   defp find_best_2(_, _, %State{can_open: []}, _, _), do: {0, []}
@@ -212,7 +302,10 @@ defmodule Day16 do
         end
 
       [{_, cached}] ->
-        cached
+        with do
+          IO.puts("Cache hit for #{inspect(state)}")
+          cached
+        end
     end
   end
 
