@@ -30,6 +30,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 13](#day-13)
 * [Day 14](#day-14)
 * [Day 15](#day-15)
+* [Day 16](#day-16)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -731,3 +732,72 @@ end
 ```
 
 The second may run slightly faster, though.
+
+## Day 16
+
+[Code](day16/day16.exs) - [Problem description](https://adventofcode.com/2022/day/16)
+
+Thoughts to come.  Code is currently a mess, but gets the right answer for part
+2… in 79 minutes.  I will probably talk about using Erlang’s `ets` for caching.
+
+## Day 17
+
+[Code](day17/day17.exs) - [Problem description](https://adventofcode.com/2022/day/17)
+
+We’ve made 2,022 ice cubes using six custom molds filled with six flavors of
+spa water.  The ice machine has a predictable pattern of how the cubes tumble
+out, so they slot into our (very tall) glass at different positions.  How tall
+is the stack of ice in our glass?  In part two, we dispense one trillion ice
+cubes (that’s two thirds of a cubic kilometer) and measure the height.
+Assuming one centimeter per ice cube segment, the glass would stretch 10% of
+the distance to the sun.
+
+Learning about `ets` in day 16 came in handy.  Elixir/Erlang define comparison
+and equality for all data types, so a cache key of “two integers and the top
+several lines of a stack of symbols” was super easy.
+
+Today’s solution illustrates one of the benefits of immutable data structures
+and change-by-copy.  I represented rocks (ice cubes) as lists of pairs of
+integers representing position above (negative y value) or below (positive y
+value) the top of the stack.  At each step of the “blow sideways, then fall
+down” the `move(rock, {dx, dy})` function uses `Enum.map` to create a new list
+of positions, and the result is assigned to a new local variable.  The
+`allowed?` predicate is then checked, and we revert back to the original local
+variable if it’s not a valid move.  Once the rock has stopped moving,
+`place_rock` creates a new stack with the rock’s resting place merged with the
+top few rows of the stack, but since a list is just a series of `[head | tail]`
+pairs, only the first few items need to be changed, the final one of which is
+pointing to the unchanged tail that might be a few thousand rows long,
+resulting in an algorithm that has a constant upper bound on memory allocation
+for each loop (assuming there isn’t a super-deep hole that a vertical bar rock
+can fall into).
+
+```elixir
+defp move(rock, {dx, dy}), do: Enum.map(rock, fn {x, y} -> {x + dx, y + dy} end)
+
+defp place_rock(rock, height, stack) do
+  get_y = &elem(&1, 1)
+  min_y = Enum.map(rock, get_y) |> Enum.min()
+  min_y_or_zero = min(min_y, 0)
+  new_rows = List.duplicate(List.duplicate(:clear, 7), -1 * min_y_or_zero)
+  new_stack =
+    Enum.reduce(rock, new_rows ++ stack, fn {x, y}, st ->
+      List.update_at(st, y - min_y_or_zero, fn list -> List.replace_at(list, x, :blocked) end)
+    end)
+  {height - min_y_or_zero, new_stack}
+end
+
+@down {0, 1}
+defp drop_rock(rock, height, stack, jets) do
+  {moved, jets} =
+    Enum.reduce_while(Stream.cycle([nil]), {rock, jets}, fn nil, {rock, jets} ->
+      {jets, move} = Jetstream.next_move(jets)
+      shifted = move(rock, move)
+      r = if allowed?(shifted, height, stack), do: shifted, else: rock
+      down = move(r, @down)
+      if allowed?(down, height, stack), do: {:cont, {down, jets}}, else: {:halt, {r, jets}}
+    end)
+  {height, stack} = place_rock(moved, height, stack)
+  {height, stack, jets}
+end
+```
