@@ -744,7 +744,7 @@ Thoughts to come.  Code is currently a mess, but gets the right answer for part
 
 [Code](day17/day17.exs) - [Problem description](https://adventofcode.com/2022/day/17)
 
-We’ve made 2,022 ice cubes using six custom molds filled with six flavors of
+We’ve made 2,022 ice cubes using five custom molds filled with five flavors of
 spa water.  The ice machine has a predictable pattern of how the cubes tumble
 out, so they slot into our (very tall) glass at different positions.  How tall
 is the stack of ice in our glass?  In part two, we dispense one trillion ice

@@ -48,6 +48,7 @@ defmodule Day17 do
     # square: #
     [{2, -4}, {3, -4}, {2, -5}, {3, -5}]
   ]
+  @num_rocks Enum.count(@rock_shapes)
 
   @small_num 2022
   @doc "Compute the stack height after 2022 iterations"
@@ -82,7 +83,7 @@ defmodule Day17 do
         if i == @big_num do
           {:halt, {height, stack, jets, i}}
         else
-          key = {rem(i, 6), jets.index, Enum.take(stack, @look_depth)}
+          key = {rem(i, @num_rocks), jets.index, Enum.take(stack, @look_depth)}
 
           {full_height, iter} =
             if @big_num - i <= String.length(jets.line) do
