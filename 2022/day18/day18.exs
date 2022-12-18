@@ -8,26 +8,48 @@
 # https://adventofcode.com/2022/day/18
 
 defmodule Day18 do
+  @moduledoc "Input is comma-separated 3D coordinates representing cubes."
+
+  @doc "Count the number of cube faces not adjacent to another cube."
   def part1(input) do
-    pts = Enum.map(input, &parseline/1) |> MapSet.new()
+    pts = Enum.map(input, &parse_line/1) |> MapSet.new()
 
-    for p <- pts do
-      neighbors(p) |> Enum.reject(fn x -> MapSet.member?(pts,  x) end)
-    end
-    |> List.flatten() |> Enum.count()
+    Enum.map(pts, fn p -> neighbors(p) |> Enum.reject(fn x -> MapSet.member?(pts, x) end) end)
+    |> List.flatten()
+    |> Enum.count()
   end
 
+  @doc "Like part 1, but ignore internal holes."
   def part2(input) do
-    :todo
+    pts = Enum.map(input, &parse_line/1) |> MapSet.new()
+    {min, max} = pts |> Enum.map(&Tuple.to_list/1) |> List.flatten() |> Enum.min_max()
+    mm = (min - 1)..(max + 1)
+    in_range = fn {x, y, z} -> x in mm && y in mm && z in mm end
+    min_point = {min - 1, min - 1, min - 1}
+
+    Enum.reduce_while(Stream.cycle([nil]), {0, [min_point], MapSet.new([min_point])}, fn
+      nil, {count, [], _} ->
+        {:halt, count}
+
+      nil, {count, [head | queue], visited} ->
+        interesting = neighbors(head) |> Enum.filter(in_range)
+
+        {:cont,
+         Enum.reduce(interesting, {count, queue, visited}, fn n, {count, queue, visited} ->
+           case {MapSet.member?(pts, n), MapSet.member?(visited, n), in_range.(n)} do
+             {true, false, true} -> {count + 1, queue, visited}
+             {false, false, true} -> {count, [n | queue], MapSet.put(visited, n)}
+             {false, true, true} -> {count, queue, visited}
+             {false, false, false} -> {count, queue, visited}
+           end
+         end)}
+    end)
   end
 
-  defp neighbors({x, y, z} = point) do
-    # dirs = for x <- -1..1, y <- -1..1, z <- -1..1, x != 0 || y != 0 || z != 0, do: {x, y, z}
-    dirs = [{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}]
-    Enum.map(dirs, fn {dx, dy, dz} -> {x + dx, y + dy, z + dz} end)
-  end
+  @dirs [{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, {0, 0, -1}, {0, 0, 1}]
+  defp neighbors({x, y, z}), do: Enum.map(@dirs, fn {dx, dy, dz} -> {x + dx, y + dy, z + dz} end)
 
-  defp parseline(line),
+  defp parse_line(line),
     do: String.split(line, ",") |> Enum.map(&String.to_integer/1) |> List.to_tuple()
 
   def main() do

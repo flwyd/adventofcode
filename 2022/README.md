@@ -31,6 +31,8 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 14](#day-14)
 * [Day 15](#day-15)
 * [Day 16](#day-16)
+* [Day 17](#day-17)
+* [Day 18](#day-18)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -800,4 +802,44 @@ defp drop_rock(rock, height, stack, jets) do
   {height, stack} = place_rock(moved, height, stack)
   {height, stack, jets}
 end
+```
+
+## Day 18
+
+[Code](day18/day18.exs) - [Problem description](https://adventofcode.com/2022/day/18)
+
+When fermenting alcohol it’s important to minimize the surface area exposed to
+air.  Yeast ferment in an anaerobic environment, and air has a bunch of
+microbes that you don’t want reproducing in your brew.  But before the yeast
+can start fermenting they need lots of oxygen immersed in the wort (for beer)
+or must (for wine) so they can reproduce.  Pitch the yeast, then aerate, then
+put the airlock on your fermenter.  In today’s problem we have an oddly shaped
+fermenter (no [carboys](https://en.wikipedia.org/wiki/Carboy) in this jungle
+cave full of elephants) with lots of air pockets.  In part one we want to know
+the total surface area of wort exposed to air.  In the second part we ignore
+the internal air pockets (the yeast will need those to reproduce) and focus on
+the exterior surface of the brew.
+
+Several previous days showed multiple functions with the same name and argument
+types but different structural values, which is one of Elixir/Erlang’s distinct
+features.  Just a few days ago I realized that anonymous functions defined with
+`fn` can provide multiple structural variants, too.  So in a sense, `case` is shorthand for calling a one-argument anonymous function with several structural variants.  Maybe that’s even how the macro is implemented.
+
+```elixir
+Enum.reduce_while(Stream.cycle([nil]), {0, [min_point], MapSet.new([min_point])}, fn
+  nil, {count, [], _} -> {:halt, count}
+
+  nil, {count, [head | queue], visited} ->
+    interesting = neighbors(head) |> Enum.filter(in_range)
+
+    {:cont,
+      Enum.reduce(interesting, {count, queue, visited}, fn n, {count, queue, visited} ->
+        case {MapSet.member?(pts, n), MapSet.member?(visited, n), in_range.(n)} do
+          {true, false, true} -> {count + 1, queue, visited}
+          {false, false, true} -> {count, [n | queue], MapSet.put(visited, n)}
+          {false, true, true} -> {count, queue, visited}
+          {false, false, false} -> {count, queue, visited}
+        end
+      end)}
+end)
 ```
