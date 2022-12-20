@@ -158,5 +158,8 @@ defmodule Runner do
   defp format_usec(usec) when usec < 1000, do: "#{usec}μs"
   defp format_usec(usec) when usec < 1_000_000, do: "#{usec / 1000}ms"
   defp format_usec(usec) when usec < 60_000_000, do: "#{Float.round(usec / 1_000_000, 3)}s"
-  defp format_usec(usec), do: "#{div(usec, 60_000_000)}:#{rem(div(usec, 1_000_000), 60)}"
+  defp format_usec(usec) do
+    mins = Integer.to_string(rem(div(usec, 1_000_000), 60)) |> String.pad_leading(2, ["0"])
+    "#{div(usec, 60_000_000)}:#{mins}"
+  end
 end
