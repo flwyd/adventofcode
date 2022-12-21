@@ -33,6 +33,8 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 16](#day-16)
 * [Day 17](#day-17)
 * [Day 18](#day-18)
+* [Day 19](#day-19)
+* [Day 20](#day-20)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -823,7 +825,9 @@ the exterior surface of the brew.
 Several previous days showed multiple functions with the same name and argument
 types but different structural values, which is one of Elixir/Erlang’s distinct
 features.  Just a few days ago I realized that anonymous functions defined with
-`fn` can provide multiple structural variants, too.  So in a sense, `case` is shorthand for calling a one-argument anonymous function with several structural variants.  Maybe that’s even how the macro is implemented.
+`fn` can provide multiple structural variants, too.  So in a sense, `case` is
+shorthand for calling a one-argument anonymous function with several structural
+variants.  Maybe that’s even how the macro is implemented.
 
 ```elixir
 Enum.reduce_while(Stream.cycle([nil]), {0, [min_point], MapSet.new([min_point])}, fn
@@ -842,4 +846,123 @@ Enum.reduce_while(Stream.cycle([nil]), {0, [min_point], MapSet.new([min_point])}
         end
       end)}
 end)
+```
+
+## Day 19
+
+[Code](day19/day19.exs) - [Problem description](https://adventofcode.com/2022/day/19)
+
+We're distilling rum.  Rum requires water and molasses.  To make molasses you
+need sugar cane and water.  To grow sugar cane you need water.  You can also use
+water to drill a well and get more water to flow.  We're evaluating several
+contractors, each can do one thing a day: drill a well, plant a field of cane,
+build a sugar refinery, or build a still.  Each day, each well produces one
+[acre-foot](https://en.wikipedia.org/wiki/Acre-foot) of water, each cane field produces a
+[hundredweight](https://en.wikipedia.org/wiki/Hundredweight) of sugar, each refinery
+produces a [hogshead](https://en.wikipedia.org/wiki/Hogshead) of molasses, and
+each still produces a barrel of rum.  Each contractor requires different amounts
+of each resource to produce each type of equipment.  We want to know the most
+barrels of rum each contractor could produce in a 24-day period (part 1) or a
+30-day period (part 2).
+
+Caching via `ets` came in handy in much the same way it did in [day 16](#day-16)
+but with different decisions to make in order to reduce the number of states
+explored at each step.  Transitioning from one state to another consists of
+deciding what (if anything) to build and then producing resources.  This is easy
+to model with maps: building adds one to one entry in the `robots` map while
+subtracting each of the `resources` costs.  Producing adds the values from the
+blueprint map to the state map.
+
+```elixir
+defmodule State do
+  defstruct robots: %{ore: 1, clay: 0, obsidian: 0, geode: 0},
+            resources: %{ore: 0, clay: 0, obsidian: 0, geode: 0}
+
+  def build(state, type, cost) do
+    struct!(state,
+      robots: Map.update!(state.robots, type, &(&1 + 1)),
+      resources: Map.merge(state.resources, cost, fn _k, v1, v2 -> v1 - v2 end)
+    )
+  end
+
+  def can_build?(state, cost), do: Enum.all?(cost, fn {k, v} -> v <= state.resources[k] end)
+
+  def add_resources(state, res),
+    do: struct!(state, resources: Map.merge(state.resources, res, fn _k, v1, v2 -> v1 + v2 end))
+end
+```
+
+## Day 20
+
+[Code](day20/day20.exs) - [Problem description](https://adventofcode.com/2022/day/20)
+
+We've pitched the yeast and it's time to aerate the wort, but we don't have any
+mixing implements.  So we decide to mix it up by putting all of the wort in a
+siphon tube with both ends connected, assigning a number to each drop of liquid,
+and individually moving each droplet forward or backward through the circular
+tube.  It is very important that we do not consider the droplet's old position
+as a step when moving a droplet more than a full cycle through the tube.
+In part one we do this mixing maneuver once, then add the numbers assigned to
+the 1-, 2-, and 3000th droplets past the droplet with value 0.  In part 2 each
+droplet value is multiplied by nearly one billion and then the mix process is
+run ten times to ensure the yeast get plenty of oxygen for the aerobic phase.
+
+This is the first problem where Elixir's lack of mutable data structures has
+presented a problem.  Previously, the only mutation was modifying a cache, which
+`ets` handled well.  Rather than lean on `ets` again I implemented a linked list
+structure where each node was held by an
+[Agent](https://elixir-lang.org/getting-started/mix-otp/agent.html).  Agents
+keep state in a separate coroutine and respond to messages like `get` and
+`update` by applying a caller-provided function, changing the state within that
+coroutine, and sending a reply back with the result.  The code mostly looks a
+lot like linked list code in a language with mutable data structures, but with
+`Agent.get` and `Agent.update` wrappers.
+
+The input file has 5,000, including many with absolute value greater than 5,000
+but the total steps per iteration is reduced by taking the remainder, so assume
+an average of 2,500 nodes are traversed times 5,000 traversals = 12,500,000
+`Agent.get` calls spent on traversal.  (Updating a node takes a few more Agent
+operations, but is only done 5,000 times.)  My solution takes roughly a minute
+to run on part 1, which is a rate of about 200 node traversals per microsecond.
+By contrast, I implemented this problem in Go with a mutable linked list
+`type Node struct` and the whole of part 1 runs in about 23 milliseconds, over
+half a million nodes per ms.  This is a significant overhead when processing a
+lot of data represented as a lot of small agents!  I wonder if it would be
+faster to skip the agents and recreate the whole linked list each time.
+
+The recursive circular linked list structure is pretty simple.
+
+```elixir
+defmodule Node do
+  defstruct value: nil, prev: nil, next: nil
+
+  def new(value, prev, next) do
+    {:ok, pid} = Agent.start_link(fn -> %Node{value: value, prev: prev, next: next} end)
+    pid
+  end
+
+  def get(agent), do: Agent.get(agent, &Function.identity/1)
+
+  def find(agent, 0), do: agent
+  def find(agent, steps) when steps < 0, do: find(get(agent).prev, steps + 1)
+  def find(agent, steps) when steps > 0, do: find(get(agent).next, steps - 1)
+
+  def find_value(agent, val) do
+    node = get(agent)
+    if node.value === val, do: agent, else: find_value(node.next, val)
+  end
+
+  def set_prev(agent, prev), do: Agent.update(agent, fn node -> struct!(node, prev: prev) end)
+
+  def set_next(agent, next), do: Agent.update(agent, fn node -> struct!(node, next: next) end)
+
+  def insert(agent, left, right) do
+    node = Node.get(agent)
+    set_next(left, agent)
+    set_prev(right, agent)
+    set_next(agent, right)
+    set_prev(agent, left)
+    :ok
+  end
+end
 ```
