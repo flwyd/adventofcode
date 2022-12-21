@@ -35,6 +35,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 18](#day-18)
 * [Day 19](#day-19)
 * [Day 20](#day-20)
+* [Day 21](#day-21)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -1081,5 +1082,58 @@ defmodule Node do
     set_prev(agent, left)
     :ok
   end
+end
+```
+
+## Day 21
+
+[Code](day21/day21.exs) - [Problem description](https://adventofcode.com/2122/day/21)
+
+We’re mixing a potion in a cauldron.  We’ve got a recipe with a lot of strange
+ingredient names, but fortunately the gig economy spell prep delivery company
+sent us nicely labeled packages of herbs.  The labels also say to stir
+[widdershins or deosil](https://en.wikipedia.org/wiki/Widdershins), or increase
+or decrease the rate of stirring.  In part 1 we count the total amount of
+progress we’ve made in a sunwise direction.  In part 2 we figure out what the
+stir count is for the satchel labeled “humn” so that we’ll make an equal number
+of clockwise and counterclockwise turns, ensuring that the sun will return its
+climb through the sky after this winter solstice day.
+
+I initially implemented part 1 by having `parse_line` assign an anonymous
+function to the `eval` property of a struct, with either the literal value or
+a Kernel function reference combined with a lookup:
+
+```elixir
+func = case op do
+  ?+ -> &+/2
+  ?- -> &-/2
+  ?* -> &*/2
+  ?/ -> &div/2
+end
+%Op{name: name, eval: fn ctx -> func.(ctx[left], ctx[right]) end}
+```
+
+This doesn’t work for the second part because we need to inspect the expression
+tree in order to solve for the unknown variable and the anonymous function hides
+any information about what it’s using to make a computation.  Instead I switched
+the `Op` struct to store the operation and two operands or the numeric value and
+write an `evaluate` method that pattern matches on the operation, in the same
+sort of way that an object-oriented language would have each Operation subclass
+implement an `evaluate` method.
+
+```elixir
+defmodule Op do
+  defstruct name: "", left: "", right: "", value: 0, operation: ?!
+
+  def get_value(name, ctx), do: evaluate(ctx[name], ctx)
+
+  def evaluate(%Op{operation: ?!, value: val}, _ctx), do: val
+  def evaluate(%Op{operation: ?+} = op, ctx), do: binary_op(op, &+/2, ctx)
+  def evaluate(%Op{operation: ?-} = op, ctx), do: binary_op(op, &-/2, ctx)
+  def evaluate(%Op{operation: ?*} = op, ctx), do: binary_op(op, &*/2, ctx)
+  def evaluate(%Op{operation: ?/} = op, ctx), do: binary_op(op, &div/2, ctx)
+
+  defp binary_op(%Op{left: left, right: right}, func, ctx),
+    do: func.(get_value(left, ctx), get_value(right, ctx))
 end
 ```
