@@ -400,7 +400,30 @@ directly with lists!
 
 [Code](day8/day8.exs) - [Problem description](https://adventofcode.com/2022/day/8)
 
-_Elixir thoughts coming soon._
+9801 glasses of various elixirs are arranged in a 99-by-99 grid.  The glasses
+are of differing heights.  In part 1 we compute the number of glasses we can see
+in a straight line from outside the grid.  In part 2 we multiply the number of
+glasses visible in each direction together and pick the glass with the highest
+score.
+
+Each year, Advent of Code has a few problems about traversing a two-dimensional
+grid.  Many people instinctively model these as a 2D array, but I prefer to use
+a map with pairs of integers as keys.  This avoids the need to get the endpoints
+right for bounds checks; you can just check `Map.member?(grid, {row, column})`.
+To find whether a tree in the grid is visible from the edges is easy by
+iterating through four ranges of pair values.
+
+```elixir
+defp visible?({row, col}, maxrow, maxcol, grid) do
+  value = grid[{row, col}]
+  Enum.any?([
+    Enum.all?(0..(row - 1)//1, fn r -> grid[{r, col}] < value end),
+    Enum.all?(0..(col - 1)//1, fn c -> grid[{row, c}] < value end),
+    Enum.all?((row + 1)..maxrow//1, fn r -> grid[{r, col}] < value end),
+    Enum.all?((col + 1)..maxcol//1, fn c -> grid[{row, c}] < value end)
+  ])
+end
+```
 
 ## Day 9
 
@@ -413,7 +436,35 @@ At first it's a really short path from the funnel, but then you pull on the
 hose and discover that it's pretty long. The elves wander around the room with
 the funnel, and you need to keep up. What path do you follow?
 
-_Elixir thoughts coming soon._
+Part 2 requires tracking nine tail components, starting at the `{0, 0}` origin.
+At first I generated a list of 9 element by mapping over a range but ignoring
+the value: `Enum.map(1..9, fn _ -> {0, 0} end)`.  Then I found `List.duplicate`
+which is a lot nicer to read.  I also used this to turn moves like `L 5` into
+five steps that reduce the X coordinate by one.
+
+```elixir
+@origin {0, 0}
+defp record_path(input, num_tails) do
+  tails = List.duplicate(@origin, num_tails)
+  moves = Enum.map(input, &expand_line/1) |> List.flatten()
+  Enum.reduce(moves, {@origin, tails, MapSet.new([@origin])}, fn move, {head, tail, acc} ->
+    newhead = move_head(move, head)
+    newtail = move_chain(newhead, tail)
+    {newhead, newtail, MapSet.put(acc, List.last(newtail))}
+  end)
+end
+
+defp expand_line(<<dir, " ", amount::binary>>) do
+  List.duplicate(
+    case dir do
+      ?U -> {-1, 0}
+      ?D -> {1, 0}
+      ?L -> {0, -1}
+      ?R -> {0, 1}
+    end,
+    String.to_integer(amount))
+end
+```
 
 ## Day 10
 
@@ -467,7 +518,7 @@ display options in an interactive REPL session.  The `tl(rows)` strip the
 initial blank list which is used to force a newline when printing output.
 
 ```
-iex> %Day10.Raster{rows: rows} = Day10.part2(Runner.read_lines("input.example.txt”))
+iex> %Day10.Raster{rows: rows} = Day10.part2(Runner.read_lines("input.example.txt"))
 iex> IO.puts(Day10.Raster.new(tl(rows), {?@, ?\s})
 @@  @@  @@  @@  @@  @@  @@  @@  @@  @@
 @@@   @@@   @@@   @@@   @@@   @@@   @@@
@@ -741,8 +792,74 @@ The second may run slightly faster, though.
 
 [Code](day16/day16.exs) - [Problem description](https://adventofcode.com/2022/day/16)
 
-Thoughts to come.  Code is currently a mess, but gets the right answer for part
-2… in 79 minutes.  I will probably talk about using Erlang’s `ets` for caching.
+Our brewery has several
+[lauter tuns](https://en.wikipedia.org/wiki/Lautering#Lauter_tun) spaced around
+a large warehouse.  We have a map of the floor with the rate that
+[wort](https://en.wikipedia.org/wiki/Wort) can flow out of each tun when the
+spigot is open.  Traveling from one tun to another takes one minute; each tun is
+linked to a few other tuns, and some of the tuns are empty.  In part 1 we want
+to know the total amount of wort that could flow in a 30-minute period as we
+walk around opening spigots.  In part 2, we spend 4 minutes training a friend to
+open the lauter spigots and spend 26 minutes opening the tuns.
+
+The number of possible spigot opening sequences in this problem is huge; even
+after compacting the graph to take several steps past empty tuns there are over
+one trillion permissions.  Fortunately, a lot of the smaller portions of the
+permutations will be the same, so runtime becomes reasonable when using a cache.
+Caches, by nature, keep and mutate state, which is difficult with Elixir’s
+immutable-only data structures.  To manage this sort of state, Elixir offers
+[Agents](https://elixir-lang.org/getting-started/mix-otp/agent.html) which run
+in a separate light-weight process that sends and receives messages and uses
+recursive calls to transition to the next state.
+
+I started with an Agent which contained a Map; at the end of each recursive
+`find_best_score` call I put the computed value into the cache like
+`Agent.update(cache, fn cur -> Map.put(cur, key, value) end)`.  I discovered
+that Agent calls have a timeout, which defaults to five seconds.  As the cache
+got into millions of items, each with a couple lists and structs as key, the
+process took several gigabytes of RAM and the O(log n) cost of updates to the
+map, combined with garbage collection, created trouble.
+
+I switched the cache to use Erlang’s
+[ETS](https://elixir-lang.org/getting-started/mix-otp/ets.html) module which
+provides a mutable key-value store with O(1) performance.  In-memory caches are
+exactly the sort of thing this module is built for, and it improved the
+performance of my search by quite a bit, though I haven’t yet run a comparison
+with the final solution with optimized heuristics.  It’s also got a nice feature
+to increment and decrement counters without needing to fetch the current value
+first; I used this to periodically print the number of cache hits and misses as
+a simple way to see progress.  My part 2 solution ended up with a cache of
+roughly 8.5 million entries and got nearly 20 million cache hits (cache hits
+above the bottom of the tree save more than one step of work, so even a 2:1 hit
+to miss ratio saves an immense amount of work).
+
+```elixir
+cache = :ets.new(:cache, [:set])
+cache_stats = :ets.new(:cache_stats, [:set])
+value = find_best_score(flows, compact, initial, cache, cache_stats)
+[hits, misses] = Enum.map([:hits, :misses], fn key -> Keyword.fetch!(:ets.lookup(cache_stats, key), key) end)
+IO.puts(:stderr, "Cache hits: #{hits} misses: #{misses}")
+:ets.delete(cache)
+:ets.delete(cache_stats)
+
+defp find_best_score(flows, graph, state, cache, stats) do
+  case :ets.lookup(cache, state) do
+    [{_, cached}] ->
+      :ets.update_counter(stats, :hits, 1, {:hits, 0})
+      cached
+    [] ->
+      :ets.update_counter(stats, :misses, 1, {:misses, 0})
+      best =
+        valid_move_groups(flows, graph, state, 0, 0)
+        |> Enum.map(fn {move, value} ->
+          value + find_best_score(flows, graph, State.normalize(move), cache, stats)
+        end)
+        |> Enum.max(fn -> 0 end)
+      :ets.insert(cache, {state, best})
+      best
+  end
+end
+```
 
 ## Day 17
 
