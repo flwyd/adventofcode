@@ -76,10 +76,12 @@ defmodule Day22 do
       Enum.reduce(moves, {{1, start_col}, start_face, traverse}, fn
         :left, {pos, face, traverse} ->
           face = rotate(face, :left)
+          # IO.puts("Rotating to #{inspect face}")
           {pos, face, Map.put(traverse, pos, face_char(face))}
 
         :right, {pos, face, traverse} ->
           face = rotate(face, :right)
+          # IO.puts("Rotating to #{inspect face}")
           {pos, face, Map.put(traverse, pos, face_char(face))}
 
         num, {pos, face, traverse} ->
@@ -99,7 +101,7 @@ defmodule Day22 do
           {final, final_face, traverse}
       end)
 
-    print_traverse(traverse, grid, max_row, max_col)
+    # print_traverse(traverse, grid, max_row, max_col)
     IO.puts("Landed on #{row}, #{col}, facing #{inspect(face)}")
     password(row, col, face)
   end
@@ -226,15 +228,15 @@ defmodule Day22 do
       Enum.map(101..150, fn col -> {{{0, col}, @up}, {{200, col - 100}, @up}} end)
       |> Enum.into(wraps)
 
-    # side 1 going down goes to 3 going right
+    # side 1 going down goes to 3 going left
     wraps =
-      Enum.map(101..150, fn col -> {{{51, col}, @down}, {{col - 50, 100}, @right}} end)
+      Enum.map(101..150, fn col -> {{{51, col}, @down}, {{col - 50, 100}, @left}} end)
       |> Enum.into(wraps)
 
     # side 2 from row 1 to 50 and col 51 to 100
-    # side 2 going left goes to 5 going left
+    # side 2 going left goes to 5 going right
     wraps =
-      Enum.map(1..50, fn row -> {{{row, 50}, @left}, {{151 - row, 1}, @left}} end)
+      Enum.map(1..50, fn row -> {{{row, 50}, @left}, {{151 - row, 1}, @right}} end)
       |> Enum.into(wraps)
 
     # side 2 going up goes to 6 going right
@@ -270,9 +272,9 @@ defmodule Day22 do
       Enum.map(101..150, fn row -> {{{row, 0}, @left}, {{151 - row, 51}, @right}} end)
       |> Enum.into(wraps)
 
-    # side 5 going up goes to 3 going left
+    # side 5 going up goes to 3 going right
     wraps =
-      Enum.map(1..50, fn col -> {{{100, col}, @up}, {{50 + col, 51}, @left}} end)
+      Enum.map(1..50, fn col -> {{{100, col}, @up}, {{50 + col, 51}, @right}} end)
       |> Enum.into(wraps)
 
     # side 6 from row 151 to 200 and col 1 to 50
@@ -306,7 +308,7 @@ defmodule Day22 do
 
         {dest, face} ->
           if Map.has_key?(grid, dest),
-            do: {dest, face},
+            do: {dest, face} , # tapfn x -> IO.puts("wrapping from #{inspect {{row, col}, {drow, dcol}}} to #{inspect x}") end),
             else: raise("Wrapped from #{row},#{col} to #{inspect({dest, face})} not in grid")
       end
     end
