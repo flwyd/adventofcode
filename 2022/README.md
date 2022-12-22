@@ -36,6 +36,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 19](#day-19)
 * [Day 20](#day-20)
 * [Day 21](#day-21)
+* [Day 22](#day-22)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -1087,7 +1088,7 @@ end
 
 ## Day 21
 
-[Code](day21/day21.exs) - [Problem description](https://adventofcode.com/2122/day/21)
+[Code](day21/day21.exs) - [Problem description](https://adventofcode.com/2022/day/21)
 
 We’re mixing a potion in a cauldron.  We’ve got a recipe with a lot of strange
 ingredient names, but fortunately the gig economy spell prep delivery company
@@ -1137,3 +1138,78 @@ defmodule Op do
     do: func.(get_value(left, ctx), get_value(right, ctx))
 end
 ```
+
+## Day 22
+
+[Code](day22/day22.exs) - [Problem description](https://adventofcode.com/2022/day/22)
+
+We’ve made a barrel of our elixir, but our equipment wasn’t properly sanitized
+so the batch is bad.  Rather than pouring it down the drain we decide to have
+some fun with it.  We’ve got six
+[tilt mazes](https://codepen.io/HunorMarton/pen/VwKwgxX) connected together
+without walls around the edges so we decide to pour our work on the maze and see
+where we can get it to flow.  In part one, when the liquid leaves a side of a
+maze that’s not adjacent to another maze it wraps around horizontally or
+vertically as if we were playing Pac-Man.  In part two, we form the six mazes
+into a cube and the water flows as we turn the cube in 3D.  But we still need to
+keep track of the 2D coordinates!
+
+Solving this problem required repeatedly mapping 2D geometry into 3D while
+running on three weeks of not enough sleep.  My cognitive style is somewhere
+between [spatial visualizer and verbalizer](https://www.nmr.mgh.harvard.edu/mkozhevnlab/?page_id=639)
+and I’m not a very effective object visualizer.  I can visualize geographic maps
+and the complex links in a computation graph, but it takes me a lot of effort to
+think about what happens when you move around a specific 3D obect.  I cut out
+strips of sticky notes and affixed them to the faces of a Rubik’s Cube, each
+with a number written on it.  I wrote the numbers out in a text file matching
+the arrangement in the input file (which annoyingly isn’t the same arrangement
+as the sample input) and then figured out which cube face, side, and direction
+one would travel after moving off the edge of another face.
+[I took a photo of the cube](https://photos.app.goo.gl/PCbuA7KC3diWJULz5) and
+the text file follows.
+
+```
+    222 111
+    222 111
+    222 111
+
+    333
+    333
+    333
+
+555 444
+555 444
+555 444
+
+666
+666
+666
+```
+
+I’m sure there’s a clever way to do the math to map to the matching side and
+orientation, but I was also sure that I wouldn’t be able to to correctly derive
+and implement it after three weeks of late nights.  So I decided to hard-code
+the edge links, for both the example configuration and the actual one.  This
+provided an opportunity to learn about [Enum.into](https://hexdocs.pm/elixir/Enum.html#into/2).
+I’d read about it, but the reason to use `Enum.map(something) |> Enum.into(%{}`
+instead of something like `Enum.map(something) |> Map.new` wasn’t clear.  The
+advantage of `into` is that it adds to the existing structure without needing
+to write an `Enum.reduce` which passes the in-progress map as an accumulator.
+
+```elixir
+wraps = %{}
+# side 1 going right goes to 6 going left
+wraps =
+  Enum.map(1..4, fn row -> {{{row, 13}, @right}, {{13 - row, 16}, @left}} end) |> Enum.into(wraps)
+# side 1 going up goes to 2 going down
+wraps =
+  Enum.map(9..12, fn col -> {{{0, col}, @up}, {{5, col - 5}, @down}} end) |> Enum.into(wraps)
+# side 1 going left goes to 3 going down
+wraps =
+  Enum.map(1..4, fn row -> {{{row, 8}, @left}, {{5, 4 + row}, @down}} end) |> Enum.into(wraps)
+```
+
+This isn’t particularly elegant, but it made it easy to find the right thing to
+change when I noticed the path drawn on a grid didn’t match expectations.  (Pro
+tip: if the side of a cube face in your output doesn’t have any inbound arrows,
+its matching edge is probably pointed at the wrong thing.)
