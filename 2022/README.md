@@ -37,6 +37,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 20](#day-20)
 * [Day 21](#day-21)
 * [Day 22](#day-22)
+* [Day 23](#day-23)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -1213,3 +1214,68 @@ This isn’t particularly elegant, but it made it easy to find the right thing t
 change when I noticed the path drawn on a grid didn’t match expectations.  (Pro
 tip: if the side of a cube face in your output doesn’t have any inbound arrows,
 its matching edge is probably pointed at the wrong thing.)
+
+## Day 23
+
+[Code](day23/day23.exs) - [Problem description](https://adventofcode.com/2023/day/23)
+
+The Kwik-E-Mart is out of [Skittlebrau](https://www.youtube.com/watch?v=tnHF11NsVFw)
+so we’ll need to make our own.  We dump a bag of skittles into a pitcher of
+American lager and notice that they all float at the top, clustered together.
+As time passes, they move away from each other (positively charged candy!).
+The way in which they spread has some surprising emergent properties: if the
+spaces toward the bar are clear they head that direction.  If not, they might
+head toward the pool table.  If not that, they head for the stage, or maybe the
+exit.  But every second they seem to switch their preference order, swirling
+around at the top of the pitcher.  In the first part we measure the area that’s
+head foam, not occupied by Skittles.  In the second part we count the number of
+seconds until the skittles stabilize.  This bug’s for you.
+
+In the second part we need to perform an operation until reaching a stopping
+condition, and count the number of times that happens.  In a typical imperative
+language, that can easily be done with a loop counter:
+
+```java
+int countRounds() {
+  State state = …;
+  for (int round = 1; ; round++) {
+    runRound(state);
+    if (shouldStop(state)) { return round; }
+  }
+}
+```
+
+Earlier in the month I’ve done plenty of iterating through ranges when the
+number of steps is known, as in part 1.
+
+```elixir
+points = Enum.reduce(1..10, points, fn round, points -> run_round(…) end)
+```
+
+And I’ve written recursive functions which increment a counter, like today’s
+input parser.
+
+```elixir
+defp parse_input([line | rest], row, acc) do
+  acc = String.to_charlist(line) |> Enum.with_index()
+    |> Enum.filter(fn {c, _i} -> c == ?# end)
+    |> Enum.map(fn {_, col} -> {row, col} end)
+    |> Enum.into(acc)
+  parse_input(rest, row + 1, acc)
+end
+```
+
+And run a reduce function that didn’t care about a counter like
+`Enum.reduce(Stream.cycle([nil]), acc, fn _, acc -> whatever(acc) end)`.
+But I’m amused that it took until day 23 to need to figure out how to easily
+count the number of times a loop runs.  The
+[Stream.iterate](https://hexdocs.pm/elixir/Stream.html#iterate/2) function can
+run any function repeatedly, taking the previous value as input.  Helpfully, the
+example in the documentation is a counter that increments by one.
+
+```elixir
+Enum.reduce_while(Stream.iterate(1, &(&1 + 1)), points, fn round, points ->
+  next = run_round(points, round_prefs(round, pref_cycle))
+  if MapSet.equal?(points, next), do: {:halt, round}, else: {:cont, next}
+end)
+```
