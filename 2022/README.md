@@ -38,6 +38,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 21](#day-21)
 * [Day 22](#day-22)
 * [Day 23](#day-23)
+* [Day 24](#day-24)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -1278,4 +1279,67 @@ Enum.reduce_while(Stream.iterate(1, &(&1 + 1)), points, fn round, points ->
   next = run_round(points, round_prefs(round, pref_cycle))
   if MapSet.equal?(points, next), do: {:halt, round}, else: {:cont, next}
 end)
+```
+
+## Day 24
+[Code](day24/day24.exs) - [Problem description](https://adventofcode.com/2022/day/24)
+
+A jar of [kombucha](https://en.wikipedia.org/wiki/Kombucha) sits happily on the
+counter with a thick [SCOBY](https://en.wikipedia.org/wiki/SCOBY) on top.
+Clumps of bacteria and yeast are moving in straight lines, then quickly wrapping
+around the jar, and moving along the same line again.  We drop a small tea leaf
+at the edge and want to see how long it will take to get to the other side.  The
+leaf can move through the liquid ‘booch but it’s blocked by the pellicle.  In
+part 2 we want to know how long it takes to make one and a half round trips.
+
+After realizing that my depth-first-search and naive breadth-first-search
+implementations were generating lots of unhelpful states and unlikely to
+terminate, I decided to implement a priority queue so I could use
+[Dijkstra’s algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm).
+Elixir’s standard library doesn’t have a priority queue, so I decided to make
+one from a Map, with keys as integer priorities (distance to the goal plus turn)
+and values as a list of `{position, turn}` states with that priority.  I’d read
+that Maps don’t have a defined order, but I’d also read that equality was based
+on comparison and operations are O(log n), so I figured they were like a
+`TreeMap` in Java and would iterate in sorted order.  So I implemented
+`shift_next` (get an item from the queue with the lowest priority) using
+`Enum.take(1)` to get the lowest priority item.  I then removed the item from
+the list at that priority, or deleted the list entirely if it’s now empty.
+
+```elixir
+case Enum.take(pq, 1) do
+  [{priority, [value]}] -> {priority, value, Map.delete(pq, priority)}
+  [{priority, [value | rest]}] -> {priority, value, Map.put(pq, priority, rest)}
+end
+```
+
+This worked, and I got the correct answer.  I then reasoned that I could
+simplify it by using a MapSet of `{priority, value}` since Elixir sorts tuples
+in order of their elements.
+
+```elixir
+[{priority, value} = first] = Enum.take(pq, 1)
+{priority, value, MapSet.delete(pq, first)
+```
+
+But this got the wrong answer on the example and got stuck on the actual input.
+The reason is because Elixir (via Erlang) Maps (and thus MapSets) are only
+sorted [if they have 32 or fewer items](https://stackoverflow.com/questions/40392012/is-ordering-of-keys-and-values-preserved-in-elixir-when-you-operate-on-a-map).
+When the structure grows larger, a different internal data structure is used to
+be more efficient.  My Map-based priority queue had worked because the horizon
+doesn’t expand very far during search: at each step it can only insert
+priorities at most two greater than the current priority (one for the turn and
+one for moving away from the target).  So the total number of items in the queue
+could be in the thousands, but they’e all slotted away in lists for just a few
+keys.  When I switched to a MapSet, this structure flattened out and Erlang
+switched to a non-sorted data structure.
+
+The solution is pretty simple, though: `Enum.min` still runs fast enough on a
+small set of keys.
+
+```elixir
+case Enum.min(pq) do
+  {priority, [value]} -> {priority, value, Map.delete(pq, priority)}
+  {priority, [value | rest]} -> {priority, value, Map.put(pq, priority, rest)}
+end
 ```
