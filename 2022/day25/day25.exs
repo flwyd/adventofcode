@@ -10,6 +10,8 @@
 defmodule Day25 do
   @moduledoc """
   Input is base 5 numbers with digits valued -2 to 2.  -2 is `=` and -1 is `-`.
+  Example: 9 is `2-` (2 5s minus 1), 51 is `201` (2 25s, no 5s, plus 1),
+  75 is `1=00` (1 125 minus 2 25s, no 5s or 1s)..
   """
 
   @digit_int %{?2 => 2, ?1 => 1, ?0 => 0, ?- => -1, ?= => -2}
@@ -34,9 +36,7 @@ defmodule Day25 do
   end
 
   @doc "All problems are complete, have a pleasant night."
-  def part2(_input) do
-    "Merry Christmas"
-  end
+  def part2(_input), do: "Merry Christmas"
 
   def main() do
     unless function_exported?(Runner, :main, 1), do: Code.compile_file("../runner.ex", __DIR__)
