@@ -10,49 +10,31 @@
 defmodule Day25 do
   @moduledoc """
   Input is base 5 numbers with digits valued -2 to 2.  -2 is `=` and -1 is `-`.
-  Sum them, then print that in the same scheme.
   """
 
-  def part1(input) do
-    sum =
-      Enum.map(input, &String.to_charlist/1)
-      |> Enum.map(fn chars ->
-        Enum.with_index(Enum.reverse(chars), 0)
-        |> Enum.reduce(0, fn {c, i}, num ->
-          num +
-            trunc(:math.pow(5, i)) *
-              case c do
-                ?2 -> 2
-                ?1 -> 1
-                ?0 -> 0
-                ?- -> -1
-                ?= -> -2
-              end
-        end)
-      end)
-      |> Enum.sum()
+  @digit_int %{?2 => 2, ?1 => 1, ?0 => 0, ?- => -1, ?= => -2}
+  @int_carry_digit %{4 => {1, ?-}, 3 => {1, ?=}, 2 => {0, ?2}, 1 => {0, ?1}, 0 => {0, ?0}}
 
-    convert(sum)
+  @doc "Sum all numbers in the input, return the result in the -2 to 2 format."
+  def part1(input) do
+    Enum.map(input, &String.to_charlist/1)
+    |> Enum.map(fn chars ->
+      Enum.with_index(Enum.reverse(chars), 0)
+      |> Enum.reduce(0, fn {c, i}, num -> num + trunc(:math.pow(5, i)) * @digit_int[c] end)
+    end)
+    |> Enum.sum()
+    |> convert()
   end
 
-  defp convert(0), do: [?0]
-  defp convert(1), do: [?1]
-  defp convert(2), do: [?2]
+  def convert(x) when x >= 0 and x <= 2, do: [elem(@int_carry_digit[x], 1)]
 
-  defp convert(sum) do
-    {carry, digit} =
-      case rem(sum, 5) do
-        4 -> {1, ?-}
-        3 -> {1, ?=}
-        2 -> {0, ?2}
-        1 -> {0, ?1}
-        0 -> {0, ?0}
-      end
-
+  def convert(sum) do
+    {carry, digit} = @int_carry_digit[rem(sum, 5)]
     convert(div(sum, 5) + carry) ++ [digit]
   end
 
-  def part2(input) do
+  @doc "All problems are complete, have a pleasant night."
+  def part2(_input) do
     "Merry Christmas"
   end
 
