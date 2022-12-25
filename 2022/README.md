@@ -39,6 +39,7 @@ solution for the day.  **WARNING: Spoilers below.**
 * [Day 22](#day-22)
 * [Day 23](#day-23)
 * [Day 24](#day-24)
+* [Day 25](#day-25)
 
 ## Day 1
 [Code](day1/day1.exs) - [Problem description](https://adventofcode.com/2022/day/1)
@@ -1282,6 +1283,7 @@ end)
 ```
 
 ## Day 24
+
 [Code](day24/day24.exs) - [Problem description](https://adventofcode.com/2022/day/24)
 
 A jar of [kombucha](https://en.wikipedia.org/wiki/Kombucha) sits happily on the
@@ -1295,7 +1297,7 @@ part 2 we want to know how long it takes to make one and a half round trips.
 After realizing that my depth-first-search and naive breadth-first-search
 implementations were generating lots of unhelpful states and unlikely to
 terminate, I decided to implement a priority queue so I could use
-[Dijkstra’s algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm).
+[A\* search](https://en.wikipedia.org/wiki/A*_search_algorithm).
 Elixir’s standard library doesn’t have a priority queue, so I decided to make
 one from a Map, with keys as integer priorities (distance to the goal plus turn)
 and values as a list of `{position, turn}` states with that priority.  I’d read
@@ -1341,5 +1343,57 @@ small set of keys.
 case Enum.min(pq) do
   {priority, [value]} -> {priority, value, Map.delete(pq, priority)}
   {priority, [value | rest]} -> {priority, value, Map.put(pq, priority, rest)}
+end
+```
+
+## Day 25
+
+[Code](day25/day25.exs) - [Problem description](https://adventofcode.com/2022/day/25)
+
+We’re mixing an elixir in a kitchen with unfamiliar measuring devices.  The
+smallest measure is a beespoon; there’s also a babelspoon which is 5 times the
+volume of a beespoon.  The recipe for our elixir has instructions like “add one
+beespoon”, “add two beespoons”, “add one babelspoon and remove two beespoons”,
+and “add one babelspoon and remove one beespoon”.  There are more measures,
+each a size five times the size before, including
+[bineglass, beecup, breakcup, and bumbler](https://en.wikipedia.org/wiki/Apothecaries%27_system).
+Our recipe has one compound measure per line and we need to calculate the total
+volume, in this arcane measurement system.
+
+Once again, Elixir’s
+[charlist](https://elixir-lang.org/getting-started/binaries-strings-and-char-lists.html)
+(an ordinary list of integers where each number is a valid Unicode code point)
+came in handy, turning each input digit into a component of a base-5 integer and
+then recursively building a list of digits one character at a time.  Elixir’s
+to-string conversion joins lists of integers as Unicode characters, lists of
+strings by concatenating them, and allows mixing and matching the two with
+arbitrary nesting.
+
+I originally implemented this with three base case function heads for 0-2 and a
+`case` block for parsing as well as the remainder of division by 5, but
+`mix format` made the code really long.  Since there are only five digits, I
+was able to put both parsing and remainder logic into one map each with
+[module attributes](https://elixir-lang.org/getting-started/module-attributes.html#as-constants)
+serving the role that constants would play in other languages.
+
+```elixir
+@digit_int %{?2 => 2, ?1 => 1, ?0 => 0, ?- => -1, ?= => -2}
+@int_carry_digit %{4 => {1, ?-}, 3 => {1, ?=}, 2 => {0, ?2}, 1 => {0, ?1}, 0 => {0, ?0}}
+
+def part1(input) do
+  Enum.map(input, &String.to_charlist/1)
+  |> Enum.map(fn chars ->
+    Enum.with_index(Enum.reverse(chars), 0)
+    |> Enum.reduce(0, fn {c, i}, num -> num + trunc(:math.pow(5, i)) * @digit_int[c] end)
+  end)
+  |> Enum.sum()
+  |> convert()
+end
+
+def convert(x) when x >= 0 and x <= 2, do: [elem(@int_carry_digit[x], 1)]
+
+def convert(sum) do
+  {carry, digit} = @int_carry_digit[rem(sum, 5)]
+  convert(div(sum, 5) + carry) ++ [digit]
 end
 ```
