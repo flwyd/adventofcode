@@ -101,12 +101,15 @@ object Part2 {
         error("Multiple possible values $possible for $field")
       }
     }
-    return possiblePositions
-      .filterKeys { it.startsWith("departure") }
-      .values.map(Set<Int>::first)
-      .map(yourTicket::get)
-      .map(Int::toLong)
-      .reduce(Long::times).toString()
+    // for actual input, only fields starting with "departure" matter, but example inputs
+    // don't have any departure fields.
+    val filtered =
+        possiblePositions.filterKeys { it.startsWith("departure") }.ifEmpty { possiblePositions }
+    return filtered
+        .values.map(Set<Int>::first)
+        .map(yourTicket::get)
+        .map(Int::toLong)
+        .reduce(Long::times).toString()
   }
 }
 

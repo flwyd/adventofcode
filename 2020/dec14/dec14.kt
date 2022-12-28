@@ -54,6 +54,10 @@ object Part2 {
     for (line in input) {
       if (line.startsWith("mask")) {
         mask = line.replaceFirst("mask = ", "")
+        if (mask.startsWith("XXXXXXXXX")) {
+          // first example runs out of memory, example2 works for part2
+          return "(skipped)"
+        }
       } else if (line.startsWith("mem")) {
         memPattern.find(line)!!.destructured.let { (index, value) ->
           applyFloatingMask(mask, index.toLong()).forEach { mem[it] = value.toLong() }
