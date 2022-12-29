@@ -21,7 +21,7 @@ $(CLASSES)/$(PACKAGE)/$(MAIN_CLASS).class: $(PACKAGE).kt
 output.%.txt: input.%.txt compile
 	$(KOTLIN) -cp $(CLASSES) $(PACKAGE).$(MAIN_CLASS) < $< | tee $@
 
-out: output.example.txt output.actual.txt
+out: output.example.txt output.example2.txt output.example3.txt output.example4.txt output.example5.txt output.example6.txt output.example7.txt output.actual.txt
 
 clean:
 	rm -r $(CLASSES)
