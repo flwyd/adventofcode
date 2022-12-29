@@ -65,18 +65,19 @@ object Part2 {
 }
 
 @ExperimentalTime
+@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
   // input.example.txt uses windowSize=5, input.actual.txt uses windowSize=25
   val lines = generateSequence(::readLine).toList()
   val windowSize = if (lines.size < 30) { 5 } else { 25 }
-  println("Part 1:")
+  print("part1: ")
   TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence(), windowSize) }.let {
     println(it.value)
-    println("Completed in ${it.duration}")
+    System.err.println("Completed in ${it.duration}")
   }
-  println("Part 2:")
+  print("part2: ")
   TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence(), windowSize) }.let {
     println(it.value)
-    println("Completed in ${it.duration}")
+    System.err.println("Completed in ${it.duration}")
   }
 }

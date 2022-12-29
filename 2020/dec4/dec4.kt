@@ -75,15 +75,15 @@ object Part2 {
 fun main(args: Array<String>) {
   val lines = generateSequence(::readLine).toParagraphs().toList()
   // println("Lines has ${lines.size} paragraphs")
-  println("Part 1:")
+  print("part1: ")
   TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
     println(it.value)
-    println("Completed in ${it.duration}")
+    System.err.println("Completed in ${it.duration}")
   }
-  println("Part 2:")
+  print("part2: ")
   TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
     println(it.value)
-    println("Completed in ${it.duration}")
+    System.err.println("Completed in ${it.duration}")
   }
 }
 
