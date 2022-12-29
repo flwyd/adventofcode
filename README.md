@@ -21,7 +21,7 @@ Year           | Language | Thoughts
 -------------- | -------- | --------
 [2020](./2020) | [Kotlin](https://kotlinlang.org/) | [Blog post](https://flwyd.dreamwidth.org/396527.html)
 [2021](./2021) | [Raku](https://raku.org/) plus [Go](https://go.dev/) when Raku was too slow | [Blog post](https://flwyd.dreamwidth.org/400979.html)
-[2022](./2022) | [Elixir](https://elixir-lang.org/)
+[2022](./2022) | [Elixir](https://elixir-lang.org/) | [Blog post](https://flwyd.dreamwidth.org/405717.html)
 
 This code is made available under an [MIT-style license](./LICENSE). I do not
 accept pull requests to this repo, but you’re welcome to point out anything you
