@@ -8,7 +8,7 @@
 # TAP (testanything.org) runner for Advent of Code days.  Runs all days if none
 # are provided on the command line.  Assumes running
 #   make output.foo.txt
-# from decXX creates an output file which can be diffed with
+# from dayXX creates an output file which can be diffed with
 # dayXX/input.foo.expected (where "foo" is usually "expected" or "actual").
 
 indent() {
@@ -20,8 +20,7 @@ setopt extendedglob
 
 BASEDIR=${0:h}
 if [[ $# -eq 0 ]]; then
-  # DAYS=($BASEDIR/day*(n))
-  DAYS=($BASEDIR/dec*(n))
+  DAYS=($BASEDIR/day*(n))
 else
   DAYS=($@)
 fi
