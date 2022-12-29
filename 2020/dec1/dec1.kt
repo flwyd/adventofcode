@@ -48,7 +48,6 @@ object Part2 {
   }
 }
 
-object Main {
 @ExperimentalTime
 @Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
@@ -63,5 +62,4 @@ fun main(args: Array<String>) {
     println(it.value)
     System.err.println("Completed in ${it.duration}")
   }
-}
 }
