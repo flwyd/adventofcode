@@ -1052,6 +1052,11 @@ half a million nodes per ms.  This is a significant overhead when processing a
 lot of data represented as a lot of small agents!  I wonder if it would be
 faster to skip the agents and recreate the whole linked list each time.
 
+**Update:** Switching from the Agent-based approach to maintaining a map of `id`
+“pointers” dropped the runtime of part 2 from about 9 minutes to about 8
+_seconds_.  The overhead of communicating back and forth to Agents is thus much
+higher than the overhead of recreating a 5,000-item map 50,000 times.
+
 The recursive circular linked list structure is pretty simple.
 
 ```elixir
