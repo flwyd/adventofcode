@@ -42,93 +42,94 @@ defmodule Day20 do
   """
 
   defmodule Node do
-    defstruct value: nil, prev: nil, next: nil
+    defstruct id: 0, prev: 0, next: 0
 
-    def new(value, prev, next) do
-      {:ok, pid} = Agent.start_link(fn -> %Node{value: value, prev: prev, next: next} end)
-      pid
+    def find(node, 0, _nodes), do: node
+    def find(node, steps, nodes) when steps < 0, do: find(nodes[node.prev], steps + 1, nodes)
+    def find(node, steps, nodes) when steps > 0, do: find(nodes[node.next], steps - 1, nodes)
+
+    def insert(node, left_id, right_id, nodes) do
+      Map.merge(nodes, %{
+        node.id => struct!(node, prev: left_id, next: right_id),
+        left_id => struct!(nodes[left_id], next: node.id),
+        right_id => struct!(nodes[right_id], prev: node.id)
+      })
     end
 
-    def get(agent), do: Agent.get(agent, &Function.identity/1)
+    def remove(node, nodes) do
+      left = nodes[node.prev]
+      right = nodes[node.next]
 
-    def find(agent, 0), do: agent
-    def find(agent, steps) when steps < 0, do: find(get(agent).prev, steps + 1)
-    def find(agent, steps) when steps > 0, do: find(get(agent).next, steps - 1)
-
-    def find_value(agent, val) do
-      node = get(agent)
-      if node.value === val, do: agent, else: find_value(node.next, val)
-    end
-
-    def set_prev(agent, prev), do: Agent.update(agent, fn node -> struct!(node, prev: prev) end)
-
-    def set_next(agent, next), do: Agent.update(agent, fn node -> struct!(node, next: next) end)
-
-    def insert(agent, left, right) do
-      node = Node.get(agent)
-      set_next(left, agent)
-      set_prev(right, agent)
-      set_next(agent, right)
-      set_prev(agent, left)
-      :ok
+      Map.delete(nodes, node.id)
+      |> Map.merge(%{
+        left.id => struct!(left, next: right.id),
+        right.id => struct!(right, prev: left.id)
+      })
     end
   end
 
   @doc "Mix the file once, add the 1000th, 2000th, and 3000th numbers after 0."
   def part1(input) do
-    {agents, first, size} = build_list(input |> Enum.map(&String.to_integer/1))
-    find_result(move_agents(agents, first, size))
+    {order, values, nodes} = parse_input(Enum.map(input, &String.to_integer/1))
+    find_result(values, move_all(order, values, nodes))
   end
 
   @doc "Multiply each number by a large constant, mix the file ten times."
   @multiplier 811_589_153
   def part2(input) do
-    {agents, first, size} = build_list(input |> Enum.map(&(String.to_integer(&1) * @multiplier)))
-    find_result(Enum.reduce(1..10, first, fn _, first -> move_agents(agents, first, size) end))
+    {order, vals, nodes} = parse_input(Enum.map(input, &(String.to_integer(&1) * @multiplier)))
+    find_result(vals, Enum.reduce(1..10, nodes, fn _, nodes -> move_all(order, vals, nodes) end))
   end
 
-  defp build_list(numbers) do
-    {agents, {first, last, size}} =
-      Enum.map_reduce(numbers, {nil, nil, 0}, fn
-        val, {nil, nil, 0} ->
-          agent = Node.new(val, nil, nil)
-          {agent, {agent, agent, 1}}
-
-        val, {first, last, count} ->
-          agent = Node.new(val, last, nil)
-          Node.set_next(last, agent)
-          {agent, {first, agent, count + 1}}
-      end)
-
-    Node.set_prev(first, last)
-    Node.set_next(last, first)
-    {agents, first, size}
+  defp find_result(values, nodes) do
+    [{zero_id, 0}] = Enum.filter(values, fn {_, val} -> val === 0 end)
+    one = Node.find(nodes[zero_id], 1000, nodes)
+    two = Node.find(nodes[one.id], 1000, nodes)
+    three = Node.find(nodes[two.id], 1000, nodes)
+    Enum.map([one, two, three], &values[&1.id]) |> Enum.sum()
   end
 
-  defp move_agents(agents, first, size) do
-    for a <- agents do
-      before = Node.get(a)
-      steps = rem(before.value, size - 1)
-
-      if steps != 0 do
-        Node.set_next(before.prev, before.next)
-        Node.set_prev(before.next, before.prev)
-        found = Node.find(a, steps)
-        found_node = Node.get(found)
-        {left, right} = if steps < 0, do: {found_node.prev, found}, else: {found, found_node.next}
-        Node.insert(a, left, right)
-      end
-    end
-
-    first
+  defp move_all(order, values, nodes) do
+    cycle = Map.size(nodes) - 1
+    Enum.reduce(order, nodes, fn id, nodes -> move(id, rem(values[id], cycle), nodes) end)
   end
 
-  defp find_result(first) do
-    zero = Node.find_value(first, 0)
-    one = Node.find(zero, 1000)
-    two = Node.find(one, 1000)
-    three = Node.find(two, 1000)
-    Enum.map([one, two, three], fn agent -> Node.get(agent).value end) |> Enum.sum()
+  defp move(_, 0, nodes), do: nodes
+
+  defp move(id, steps, nodes) do
+    node = nodes[id]
+    nodes = Node.remove(node, nodes)
+    dest = Node.find(node, steps, nodes)
+
+    if steps < 0,
+      do: Node.insert(node, dest.prev, dest.id, nodes),
+      else: Node.insert(node, dest.id, dest.next, nodes)
+  end
+
+  defp parse_input(numbers) do
+    first_index = 100_000
+    last_index = first_index + Enum.count(numbers) - 1
+
+    # {order, values, nodes}
+    numbers
+    |> Enum.with_index(first_index)
+    |> Enum.reduce({[], %{}, %{}}, fn
+      {val, ^first_index}, {[], %{}, %{}} ->
+        {[first_index], %{first_index => val},
+         %{first_index => %Node{id: first_index, prev: last_index, next: first_index + 1}}}
+
+      {val, ^last_index}, {order, values, nodes} ->
+        {order ++ [last_index], Map.put(values, last_index, val),
+         Map.put(nodes, last_index, %Node{
+           id: last_index,
+           prev: last_index - 1,
+           next: first_index
+         })}
+
+      {val, id}, {order, values, nodes} ->
+        {order ++ [id], Map.put(values, id, val),
+         Map.put(nodes, id, %Node{id: id, prev: id - 1, next: id + 1})}
+    end)
   end
 
   def main() do
