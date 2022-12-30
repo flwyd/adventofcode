@@ -61,19 +61,19 @@ class RunContext {
   method run-part(Solver:U $part) {
     my $num = $part.^name.comb(/\d+/).head;
     my $expected = $.expected«$num» // '';
-    say "Running __CLASS_NAME__ part $num on $!input-file expecting '$expected'";
+    $*ERR.say: "Running __CLASS_NAME__ part $num on $!input-file expecting '$expected'";
     my $start = now;
     my $solver = $part.new(:$!input);
     my $result = $solver.solve();
     my $end = now;
-    put $result;
+    put "part$num: $result";
     "Part $num took %.3fms\n".printf(($end - $start) * 1000);
     @!passed.push($result eq 'TODO' || $expected && $expected eq $result);
     if $expected {
       if $expected eq $result {
-        say "\c[CHECK MARK] PASS with expected value '$result'";
+        $*ERR.say: "\c[CHECK MARK] PASS with expected value '$result'";
       } else {
-        say "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
+        $*ERR.say: "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
       }
     }
     $*OUT.flush;
@@ -92,13 +92,13 @@ sub MAIN(*@input-files) {
         }
       }
       $context.run-part(Part1);
-      say '';
+      $*ERR.say: '';
       $context.run-part(Part2);
       $exit &= all($context.passed);
     } else {
-      say "EMPTY INPUT FILE: $input-file";
+      $*ERR.say: "EMPTY INPUT FILE: $input-file";
     }
-    say '=' x 40;
+    $*ERR.say: '=' x 40;
   }
   exit $exit ?? 0 !! 1;
 }

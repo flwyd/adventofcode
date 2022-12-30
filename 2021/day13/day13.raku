@@ -66,6 +66,7 @@ class Part2 is Solver {
     my $maxx = $points.keys.map({split-point($_)<x>}).max;
     my $maxy = $points.keys.map({split-point($_)<y>}).max;
     join "\n", gather {
+      take "";
       for 0..$maxy -> $y {
         take ("$_,$y" ∈ $points ?? '#' !! '.' for 0..$maxx).join;
       }
@@ -83,19 +84,19 @@ class RunContext {
     my $num = $part.^name.comb(/\d+/).head;
     my $expected = $.expected«$num» // '';
     $expected ~~ s:g/\\n/\n/;
-    say "Running Day13 part $num on $!input-file expecting '$expected'";
+    $*ERR.say: "Running Day13 part $num on $!input-file expecting '$expected'";
     my $start = now;
     my $solver = $part.new(:$!input);
     my $result = $solver.solve();
     my $end = now;
-    put $result;
-    "Part $num took %.3fms\n".printf(($end - $start) * 1000);
+    put "part$num: $result";
+    $*ERR.printf("Part $num took %.3fms\n", ($end - $start) * 1000);
     @!passed.push($result eq 'TODO' || $expected && $expected eq $result);
     if $expected {
       if $expected eq $result {
-        say "\c[CHECK MARK] PASS with expected value '$result'";
+        $*ERR.say: "\c[CHECK MARK] PASS with expected value '$result'";
       } else {
-        say "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
+        $*ERR.say: "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
       }
     }
   }
@@ -112,13 +113,13 @@ sub MAIN(*@input-files) {
         }
       }
       $context.run-part(Part1);
-      say '';
+      $*ERR.say: '';
       $context.run-part(Part2);
       $exit &= all($context.passed);
     } else {
-      say "EMPTY INPUT FILE: $input-file";
+      $*ERR.say: "EMPTY INPUT FILE: $input-file";
     }
-    say '=' x 40;
+    $*ERR.say: '=' x 40;
   }
   exit $exit ?? 0 !! 1;
 }

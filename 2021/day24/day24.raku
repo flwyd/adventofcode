@@ -82,7 +82,7 @@ class Program {
     my $state = ProgramState.new(:$input);
     for @.operations {
       $_.eval($state);
-      say "$_ ~ $state" if $!verbose;
+      $*ERR.say: "$_ ~ $state" if $!verbose;
     }
     $state
   }
@@ -138,11 +138,11 @@ class Part1 is Solver {
       my $model = ModelNumber.new($num);
       my $state = $prog.eval($model);
       if $state.get-register('z') == 0 {
-        say "Found z=0 for $model == $num";
+        $*ERR.say: "Found z=0 for $model == $num";
         return $model.Str;
       }
     }
-    say "Didn't find any matches between $all-nines-prefix$magic-suffix and 0$magic-suffix";
+    $*ERR.say: "Didn't find any matches between $all-nines-prefix$magic-suffix and 0$magic-suffix";
     0
   }
 
@@ -170,15 +170,15 @@ class Part1 is Solver {
       my $num = ModelNumber.new($try);
       my $state = $prog.eval($num);
       if $state.get-register('z') == 0 {
-        say "$num ($try) is valid: $state";
+        $*ERR.say: "$num ($try) is valid: $state";
         $max = $try;
         $max-model = $num;
         $tried-count = 0;
         next;
       }
-      say "Tried $tried-count" if ++$tried-count %% 1000;
+      $*ERR.say: "Tried $tried-count" if ++$tried-count %% 1000;
     }
-    say "Highwater mark is $max-model ($max)";
+    $*ERR.say: "Highwater mark is $max-model ($max)";
     for $max^..$all-nines {
       my $num = ModelNumber.new($_);
       my $state = $prog.eval($num);
@@ -187,7 +187,7 @@ class Part1 is Solver {
         $max-model = $num;
       }
     }
-    say "Max is $max, $max-model";
+    $*ERR.say: "Max is $max, $max-model";
     return $max-model.Str;
     # The ratcheting binary search approach:
     # say "Program on 1s:";
@@ -227,12 +227,12 @@ class Part2 is Solver {
         my $model = ModelNumber.new($num);
         my $state = $prog.eval($model);
         if $state.get-register('z') == 0 {
-          say "Found z=0 for $model == $num";
+          $*ERR.say: "Found z=0 for $model == $num";
           return $model.Str;
         }
       }
     }
-    say "Didn't find any matches between 111{$magic-infix}111 and 999{$magic-infix}999";
+    $*ERR.say: "Didn't find any matches between 111{$magic-infix}111 and 999{$magic-infix}999";
     0
   }
 }
@@ -246,19 +246,19 @@ class RunContext {
   method run-part(Solver:U $part) {
     my $num = $part.^name.comb(/\d+/).head;
     my $expected = $.expected«$num» // '';
-    say "Running Day24 part $num on $!input-file expecting '$expected'";
+    $*ERR.say: "Running Day24 part $num on $!input-file expecting '$expected'";
     my $start = now;
     my $solver = $part.new(:$!input);
     my $result = $solver.solve();
     my $end = now;
-    put $result;
-    "Part $num took %.3fms\n".printf(($end - $start) * 1000);
+    put "part$num: $result";
+    $*ERR.printf("Part $num took %.3fms\n", ($end - $start) * 1000);
     @!passed.push($result eq 'TODO' || $expected && $expected eq $result);
     if $expected {
       if $expected eq $result {
-        say "\c[CHECK MARK] PASS with expected value '$result'";
+        $*ERR.say: "\c[CHECK MARK] PASS with expected value '$result'";
       } else {
-        say "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
+        $*ERR.say: "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
       }
     }
     $*OUT.flush;
@@ -277,13 +277,13 @@ sub MAIN(*@input-files) {
         }
       }
       $context.run-part(Part1);
-      say '';
+      $*ERR.say: '';
       $context.run-part(Part2);
       $exit &= all($context.passed);
     } else {
-      say "EMPTY INPUT FILE: $input-file";
+      $*ERR.say: "EMPTY INPUT FILE: $input-file";
     }
-    say '=' x 40;
+    $*ERR.say: '=' x 40;
   }
   exit $exit ?? 0 !! 1;
 }

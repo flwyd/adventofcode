@@ -195,7 +195,7 @@ class Solver {
 
   method cheapest-solution( --> Int) {
     my $initial = Board.new(:$.hall-length, :@.pods, :@.room-nums);
-    say $initial.ascii;
+    $*ERR.say: $initial.ascii;
     my Array @q;
     @q[0].push($initial);
     my $min = 0;
@@ -209,13 +209,13 @@ class Solver {
       $min++ until @q[$min];
       my $board = @q[$min].shift;
       if $min - $last-noted >= 500 {
-        say "Min: $min size: $total-size dupes: $dupes of {+%seen}";
+        $*ERR.say: "Min: $min size: $total-size dupes: $dupes of {+%seen}";
         $last-noted = $min;
       }
       --$total-size;
       $last-said = $min;
       if $board.satisfied {
-        say "Found winning board at min: $min size: $total-size dupes: $dupes of {+%seen}";
+        $*ERR.say: "Found winning board at min: $min size: $total-size dupes: $dupes of {+%seen}";
         # say "Winning board at $min: $board from\n{$board.parents».ascii.join(qq|\n\n|)}";
         # say "\n" ~ $board.ascii;
         return $board.cost;
@@ -261,19 +261,19 @@ class RunContext {
   method run-part(Solver:U $part) {
     my $num = $part.^name.comb(/\d+/).head;
     my $expected = $.expected«$num» // '';
-    say "Running Day23 part $num on $!input-file expecting '$expected'";
+    $*ERR.say: "Running Day23 part $num on $!input-file expecting '$expected'";
     my $start = now;
     my $solver = $part.new(:$!input);
     my $result = $solver.solve();
     my $end = now;
-    put $result;
-    "Part $num took %.3fms\n".printf(($end - $start) * 1000);
+    put "part$num: $result";
+    $*ERR.printf("Part $num took %.3fms\n", ($end - $start) * 1000);
     @!passed.push($result eq 'TODO' || $expected && $expected eq $result);
     if $expected {
       if $expected eq $result {
-        say "\c[CHECK MARK] PASS with expected value '$result'";
+        $*ERR.say: "\c[CHECK MARK] PASS with expected value '$result'";
       } else {
-        say "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
+        $*ERR.say: "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
       }
     }
     $*OUT.flush;
@@ -292,13 +292,13 @@ sub MAIN(*@input-files) {
         }
       }
       $context.run-part(Part1);
-      say '';
+      $*ERR.say: '';
       $context.run-part(Part2);
       $exit &= all($context.passed);
     } else {
-      say "EMPTY INPUT FILE: $input-file";
+      $*ERR.say: "EMPTY INPUT FILE: $input-file";
     }
-    say '=' x 40;
+    $*ERR.say: '=' x 40;
   }
   exit $exit ?? 0 !! 1;
 }
