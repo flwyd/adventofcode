@@ -1,0 +1,47 @@
+#!/bin/zsh
+# Copyright 2023 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Run the AoC solution for a day on all of its input, saving logs to out/
+# Run an each change with ./watch day1 or watchexec ./runday day1
+
+YEAR="2023"
+if [ $# -eq 0 ]; then
+  print -u 2 "Usage: runday day1"
+  exit 1
+fi
+BASEDIR="${0:h:a}"
+DAYDIR="$BASEDIR/$1"
+if [[ ! -d "$DAYDIR" ]]; then
+  print -u 2 "No such directory: $DAYDIR"
+  exit 1
+fi
+cd "$DAYDIR"
+# day1/Day1.jl
+PROGRAM="${(C)1}.jl"
+if [[ ! -f "$PROGRAM" ]]; then
+  print -u 2 "Missing file: $PROGRAM"
+  exit 1
+fi
+DATEFMT='%Y%m%d-%H%M%S'
+mkdir -p out
+OUTFILE="out/$(date +$DATEFMT).log"
+if [[ -s "$BASEDIR/.cookie-jar" && ! -s input.actual.txt ]]; then
+  input=$("$BASEDIR/fetchinput" "$YEAR" "$1")
+  # Don't directly send fetchinput to input.actual.txt to avoid changing mtime
+  # if input isn't avaliable yet
+  if [[ ! -z "$input" ]]; then
+    echo "$input" >| input.actual.txt
+  fi
+fi
+CMD=("./$PROGRAM" -v input.example*.txt input.actual.txt)
+TIMEFMT="$PROGRAM > $OUTFILE %U user %S system %P cpu %*E total"
+print -u 2
+print -u 2 "$CMD > $OUTFILE"
+print -u 2
+time ($CMD 2>&1 | tee "$OUTFILE" ; exit ${pipestatus[1]})
+res=$?
+exit $res
