@@ -1,1 +1,1 @@
-123487596
+../input/23/input.actual.txt

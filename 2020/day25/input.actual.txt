@@ -1,2 +1,1 @@
-10943862
-12721030
+../input/25/input.actual.txt
