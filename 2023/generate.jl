@@ -46,9 +46,23 @@ function generate_into(daydir)
     write(jlfile, code)
     chmod(jlfile, 0o755)
   end
-  for context in ["example", "actual"]
-    touch(joinpath(base, "input.$context.txt"))
-    write(joinpath(base, "input.$context.expected"), "part1: \npart2: \n")
+  mkinput(base, "example")
+  inputdir = joinpath(dirname(PROGRAM_FILE), "input", daynum)
+  mkpath(inputdir)
+  mkinput(inputdir, "actual")
+  for name in readdir(inputdir)
+    symlink(relpath(joinpath(inputdir, name), base), joinpath(base, name))
+  end
+end
+
+function mkinput(dir, context)
+  txtfile = joinpath(dir, "input.$context.txt")
+  expectedfile = joinpath(dir, "input.$context.expected")
+  if !isfile(txtfile)
+    touch(txtfile)
+  end
+  if !isfile(expectedfile)
+    write(expectedfile, "part1: \npart2: \n")
   end
 end
 
