@@ -1,0 +1,3 @@
+[submodule "input"]
+	path = input
+	url = https://github.com/flwyd/adventofcode-input
