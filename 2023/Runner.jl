@@ -30,7 +30,7 @@ function run_module(mod, filenames; verbose = false)
               map(l -> match(r"(part\d):\s*(.*)", l), readlines(ef)),
             )
             ) do m
-              m.captures[1] => m.captures[2]
+              m.captures[1] => replace(m.captures[2], r"\\n" => "\n")
             end
           end
       else
