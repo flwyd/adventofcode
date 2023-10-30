@@ -10,50 +10,23 @@
 day20 in Go since I could not figure out what was wrong with my Elixir
 solution so I figured I'd reimplement it in a different language to see if I
 had a hard-to-spot bug.  Turns out it was an unclear specification.
+XXX This program implements the incorrect interpretation of the problem
+(tea party guests move but chairs stay put); day20.exs implements the correct
+interpretation (tea party guests carry their chair around the table).
+https://www.reddit.com/r/adventofcode/comments/zrggym/2022_day_20_alice_in_wonderland_explains_the_two/
 */
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"log"
-	"os"
-	"time"
+	"strconv"
 )
 
 func main() {
-	for _, arg := range os.Args[1:] {
-		fmt.Printf("Reading %s\n", arg)
-		f, err := os.Open(arg)
-		if err != nil {
-			log.Fatalf("Could not open %s: %v", arg, err)
-		}
-		defer f.Close()
-		ints := make([]int, 0, 5000)
-		s := bufio.NewScanner(f)
-		for s.Scan() {
-			var i int
-			if _, err := fmt.Sscanf(s.Text(), "%d", &i); err != nil {
-				log.Fatalf("Could not parse int %s: %v", s.Text(), err)
-			}
-			ints = append(ints, i)
-		}
-
-		fmt.Printf("Running part1 on %s (%d lines)\n", arg, len(ints))
-		start := time.Now()
-		res := part1(ints)
-		dur := time.Since(start)
-		fmt.Printf("part1: %d\n", res)
-		fmt.Printf("Finished part1 in %s on %s\n", dur, arg)
-
-		fmt.Printf("Running part2 on %s (%d lines)\n", arg, len(ints))
-		start = time.Now()
-		res = part2(ints)
-		dur = time.Since(start)
-		fmt.Printf("part2: %d\n", res)
-		fmt.Printf("Finished part2 in %s on %s\n", dur, arg)
-	}
+	runMain(part1, part2)
 }
+
+const dayName = "day20"
 
 type Node struct {
 	value      int
@@ -115,18 +88,32 @@ func (n *Node) toSlice() []int {
 	return ints
 }
 
-func part1(ints []int) int {
+func stringsToInts(strs []string) []int {
+	res := make([]int, len(strs))
+	for i, s := range strs {
+		x, err := strconv.Atoi(s)
+		if err != nil {
+			log.Fatalf("Invalid int %q at line %d: %v", s, i+1, err)
+		}
+		res[i] = x
+	}
+	return res
+}
+
+func part1(lines []string) string {
+	ints := stringsToInts(lines)
 	size := len(ints)
 	nodes := buildList(ints, 1)
 	for _, n := range nodes {
 		n.move(n.value % (size - 1))
 	}
-	return score(nodes)
+	return strconv.Itoa(score(nodes))
 }
 
 const part2Multiplier = 811589153
 
-func part2(ints []int) int {
+func part2(lines []string) string {
+	ints := stringsToInts(lines)
 	size := len(ints)
 	nodes := buildList(ints, part2Multiplier)
 	for i := 0; i < 10; i++ {
@@ -135,7 +122,7 @@ func part2(ints []int) int {
 			n.move(steps)
 		}
 	}
-	return score(nodes)
+	return strconv.Itoa(score(nodes))
 }
 
 func buildList(ints []int, multiplier int) []*Node {

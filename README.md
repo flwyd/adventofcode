@@ -31,23 +31,30 @@ think could be done better.
 
 ## Directory Structure
 
-Each year has one directory for each day’s solution, named `day1` through `day25`.
+Each year’s solutions are in a directory named after the year.  Within that dir
+is one directory for each day’s solution, named `day1` through `day25`.
 Each day directory has the solution code in one or more languages, a file named
 `input.example.txt` with an example taken from the problem description and
 `input.example.expected` with two lines (prefixed `part1: ` and `part2: `) with
 the expected output when the solution code is run `input.example.txt`.  If the
 problem description has multiple examples, they’ll be in `input.example2.txt`
-and `input.example2.expected`, etc.  The `input.actual.txt` and
-`input.actual.expected` files are symlinks into a non-public directory with
-input specific to my AoC account.  If you’d like to test my code against your
-personal input, provide the path to your input as a command line argument:
-`day1/day1.exs -v path/to/my/input.txt`.  If you’d like to run a whole suite of
-solutions against your input, make sure they’re in a directory with numbered
-subdirectories, e.g. `1/input.actual.txt` and replace my `input` directory with
-a symlink to yours, e.g. `rm 2023/input; ln -s path/to/my/2023 2023/input` which
-will cause `runday` and `testday` scripts to use yours.  Alternatively,
-substitute the `input` submodule at the base of the repository, as in the next
-section.
+and `input.example2.expected`, etc.
+
+The `input.actual.txt` and `input.actual.expected` files are symlinks into a
+non-public directory with input specific to my AoC account.  If you’d like to
+test my code against your personal input, provide the path to your input as a
+command line argument: `day1/day1.exs -v path/to/my/input.txt`.  If you’d like
+to run a whole suite of solutions against your input, make sure they’re in a
+directory with numbered subdirectories, e.g. `1/input.actual.txt` and replace
+my `input` directory with a symlink to yours, e.g. `rm 2023/input; ln -s
+path/to/my/2023 2023/input` which will cause `runday` and `testday` scripts to
+use yours.  Alternatively, substitute the `input` submodule at the base of the
+repository, as in the next section.
+
+There is also a `lang` directory for runner and generator infrastructure for
+programming languages which aren’t “the main language” for any year, but which I
+sometimes use for fun or because I got stuck on a problem with the main new
+language for a year.
 
 ## Hiding Private Advent of Code Input with Git Submodules
 
