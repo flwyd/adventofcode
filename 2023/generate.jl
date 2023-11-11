@@ -32,10 +32,16 @@ function generate_into(daydir)
     module Day$daynum
 
     function part1(lines)
+      input = map(lines) do line
+        line
+      end
       :TODO
     end
 
     function part2(lines)
+      input = map(lines) do line
+        line
+      end
       :TODO
     end
 
