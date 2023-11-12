@@ -1,0 +1,50 @@
+#!/bin/zsh
+# Copyright 2023 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Script to start a REPL with development environment conveniences.
+# Usage: ./repl day1
+
+set -e
+DAY=${1:?missing day}
+# ${(C)} is ucfirst
+MODULE=${(C)DAY}
+cd $DAY
+export JULIA_LOAD_PATH=".:..:$JULIA_LOAD_PATH"
+if [[ -z $SSH_TTY && -z $JULIA_EDITOR ]]; then
+  vims=($(whence gvim mvim vim || true))
+  export JULIA_EDITOR=${vims[1]}
+fi
+
+read -r -d '' STARTUP <<EOT || true
+try
+  @eval using Debugger
+catch e
+  @warn "Need to install Debugger?" exception=(e, catch_backtrace())
+end
+try
+  @eval using Revise
+catch e
+  @warn "Need to install Revise?" exception=(e, catch_backtrace())
+end
+using $MODULE
+using Runner
+inputexample = "input.example.txt"
+inputactual = "input.actual.txt"
+inputfiles() = readdir(sort=true) |> filter(x -> occursin(r"^input\..*\.txt$", x))
+function inputstats()
+  for i in inputfiles()
+    expect = join(readlines(Runner.expectedfile(i)), " ")
+    count = length(readlines(i))
+    println("\$i \$count lines expected: \$expect")
+  end
+end
+run() = Runner.run_module($MODULE, inputfiles(); verbose=true)
+inputstats()
+println("$MODULE ready, just run() or $MODULE.part1(readlines(inputexample))")
+EOT
+
+exec julia -e "$STARTUP" -i

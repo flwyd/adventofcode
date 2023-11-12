@@ -11,32 +11,16 @@ using Printf
 
 function run_part(func, input, expected)
   stats = @timed func(input)
-  Result(stats.value, expected, stats.time)
+  Result(stats.value, expected, stats.time, stats.bytes)
 end
 
-function run_module(mod, filenames; verbose = false)
+function run_module(mod, filenames; verbose=false)
   name = nameof(mod)
   ok = true
   for fname in filenames
     lines = readlines(fname == "-" ? stdin : fname)
     len = length(lines)
-    expectfile = replace(fname, r"(.*)\.txt$" => s"\1.expected")
-    expect = Dict(
-      if expectfile != fname && isfile(expectfile)
-        open(expectfile) do ef
-          map(
-            filter(
-              !isnothing,
-              map(l -> match(r"(part\d):\s*(.*)", l), readlines(ef)),
-            )
-            ) do m
-              m.captures[1] => replace(m.captures[2], r"\\n" => "\n")
-            end
-          end
-      else
-        []
-      end,
-    )
+    expect = expectedfor(fname)
     for func in [mod.part1, mod.part2]
       expected = get(expect, string(func), "")
       if verbose
@@ -46,13 +30,29 @@ function run_module(mod, filenames; verbose = false)
       println("$func: $(res.got)")
       if verbose
         time = format_seconds(res.time_sec)
+        bytes = Base.format_bytes(res.allocated_bytes)
         print_message(stderr, res)
-        println(stderr, "$func took $time on $fname")
+        println(stderr, "$func took $time and $bytes on $fname")
         println(stderr, "="^40)
       end
     end
   end
   return ok
+end
+
+expectedfile(inputfile) = replace(inputfile, r"(.*)\.txt$" => s"\1.expected")
+
+function expectedfor(inputfile)
+  expectfile = expectedfile(inputfile)
+  if expectfile != inputfile && isfile(expectfile)
+    open(expectfile) do ef
+      map(m -> m.captures[1] => replace(m.captures[2], r"\\n" => "\n"),
+        map(l -> match(r"(part\d):\s*(.*)", l), readlines(ef)) |>
+        filter(!isnothing))
+    end |> Dict{String, String}
+  else
+    Dict{String, String}()
+  end
 end
 
 function format_seconds(sec)
@@ -66,9 +66,9 @@ function format_seconds(sec)
   elseif sec >= 1
     @sprintf("%.3fs", sec)
   elseif sec >= 0.001
-    @sprintf("%.3fms", sec * 1_000)
+    @sprintf("%.3fms", sec*1_000)
   else
-    @sprintf("%.3fµs", sec * 1_000_000)
+    @sprintf("%.3fµs", sec*1_000_000)
   end
 end
 
@@ -76,12 +76,20 @@ struct Result
   got::Any
   want::String
   time_sec::Float64
+  allocated_bytes::Int
 end
 
+const OUTCOME_SYMBOLS = Dict(:success => "✅",
+  :failure => "❌",
+  :unknown => "❓",
+  :todo => "❗")
+const OUTCOME_BG_COLOR = Dict(:success => :light_green,
+  :failure => :light_red,
+  :unknown => :magenta,
+  :todo => :cyan)
 function print_message(io, res::Result)
   o = outcome(res)
-  sign =
-    Dict(:success => "✅", :failure => "❌", :unknown => "❓", :todo => "❗")[o]
+  sign = OUTCOME_SYMBOLS[o]
   msg = if o == :success
     "got $(res.got)"
   elseif o == :failure
@@ -93,14 +101,12 @@ function print_message(io, res::Result)
   elseif o == :todo
     "implement it, want $(res.want)"
   end
-  bg = Dict(
-    :success => :light_green,
-    :failure => :light_red,
-    :unknown => :magenta,
-    :todo => :cyan,
-  )[o]
+  bg = OUTCOME_BG_COLOR[o]
   buf = IOBuffer()
-  printstyled(IOContext(buf, :color => true), uppercase(string(o)), color = bg, reverse = true)
+  printstyled(IOContext(buf, :color => true),
+    uppercase(string(o)),
+    color=bg,
+    reverse=true)
   colored = String(take!(buf))
   println(io, "$sign $colored $msg")
 end
@@ -122,18 +128,16 @@ end
 macro run_if_main()
   srcfile = QuoteNode(__source__.file)
   mod = __module__
-  :(
-    if abspath(PROGRAM_FILE) == string($srcfile)
-      args = ARGS
-      verbose = false
-      if isempty(ARGS)
-        args = ["-"]
-      elseif first(ARGS) in ["-v", "--verbose"]
-        verbose = true
-        args = args[2:end]
-      end
-      ok = Runner.run_module($mod, args, verbose = verbose)
-      exit(ok ? 0 : 1)
+  :(if abspath(PROGRAM_FILE) == string($srcfile)
+    args = ARGS
+    verbose = false
+    if isempty(ARGS)
+      args = ["-"]
+    elseif first(ARGS) in ["-v", "--verbose"]
+      verbose = true
+      args = args[2:end]
     end
-  )
+    ok = Runner.run_module($mod, args, verbose=verbose)
+    exit(ok ? 0 : 1)
+  end)
 end
