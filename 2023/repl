@@ -23,12 +23,12 @@ read -r -d '' STARTUP <<EOT || true
 try
   @eval using Debugger
 catch e
-  @warn "Need to install Debugger?" exception=(e, catch_backtrace())
+  @warn "Need to install Debugger?" exception=(e)
 end
 try
   @eval using Revise
 catch e
-  @warn "Need to install Revise?" exception=(e, catch_backtrace())
+  @warn "Need to install Revise?" exception=(e)
 end
 using $MODULE
 using Runner
