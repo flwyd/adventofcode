@@ -34,17 +34,9 @@ using $MODULE
 using Runner
 inputexample = "input.example.txt"
 inputactual = "input.actual.txt"
-inputfiles() = readdir(sort=true) |> filter(x -> occursin(r"^input\..*\.txt$", x))
-function inputstats()
-  for i in inputfiles()
-    expect = join(readlines(Runner.expectedfile(i)), " ")
-    count = length(readlines(i))
-    println("\$i \$count lines expected: \$expect")
-  end
-end
-run() = Runner.run_module($MODULE, inputfiles(); verbose=true)
-inputstats()
-println("$MODULE ready, just run() or $MODULE.part1(readlines(inputexample))")
+run() = Runner.run_module($MODULE, Runner.inputfiles(); verbose=true)
+Runner.inputstats()
+println("$MODULE, just run() or $MODULE.part1(readlines(inputexample))")
 EOT
 
 exec julia -e "$STARTUP" -i

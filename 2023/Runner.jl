@@ -55,6 +55,16 @@ function expectedfor(inputfile)
   end
 end
 
+inputfiles(dir=pwd()) = readdir(sort=true) |> filter(x -> occursin(r"^input\..*\.txt$", x))
+
+function inputstats(dir=pwd())
+  for i in inputfiles()
+    expect = join(readlines(Runner.expectedfile(i)), " ")
+    count = length(readlines(i))
+    println("$i $count lines expected: $expect")
+  end
+end
+
 function format_seconds(sec)
   if sec >= 60 * 60
     (m, s) = divrem(sec, 60)

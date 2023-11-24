@@ -1,0 +1,30 @@
+#!/bin/zsh
+# Copyright 2023 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Script to start Pluto and open a notebook in your web browser.
+# Usage: ./pluto day1
+
+set -e
+DAY=${1:?missing day}
+cd $DAY
+export JULIA_LOAD_PATH=".:..:$JULIA_LOAD_PATH"
+plutoargs=('notebook="notebook.jl"' 'dismiss_update_notification=true')
+
+if [[ ! -z $SSH_CONNECTION ]]; then
+  # need to pick our own port in order to use root_url, see
+  # https://github.com/fonsp/Pluto.jl/issues/2729
+  ((PORT=1234))
+  while nc -z localhost $PORT >& /dev/null ; do
+    PORT+=1
+  done
+  plutoargs+=('launch_browser=false' \
+    'host="0.0.0.0"' "port=$PORT" \
+    "root_url=\"http://$(hostname):$PORT/\"")
+fi
+
+echo "Launching Pluto for $DAY"
+exec julia -e "import Pluto; Pluto.run(${(j:, :)plutoargs})"

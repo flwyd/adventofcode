@@ -7,6 +7,8 @@
 
 # Script to generate a skeletal Advent of Code solution in Julia.
 
+using UUIDs
+
 function generate_into(daydir)
   m = match(r"(\d+)$", daydir)
   if isnothing(m)
@@ -26,23 +28,26 @@ function generate_into(daydir)
     # Use of this source code is governed by an MIT-style
     # license that can be found in the LICENSE file or at
     # https://opensource.org/licenses/MIT.
-    #
-    # https://adventofcode.com/2023/day/$daynum
 
+    \"""# Advent of Code 2023 day $daynum
+    [Read the puzzle](https://adventofcode.com/2023/day/$daynum)
+    \"""
     module Day$daynum
 
     function part1(lines)
-      input = map(lines) do line
-        line
-      end
+      input = parseinput(lines)
       :TODO
     end
 
     function part2(lines)
-      input = map(lines) do line
+      input = parseinput(lines)
+      :TODO
+    end
+
+    function parseinput(lines)
+      map(lines) do line
         line
       end
-      :TODO
     end
 
     include("../Runner.jl")
@@ -52,8 +57,95 @@ function generate_into(daydir)
     write(jlfile, code)
     chmod(jlfile, 0o755)
   end
+
+  notebook = joinpath(base, "notebook.jl")
+  if !isfile(notebook)
+    header_uuid = UUIDs.uuid4()
+    preamble_uuid = UUIDs.uuid4()
+    inputstats_uuid = UUIDs.uuid4()
+    functions_uuid = UUIDs.uuid4()
+    vars_uuid = UUIDs.uuid4()
+    resultshead_uuid = UUIDs.uuid4()
+    results_uuid = UUIDs.uuid4()
+    code = """
+    ### A Pluto.jl notebook ###
+    # v0.19.32
+    #
+    # Copyright 2023 Google LLC
+    #
+    # Use of this source code is governed by an MIT-style
+    # license that can be found in the LICENSE file or at
+    # https://opensource.org/licenses/MIT.
+
+    using Markdown
+    using InteractiveUtils
+
+    # ╔═╡ $header_uuid
+    @doc Day$daynum
+
+    # ╔═╡ $preamble_uuid
+    begin
+      import Pkg
+      Pkg.activate()
+      try
+        @eval using Revise
+      catch e
+        @warn "Need to install Revise?" exception=(e)
+      end
+      using Day$daynum
+      using Runner
+      inputexample = "input.example.txt"
+      inputactual = "input.actual.txt"
+      run() = Runner.run_module(Day$daynum, Runner.inputfiles(); verbose=true)
+      println("Day$daynum ready, just run() or Day$daynum.part1(readlines(inputexample))")
+    end
+
+    # ╔═╡ $inputstats_uuid
+    Runner.inputstats();
+
+    # ╔═╡ $functions_uuid
+    begin
+    function parseinput(lines)
+      Day$daynum.parseinput(lines)
+      #map(lines) do line
+        #parse(Int, line)
+        #if (m = match(r"^(\\S+) (\\S+)\$", line)) !== nothing
+        #  (foo, bar) = m.captures
+        #end
+      #end
+    end
+    end;
+
+    # ╔═╡ $vars_uuid
+    begin # Useful variables
+    exampleexpected = Runner.expectedfor(inputexample)
+    examplelines = readlines(inputexample)
+    input = parseinput(examplelines)
+    end
+
+    # ╔═╡ $resultshead_uuid
+    md"## Results"
+
+    # ╔═╡ $results_uuid
+    Runner.run_module(Day$daynum, [
+    inputexample,
+    inputactual,
+    ], verbose=true)
+
+    # ╔═╡ Cell order:
+    # ╟─$header_uuid
+    # ╟─$preamble_uuid
+    # ╠═$inputstats_uuid
+    # ╠═$functions_uuid
+    # ╠═$vars_uuid
+    # ╟─$resultshead_uuid
+    # ╠═$results_uuid
+    """
+    write(notebook, code)
+  end
+
   mkinput(base, "example")
-  inputdir = joinpath(dirname(PROGRAM_FILE), "input", daynum)
+  inputdir = joinpath(@__DIR__, "input", daynum)
   mkpath(inputdir)
   mkinput(inputdir, "actual")
   for name in readdir(inputdir)
