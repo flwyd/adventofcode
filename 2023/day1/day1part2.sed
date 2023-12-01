@@ -5,7 +5,7 @@
 # https://opensource.org/licenses/MIT.
 
 # Advent of Code 2023 day 1 part 2.
-# Run with sed -f day1part1.sed -f day1part2.sed input.example2.txt | xargs expr
+# Run with sed -f day1part2.sed -f day1part1.sed input.example2.txt | xargs expr
 
 # Replace digit names while allowing for overlap.
 s/one/o1e/g
