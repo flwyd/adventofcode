@@ -1,5 +1,5 @@
 indent = 2
-margin = 80
+margin = 100
 trailing_comma = false
 whitespace_in_kwargs = false
 style = "sciml"
