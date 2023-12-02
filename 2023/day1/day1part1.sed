@@ -13,5 +13,7 @@ s/\([0-9]\).*\([0-9]\).*$/\1\2/
 s/^[^0-9]*\([0-9]\)[^0-9]*$/\1\1/
 # Delete any non-leading digits.
 s/^[^0-9]*//
+# If a line has no digits, treat it as 0.
+s/^[^0-9]*$/0/
 # Prepend a + to each line so it can be fed to a calculator.
 s/^/+ /
