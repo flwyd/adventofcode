@@ -31,18 +31,15 @@ function part2(lines)
 end
 
 function parseinput2(lines)
+  words = Dict(map(x -> string(x[2]) => string(x[1]),
+    vcat(
+      collect(enumerate(["one", "two", "three", "four", "five", "six", "seven", "eight", "nine"])),
+      collect(enumerate(1:9)))))
   map(lines) do line
-    r = replace(line, "one" => "1",
-      "two" => "2",
-      "three" => "3",
-      "four" => "4",
-      "five" => "5",
-      "six" => "6",
-      "seven" => "7",
-      "eight" => "8",
-      "nine" => "9")
-    s = filter(isdigit, r)
-    parse(Int, string(first(s), last(s)))
+    ranges = Iterators.flatten([findall(x, line) for x in keys(words)])
+    first = words[line[minimum(ranges)]]
+    last = words[line[maximum(ranges)]]
+    parse(Int, "$first$last")
   end
 end
 
