@@ -58,6 +58,7 @@ function generate_into(daydir)
     chmod(jlfile, 0o755)
   end
 
+  # NOTE: Pluto uses tabs for indent https://github.com/fonsp/Pluto.jl/issues/586
   notebook = joinpath(base, "notebook.jl")
   if !isfile(notebook)
     header_uuid = UUIDs.uuid4()
@@ -105,22 +106,25 @@ function generate_into(daydir)
 
     # ╔═╡ $functions_uuid
     begin
-    function parseinput(lines)
-      Day$daynum.parseinput(lines)
-      #map(lines) do line
-        #parse(Int, line)
-        #if (m = match(r"^(\\S+) (\\S+)\$", line)) !== nothing
-        #  (foo, bar) = m.captures
-        #end
-      #end
-    end
+    	function parseinput(lines)
+    		Day$daynum.parseinput(lines)
+    		#map(lines) do line
+    			#parse(Int, line)
+    			#if (m = match(r"^(\\S+) (\\S+)\$", line)) !== nothing
+    			#  (foo, bar) = m.captures
+    			#end
+    		#end
+    	end
     end;
 
     # ╔═╡ $vars_uuid
     begin # Useful variables
-    exampleexpected = Runner.expectedfor(inputexample)
-    examplelines = readlines(inputexample)
-    input = parseinput(examplelines)
+    	exampleexpected = Runner.expectedfor(inputexample)
+    	examplelines = readlines(inputexample)
+    	actualexpected = Runner.expectedfor(inputactual)
+    	actuallines = readlines(inputactual)
+    	inputa = parseinput(actuallines)
+    	input = parseinput(examplelines)
     end
 
     # ╔═╡ $resultshead_uuid
