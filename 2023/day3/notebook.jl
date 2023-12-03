@@ -29,15 +29,40 @@ Runner.inputstats();
 
 # ╔═╡ e49f45cf-4b46-4c9c-9816-5bcc5face544
 begin
-function parseinput(lines)
-	Day3.parseinput(lines)
-	#map(lines) do line
-		#parse(Int, line)
-		#if (m = match(r"^(\S+) (\S+)$", line)) !== nothing
-		#  (foo, bar) = m.captures
-		#end
-	#end
+parseinput(lines) = reduce(hcat, collect(line) for line in lines)
+
+function neighborhood(grid, point)
+  # See https://julialang.org/blog/2016/02/iteration/ for multi-dimensional iteration
+  indices = CartesianIndices(grid)
+  ifirst, ilast = first(indices), last(indices)
+  one = oneunit(ifirst)
+  max(ifirst, point - one):min(ilast, point + one)
 end
+
+function digitrun(grid, point)
+  col = point[2]
+  start = stop = point[1]
+  firstrow = firstindex(grid, 1)
+  lastrow = lastindex(grid, 1)
+  while start >= firstrow
+    !isdigit(grid[start, col]) && break
+    start -= 1
+  end
+  while stop <= lastrow
+    !isdigit(grid[stop, col]) && break
+    stop += 1
+  end
+  # start is now 1 before first digit and stop is 1 after last digit
+  CartesianIndex(start + 1, col):CartesianIndex(stop - 1, col)
+end
+
+function numberneighbors(grid, point)
+  neighbors = neighborhood(grid, point)
+  digitneighbors = [n for n in neighbors if isdigit(grid[n])]
+  [digitrun(grid, n) for n in digitneighbors]
+end
+
+readnum(grid, range) = parse(Int, join(grid[range], ""))
 end;
 
 # ╔═╡ 63914d70-76bc-40b7-9991-e073bfb201c7
@@ -50,7 +75,17 @@ begin # Useful variables
 end
 
 # ╔═╡ af874c05-4f80-477d-8a07-90c42e743b0b
-grid = [input[i][j] for i in 1:length(input), j in 1:length(input[1])]
+#grid = [input[i][j] for i in 1:length(input), j in 1:length(input[1])]
+grid = reduce(hcat, collect(line) for line in examplelines)
+
+# ╔═╡ f711d9dd-17dd-4031-8452-fc75683bc1d5
+numberneighbors(grid, CartesianIndex(4, 2))
+
+# ╔═╡ 476f940d-1713-4db9-8f8d-e5212200220a
+neighborhood(grid, CartesianIndex(3, 2))
+
+# ╔═╡ fb4709c4-8149-4948-932d-e0acf7f44fc7
+numberneighbors(grid, CartesianIndex(3, 2))
 
 # ╔═╡ 64e2c07a-a035-494f-b782-90d125f6556b
 rows, cols = size(grid)
@@ -78,23 +113,23 @@ for i = 1:rows, j = 1:cols
 end
 
 # ╔═╡ 2a9cb3e7-3722-4116-b107-e2eb7dcfd63e
-for i = 1:rows, j = 1:cols
-	c = grid[i, j]
-	if isdigit(c)
-		if isempty(num)
-			sawsymbol = false
-		end
-		push!(num, c)
-		if notparts[i, j]
-			sawsymbol = true
-		end
-	elseif c == '.' || j == cols
-		if !sawsymbol && !isempty(num)
-			push!(nonadjacent, parse(Int, join(num, "")))
-		end
-		num = []
-	end
-end
+#for i = 1:rows, j = 1:cols
+#	c = grid[i, j]
+#	if isdigit(c)
+#		if isempty(num)
+#			sawsymbol = false
+#		end
+#		push!(num, c)
+#		if notparts[i, j]
+#			sawsymbol = true
+#		end
+#	elseif c == '.' || j == cols
+#		if !sawsymbol && !isempty(num)
+#			push!(nonadjacent, parse(Int, join(num, "")))
+#		end
+#		num = []
+#	end
+#end
 
 # ╔═╡ 3e823423-f6b1-4349-8880-cc189fb2a042
 nonadjacent
@@ -108,11 +143,11 @@ function digitspan(grid, row, col)
 end
 
 # ╔═╡ 3ea4027f-23a5-4291-8079-a451cf04e972
-digitspan(grid, 6, 9)
+digitspan(grid, 9, 6)
 
 # ╔═╡ 9f7c0196-f97e-4434-bbb2-20ce18a73326
-x = for i = 1:5
-	i * 2
+for ix in CartesianIndices(grid)
+	println(ix)
 end
 
 # ╔═╡ 45178326-e100-4b57-a509-64fc788720ae
@@ -131,6 +166,9 @@ inputactual,
 # ╠═e49f45cf-4b46-4c9c-9816-5bcc5face544
 # ╠═63914d70-76bc-40b7-9991-e073bfb201c7
 # ╠═af874c05-4f80-477d-8a07-90c42e743b0b
+# ╠═f711d9dd-17dd-4031-8452-fc75683bc1d5
+# ╠═476f940d-1713-4db9-8f8d-e5212200220a
+# ╠═fb4709c4-8149-4948-932d-e0acf7f44fc7
 # ╠═64e2c07a-a035-494f-b782-90d125f6556b
 # ╠═a00ed6f2-ab22-428f-b860-5d3abd330f16
 # ╠═b4b7e20d-800b-4787-9105-b8d4f2046327

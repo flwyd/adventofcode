@@ -17,76 +17,53 @@ The answer is the sum of the gear ratios.
 module Day3
 
 function part1(lines)
-  input = parseinput(lines)
-  grid = [input[i][j] for i in 1:length(input), j in 1:length(input[1])]
-  rows, cols = size(grid)
-  partnums::Vector{Int} = []
-  num = []
-  sawsymbol = false
-  notparts = zeros(Bool, axes(grid))
-  for i in 1:rows, j in 1:cols
-    c = grid[i, j]
-    if c != '.' && !isdigit(c)
-      for row in max(1, i - 1):min(rows, i + 1), col in max(1, j - 1):min(cols, j + 1)
-        notparts[row, col] = true
-      end
-    end
-  end
-  for i in 1:rows, j in 1:cols
-    c = grid[i, j]
-    if isdigit(c)
-      if isempty(num)
-        sawsymbol = false
-      end
-      push!(num, c)
-      if notparts[i, j]
-        sawsymbol = true
-      end
-    end
-    if !isdigit(c) || j == cols
-      if sawsymbol && !isempty(num)
-        push!(partnums, parse(Int, join(num, "")))
-      end
-      num = []
-    end
-  end
-  sum(partnums)
+  grid = parseinput(lines)
+  parts = [i for i in CartesianIndices(grid) if grid[i] != '.' && !isdigit(grid[i])]
+  neighbors = unique(reduce(vcat, numberneighbors(grid, p) for p in parts))
+  sum(readnum(grid, n) for n in neighbors)
 end
 
 function part2(lines)
-  input = parseinput(lines)
-  grid = [input[i][j] for i in 1:length(input), j in 1:length(input[1])]
-  rows, cols = size(grid)
-  total = 0
-  for i in 1:rows, j in 1:cols
-    if grid[i, j] == '*'
-      ranges = Set()
-      for row in max(1, i - 1):min(rows, i + 1), col in max(1, j - 1):min(cols, j + 1)
-        if isdigit(grid[row, col])
-          push!(ranges, digitspan(grid, row, col))
-        end
-      end
-      length(ranges) > 2 && error("$i,$j gear has $ranges ranges")
-      if length(ranges) == 2
-        total += prod([parse(Int, join(grid[row, range], "")) for (row, range) in ranges])
-      end
-    end
-  end
-  total
+  grid = parseinput(lines)
+  gears = [i for i in CartesianIndices(grid) if grid[i] == '*']
+  neighborpairs = [numberneighbors(grid, g) for g in gears] |> filter(n -> length(n) == 2)
+  sum(prod([readnum(grid, n) for n in p]) for p in neighborpairs)
 end
 
-function parseinput(lines)
-  map(lines) do line
-    line
-  end
+parseinput(lines) = reduce(hcat, collect(line) for line in lines)
+
+function neighborhood(grid, point)
+  # See https://julialang.org/blog/2016/02/iteration/ for multi-dimensional iteration
+  indices = CartesianIndices(grid)
+  ifirst, ilast = first(indices), last(indices)
+  one = oneunit(ifirst)
+  max(ifirst, point - one):min(ilast, point + one)
 end
 
-function digitspan(grid, row, col)
-  !isdigit(grid[row, col]) && error("$row,$col is $(grid[row, col])")
-  first = something(findlast(!isdigit, grid[row, 1:col]), 0) + 1
-  last = something(findnext(!isdigit, grid[row, 1:end], col), size(grid)[2] + 1) - 1
-  (row, first:last)
+function digitrun(grid, point)
+  col = point[2]
+  start = stop = point[1]
+  firstrow = firstindex(grid, 1)
+  lastrow = lastindex(grid, 1)
+  while start >= firstrow
+    !isdigit(grid[start, col]) && break
+    start -= 1
+  end
+  while stop <= lastrow
+    !isdigit(grid[stop, col]) && break
+    stop += 1
+  end
+  # start is now 1 before first digit and stop is 1 after last digit
+  CartesianIndex(start + 1, col):CartesianIndex(stop - 1, col)
 end
+
+function numberneighbors(grid, point)
+  neighbors = neighborhood(grid, point)
+  digitneighbors = [n for n in neighbors if isdigit(grid[n])]
+  unique([digitrun(grid, n) for n in digitneighbors])
+end
+
+readnum(grid, range) = parse(Int, join(grid[range], ""))
 
 include("../Runner.jl")
 @run_if_main
