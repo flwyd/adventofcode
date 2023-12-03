@@ -7,6 +7,12 @@
 
 """# Advent of Code 2023 day 3
 [Read the puzzle](https://adventofcode.com/2023/day/3)
+
+Input is a grid with dots as empty space, punctuation as engine parts, and multi-digit numbers.
+Part 1 sums all the numbers adjacent (including diagonal) to a part.
+Part 2 is only concerned with gears, marked by asterisks.  The gear ratio is the product of
+two numbers adjacent to a gear; gears with only one adjacent number have no gear ratio.
+The answer is the sum of the gear ratios.
 """
 module Day3
 
