@@ -4,8 +4,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-# Advent of Code 2023 day 1 part 1.
-# Run with sed -f day1part1.sed input.example.txt | xargs expr
+# Advent of Code 2023 day 1 part 1.  Run with
+# sed -f day1part1.sed input.example.txt | xargs expr 0
 
 # Replace delete everything between first and last digit and after the last.
 s/\([0-9]\).*\([0-9]\).*$/\1\2/

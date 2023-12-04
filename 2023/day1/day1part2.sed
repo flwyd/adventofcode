@@ -4,8 +4,8 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-# Advent of Code 2023 day 1 part 2.
-# Run with sed -f day1part2.sed -f day1part1.sed input.example2.txt | xargs expr
+# Advent of Code 2023 day 1 part 2.  Run with
+# sed -f day1part2.sed -f day1part1.sed input.example2.txt | xargs expr 0
 
 # Replace digit names while allowing for overlap.
 s/one/o1e/g
