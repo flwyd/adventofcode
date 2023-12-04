@@ -47,8 +47,8 @@ end;
 begin # Useful variables
 exampleexpected = Runner.expectedfor(inputexample)
 examplelines = readlines(inputexample)
-input = parseinput(examplelines)
-#input = parseinput(readlines(inputactual))
+#input = parseinput(examplelines)
+input = parseinput(readlines(inputactual))
 end
 
 # ╔═╡ c98ec821-dcc1-4274-a290-166b13d861ea
@@ -60,19 +60,23 @@ end
 # ╔═╡ 5d147234-df26-4363-8275-a963b72a7461
 sum(scores)
 
-# ╔═╡ 70e73793-2c19-4af9-8d47-7178afd7e054
-copies = ones(Int, length(input))
-
 # ╔═╡ 8a443aec-647a-4733-8738-9fd00032b79c
+copies = begin
+copies = ones(Int, length(input))
 for (card, wins, have) in input
 	count = length(intersect(wins, have))
 	for i = 1:count
 		copies[card + i] += copies[card]
 	end
 end
+copies
+end
 
 # ╔═╡ e58c4956-ae5e-499f-94e9-b14ca95aa673
 sum(copies)
+
+# ╔═╡ ccf9a10d-649f-465a-9408-12b71df9d12e
+maximum(copies)
 
 # ╔═╡ 7df5cfe5-8336-42eb-8748-5a571f2408dd
 md"## Results"
@@ -91,8 +95,8 @@ inputactual,
 # ╠═11e503c7-ba92-474e-b53b-08a81ab820ae
 # ╠═c98ec821-dcc1-4274-a290-166b13d861ea
 # ╠═5d147234-df26-4363-8275-a963b72a7461
-# ╠═70e73793-2c19-4af9-8d47-7178afd7e054
 # ╠═8a443aec-647a-4733-8738-9fd00032b79c
 # ╠═e58c4956-ae5e-499f-94e9-b14ca95aa673
+# ╠═ccf9a10d-649f-465a-9408-12b71df9d12e
 # ╟─7df5cfe5-8336-42eb-8748-5a571f2408dd
 # ╠═a8cb9125-468e-4372-a11c-a045509c6eea

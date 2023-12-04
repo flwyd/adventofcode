@@ -18,7 +18,7 @@ module Day4
 
 function part1(lines)
   map(parseinput(lines)) do card
-    count = length(intersect(card[2], card[3]))
+    count = length(card[2] ∩ card[3])
     count == 0 ? 0 : 2^(count - 1)
   end |> sum
 end
@@ -26,7 +26,7 @@ end
 function part2(lines)
   copies = ones(Int, length(lines))
   for (card, wins, have) in parseinput(lines)
-    count = length(intersect(wins, have))
+    count = length(wins ∩ have)
     copies[(card + 1):(card + count)] .+= copies[card]
   end
   sum(copies)
