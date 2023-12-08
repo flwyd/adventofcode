@@ -8,16 +8,16 @@
 """# Advent of Code 2023 day 7
 [Read the puzzle](https://adventofcode.com/2023/day/7)
 
-Input is poker-style hands expressed as five characters 2-9, T, J, Q, K.
-Hands are ranked as five-of-a-kind, four-of-a-kind, full-house, three-of-a-kind,
-two-pair, one-pair, high-card.  When comparing to hands of the same type,
-compare cards in hand order (not "highest card in the hand" but "higher first
-card").  Each hand also has a bid, output is sum(rank * bid) with the wors hand
-having rank 1.  Part 2 changes J to a joker which can have any value when
-determining type but has a lower value than all other cards when breaking ties.
+Input is poker-style hands and bid values.  Hands are ranked with five-of-a-kind > four-of-a-kind >
+full house > three-of-a-kind > two-pair > pair > high card.  Within a type, hands are scored by the
+order of cards, so the full house 52525 scores higher than the full house 25255.
+All inputs are ordered by their rank (1 is the worst hand), then position * bid are added.
+Part 2 changes J from Jack to Joker.  Joker takes on the identity of any card for ranking but when
+comparing within a rank it is the lowest card (less than 2).
 """
 module Day7
 
+# Joker becomes 0
 const ORDER = "023456789TJQKA"
 
 struct Hand
@@ -27,7 +27,7 @@ struct Hand
   function Hand(cards, bid, jokers)
     cards = jokers ? replace(cards, 'J' => '0') : cards
     mod = jokers ? optimize_jokers(cards) : cards
-    handtype = sort([count(==(i), mod) for i in unique(mod)]; rev=true)
+    handtype = sort([count(==(i), mod) for i in unique(mod)]; rev=true) # [3, 2] is a full house
     tiebreaker = collect(findfirst(c, ORDER) for c in cards)
     new(cards, bid, (handtype, tiebreaker))
   end
