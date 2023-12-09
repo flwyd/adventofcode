@@ -16,11 +16,11 @@ Part 1's answer is the sum of next numbers, part 2's answer is the sum of previo
 """
 module Day9
 
-part1(lines) = map(l -> infer(l, +, a -> a[end]), parseinput(lines)) |> sum
-part2(lines) = map(l -> infer(l, -, a -> a[1]), parseinput(lines)) |> sum
+part1(lines) = map(l -> infer(l, +, last), parseinput(lines)) |> sum
+part2(lines) = map(l -> infer(l, -, first), parseinput(lines)) |> sum
 
 infer(nums, op, el) =
-  all(==(nums[1]), nums) ? nums[1] : op(el(nums), infer(nums[2:end] - nums[1:end-1], op, el))
+  allequal(nums) ? nums[1] : op(el(nums), infer(nums[2:end] - nums[1:end-1], op, el))
 
 parseinput(lines) = map(l -> parse.(Int, split(l)), lines) 
 
