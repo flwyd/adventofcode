@@ -61,8 +61,6 @@ end
 function score_part2(grid)
   olds = (vertical_mirror(grid), horizontal_mirror(grid))
   factors = (1, 100)
-  # oldv = vertical_mirror(grid)
-  # oldh = horizontal_mirror(grid)
   for (i, p) in enumerate(grid)
     g = copy(grid)
     g[i] = p == '#' ? '.' : '#'
@@ -73,16 +71,6 @@ function score_part2(grid)
         return factor * only(diff)
       end
     end
-    # v = vertical_mirror(g)
-    # vdiff = setdiff(v, oldv)
-    # if !isempty(vdiff)
-    #   return only(vdiff)
-    # end
-    # h = horizontal_mirror(g)
-    # hdiff = setdiff(h, oldh)
-    # if !isempty(hdiff)
-    #   return 100 * only(hdiff)
-    # end
   end
 end
 
