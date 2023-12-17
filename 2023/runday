@@ -34,7 +34,7 @@ if [[ -s "$BASEDIR/.cookie-jar" && ! -s input.actual.txt ]]; then
   # Don't directly send fetchinput to input.actual.txt to avoid changing mtime
   # if input isn't avaliable yet
   if [[ ! -z "$input" ]]; then
-    echo "$input" >| input.actual.txt
+    cat <<< $input >| input.actual.txt
   fi
 fi
 CMD=("./$PROGRAM" -v input.example*.txt input.actual.txt)
