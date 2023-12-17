@@ -28,12 +28,12 @@ end
 parseinput(lines) = permutedims(reduce(hcat, parse.(Int, split(l, "")) for l in lines), (2, 1))
 
 function finalstates(movefun, grid)
-  states = similar(grid, Set{State})
+  states = similar(grid, Vector{State})
   for i in eachindex(grid)
-    states[i] = Set{State}()
+    states[i] = []
   end
   start = CartesianIndex(1, 1)
-  states[start] = Set([State(DOWN, 0, 0), State(RIGHT, 0, 0)])
+  states[start] = [State(DOWN, 0, 0), State(RIGHT, 0, 0)]
   queue = [start]
   while !isempty(queue)
     cur = popfirst!(queue)
@@ -43,9 +43,7 @@ function finalstates(movefun, grid)
         if any(x -> x.heading == head && x.steps == steps && x.cost <= cost, states[pos])
           continue
         end
-        for bad in filter(x -> x.heading == head && x.steps == steps && x.cost > cost, states[pos])
-          delete!(states[pos], bad)
-        end
+        deleteat!(states[pos], findall(x -> x.heading == head && x.steps == steps && x.cost > cost, states[pos]))
         push!(states[pos], State(head, steps, cost))
         push!(queue, pos)
       end
