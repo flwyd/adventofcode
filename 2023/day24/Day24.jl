@@ -7,23 +7,30 @@
 
 """# Advent of Code 2023 day 24
 [Read the puzzle](https://adventofcode.com/2023/day/24)
+
+Input is initial position and velocity vector of hailstones in 3D.
+Part 1 is the number of pairs of hailstones which will collide when projected into (x, y).
+Part 2 is the sum of (x, y, z) for the initial position of a hailstone which would collide with
+all other stones in the input.
 """
 module Day24
 
-using Symbolics
-
-TOOHIGH = [653419564351753]
+using JuMP
+using Ipopt
 
 function part1(lines)
   input = parseinput(lines)
-  count(==(:intersect),
-    [intersect2d(input[i], input[j], coordrange(input)) for i in 1:(length(input) - 1)
-     for j in (i + 1):length(input)])
+  space = first(input).x < 100 ? (7.0, 27.0) : (200000000000000.0, 400000000000000.0)
+  num = length(input)
+  outcomes = [intersect2d(input[i], input[j], space) for i in 1:(num - 1) for j in (i + 1):num]
+  count(==(:intersect), outcomes)
 end
 
 function part2(lines)
   input = parseinput(lines)
-
+  # Focus on the "corners", stones moving towards from the center, though this may be a bit of
+  # stupid luck since ipopt ends up exceeding the iteration limit with this set, though it fails
+  # with local infeasibility with some other stone sets
   bysigns = Dict()
   for s in input
     signed = sign.((s.dx, s.dy, s.dz))
@@ -32,6 +39,7 @@ function part2(lines)
     end
     push!(bysigns[signed], s)
   end
+  # all example stones but one are going in the same direction
   corners = length(bysigns) < 6 ? input : first.([
     sort(bysigns[(1, -1, -1)]; by=s -> s.x),
     sort(bysigns[(-1, 1, -1)]; by=s -> s.y),
@@ -40,25 +48,42 @@ function part2(lines)
     sort(bysigns[(1, -1, 1)]; by=s -> -s.y),
     sort(bysigns[(1, 1, -1)]; by=s -> -s.z),
   ])
-
-  # for stones in Iterators.partition(input, 20)
-    eqs, ans, times = symbolize(corners)
-    for tval in (length(lines) < 10 ? (1:10) : (1:1_000_000_000))
-      for (i, t) in enumerate(times)
-        sub = Symbolics.substitute.(eqs, (Dict(t => tval),))
-        solved, timesolved... = Symbolics.solve_for(sub, vcat(ans, times[1:i-1], times[(i + 1):end]))
-        if solved > 0 && all(>(0), timesolved)
-          closest = input[i]
-          if isinteger(solved)
-            println("$t=$tval $(Int(solved)) $closest")
-          else
-            println("non-integer t1=$t $solved $(round(solved)) $closest")
-          end
-        end
-      end
-    end
+  # Ipopt fails to find a solution on the final three corners, but the first three work ¯\(°_o)/¯
+  s1, s2, s3 = corners[1:3]
+  mincoord = minimum(min(s.x, s.y, s.z) for s in input)
+  maxcoord = maximum(max(s.x, s.y, s.z) for s in input)
+  maxvel = maximum(max(abs(s.dx), abs(s.dy), abs(s.dz)) for s in input)
+  model = Model(Ipopt.Optimizer)
+  set_attribute(model, "print_level", 2) # don't print everything the optimizer is doing
+  set_attribute(model, "sb", "yes") # don't print Ipopt license
+  @variable(model, maxcoord*2 >= x >= mincoord÷2)
+  @variable(model, maxcoord*2 >= y >= mincoord÷2)
+  @variable(model, maxcoord*2 >= z >= mincoord÷2)
+  @variable(model, -maxvel <= dx <= maxvel)
+  @variable(model, -maxvel <= dy <= maxvel)
+  @variable(model, -maxvel <= dz <= maxvel)
+  @variable(model, t1 >= 1)
+  @variable(model, t2 >= 1)
+  @variable(model, t3 >= 1)
+  @constraint(model, c1x, x + dx * t1 == s1.x + s1.dx * t1)
+  @constraint(model, c1y, y + dy * t1 == s1.y + s1.dy * t1)
+  @constraint(model, c1z, z + dz * t1 == s1.z + s1.dz * t1)
+  @constraint(model, c2x, x + dx * t2 == s2.x + s2.dx * t2)
+  @constraint(model, c2y, y + dy * t2 == s2.y + s2.dy * t2)
+  @constraint(model, c2z, z + dz * t2 == s2.z + s2.dz * t2)
+  @constraint(model, c3x, x + dx * t3 == s3.x + s3.dx * t3)
+  @constraint(model, c3y, y + dy * t3 == s3.y + s3.dy * t3)
+  @constraint(model, c3z, z + dz * t3 == s3.z + s3.dz * t3)
+  optimize!(model)
+  if (status = termination_status(model)) !== LOCALLY_SOLVED
+    @warn "Solver status is $status, answer might be incorrect"
+  end
+  # for vars in ((x, y, z), (dx, dy, dz), (t1, t2, t3))
+  #   println(stderr,
+  #   join(["$v: $(round(Int, value(v))) ± $(abs(value(v) - round(Int, value(v))))" for v in vars],
+  #   " "))
   # end
-  :TODO
+  sum(round(Int, value(v)) for v in (x, y, z))
 end
 
 struct Stone
@@ -91,18 +116,6 @@ function intersect2d(a::Stone, b::Stone, bounds)
   return :intersect
 end
 
-function symbolize(stones)
-  @variables ans
-  times = Num[]
-  eqs = map(enumerate(stones)) do (i, s)
-    t = Symbolics.variable(Symbol("t$i"))
-    push!(times, t)
-    f = s.x + s.y + s.z + (s.dx + s.dy + s.dz) * t
-    f ~ ans
-  end
-  eqs, ans, times
-end
-
 function parseinput(lines)
   map(lines) do line
     coords, vel = split(line, " @ ")
@@ -110,10 +123,6 @@ function parseinput(lines)
     dx, dy, dz = parse.(Int, split(vel, ", "))
     Stone(x, y, z, dx, dy, dz)
   end
-end
-
-function coordrange(stones)
-  first(stones).x < 100 ? (7.0, 27.0) : (200000000000000.0, 400000000000000.0)
 end
 
 include("../Runner.jl")
