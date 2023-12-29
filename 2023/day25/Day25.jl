@@ -15,9 +15,9 @@ product of the sizes of those two compoonents.
 module Day25
 
 function part1(lines)
-  nodes, edges, graph = parseinput(lines)
+  edges, graph = parseinput(lines)
   dists = zeros(Int, size(edges))
-  for i in 1:(length(nodes) - 1)
+  for i in 1:(size(edges, 1) - 1)
     seen = BitSet([i])
     q = [(i, 0)]
     while !isempty(q)
@@ -31,7 +31,7 @@ function part1(lines)
       end
     end
   end
-  maxs = sort([(maximum(dists[i, :]), i) for i in eachindex(nodes)])
+  maxs = sort([(maximum(dists[i, :]), i) for i in axes(edges, 1)])
   lowest = map(last, Iterators.takewhile(x -> x[1] == maxs[1][1], maxs))
   if length(lowest) == 6
     cuts = [(i, j) for i in lowest, j in lowest if i < j && edges[i, j]]
@@ -113,7 +113,7 @@ function parseinput(lines)
       push!(intgraph[i], findfirst(==(m), nodes))
     end
   end
-  nodes, edges, intgraph
+  edges, intgraph
 end
 
 include("../Runner.jl")
