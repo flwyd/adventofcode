@@ -283,14 +283,16 @@ end
 # ╔═╡ 5fb14d8e-b9d6-4403-81e7-7c44a39cae55
 function symbolize(stones::Vector{Stone})
 	@variables ans vx vy vz
+	times = Num[]
 	eqs = map(enumerate(stones)) do (i, s)
 		x, y, z = Tuple(s.init)
 		dx, dy, dz = Tuple(s.velocity)
 		t = Symbolics.variable(Symbol("t$i"))
+		push!(times, t)
 		f = x + y + z + (dx + dy + dz)*t
 		f ~ ans #+ (vx + vy + vz)*t
 	end
-	eqs, ans, vx, vy, vz
+	eqs, ans, vx, vy, vz, times
 end
 
 # ╔═╡ 3bf54a02-69a1-4ee5-aa7f-00dcbae6e08d
@@ -300,10 +302,71 @@ exeqs, ans, vx, vy, vz = symbolize(input)
 exeqs
 
 # ╔═╡ 3237bf5b-85b2-40dd-ab4b-65eead6d941d
-Symbolics.solve_for(exeqs[1:3], [Symbolics.variable(:t1), Symbolics.variable(:t2), Symbolics.variable(:t3)]; check=true)
+Symbolics.solve_for(Symbolics.substitute.(exeqs, (Dict(Symbolics.variable(:t5) => 1),)), [Symbolics.variable(:t1), Symbolics.variable(:t2), Symbolics.variable(:t3), Symbolics.variable(:t4), ans]; check=true)
+
+# ╔═╡ 1784cf3e-9002-439b-9c37-b7b9bf9f3e5d
+begin
+	bysigns = Dict()
+	for s in inputa
+		signed = sign.(Tuple(s.velocity))
+		if !haskey(bysigns, signed)
+			bysigns[signed] = Stone[]
+		end
+		push!(bysigns[signed], s)
+	end
+	bysigns
+end
+
+# ╔═╡ cca2a4c9-abc7-42ab-b192-0f87f8607fea
+corners = [
+	sort(bysigns[(1, -1, -1)]; by=s -> Tuple(s.init)[1]),
+	sort(bysigns[(-1, 1, -1)]; by=s -> Tuple(s.init)[2]),
+	sort(bysigns[(-1, -1, 1)]; by=s -> Tuple(s.init)[3]),
+	sort(bysigns[(-1, 1, 1)]; by=s -> -Tuple(s.init)[1]),
+	sort(bysigns[(1, -1, 1)]; by=s -> -Tuple(s.init)[2]),
+	sort(bysigns[(1, 1, -1)]; by=s -> -Tuple(s.init)[3]),
+]
+
+# ╔═╡ f8867370-a8db-4531-8244-d0446af69320
+#eqsa, ansa, vxa, vya, vza, timesa = symbolize(corners)
+
+# ╔═╡ db02bc6d-067e-476d-94f6-b7b3f866d763
+#t1 = first(timesa)
 
 # ╔═╡ d6c5d436-319d-4592-a474-e13e7d4379de
+for corner in corners
+	eqsa, ansa, vxa, vya, vza, timesa = symbolize(corner)
+for tval in 1:10000
+for (i, s) in enumerate(corner)
+	if abs(sum(Tuple(s.velocity))) == 3
+		continue
+	end
+	t = timesa[i]
+	tosolve = vcat(ans, timesa[1:i-1], timesa[i+1:end])
+solvedans, solvedtimes... = Symbolics.solve_for(Symbolics.substitute.(eqsa, (Dict(t => tval),)), tosolve)
+	if all(>(0), solvedtimes)
+		if !isinteger(solvedans)
+			println("Non-integer $t=$tval $solvedans $(round(solvedans))")
+		else
+			println("$t=$tval $(Int(solvedans))")
+		end
+		break
+	end
+#	if !isinteger(solvedans)
+#		println("Non-integer solution for $t=$tval $solvedans)")
+#	end
+end
+end
+end
 
+# ╔═╡ b8d89bb8-0c13-4f0e-a97e-cf636f510a58
+isinteger(solvedans)
+
+# ╔═╡ a59add6c-d0f7-47df-8dd3-3464e4a13a6d
+Int(solvedans)
+
+# ╔═╡ 5eda6898-9acd-4fff-b2f2-984cc8a5765e
+[Int(t) for t in solvedtimes]
 
 # ╔═╡ d32585fd-f9ec-4dcc-8299-38d11d1cff76
 
@@ -392,7 +455,14 @@ inputactual,
 # ╠═3bf54a02-69a1-4ee5-aa7f-00dcbae6e08d
 # ╠═29eaa015-d9e2-4f3c-811c-dad6693f66fe
 # ╠═3237bf5b-85b2-40dd-ab4b-65eead6d941d
+# ╠═1784cf3e-9002-439b-9c37-b7b9bf9f3e5d
+# ╠═cca2a4c9-abc7-42ab-b192-0f87f8607fea
+# ╠═f8867370-a8db-4531-8244-d0446af69320
+# ╠═db02bc6d-067e-476d-94f6-b7b3f866d763
 # ╠═d6c5d436-319d-4592-a474-e13e7d4379de
+# ╠═b8d89bb8-0c13-4f0e-a97e-cf636f510a58
+# ╠═a59add6c-d0f7-47df-8dd3-3464e4a13a6d
+# ╠═5eda6898-9acd-4fff-b2f2-984cc8a5765e
 # ╠═d32585fd-f9ec-4dcc-8299-38d11d1cff76
 # ╟─7d73022a-40e0-4133-8150-40fc3ffe4e04
 # ╠═02cc00b6-d951-41c7-9d05-95bfe926c1e5
