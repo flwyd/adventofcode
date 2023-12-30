@@ -116,7 +116,7 @@ function countdests(grid, numrounds, start, printranges=[])
 		#println("Round $round")
 		#printround(grid, rounds, round+1)
 	end
-		#printround(grid, rounds, numrounds+1)
+	#printround(grid, rounds, numrounds+1)
 	for r in printranges
 		c = count(rounds[first(r), last(r), numrounds+1])
 		println("$r $c")
@@ -224,7 +224,7 @@ function repeatandcount(grid, numrounds)
 end
 
 # ╔═╡ a3442c39-cc0a-4fba-8b41-7bbdff7eae2c
-repeatandcount(input, 71)
+repeatandcount(input, 50)
 
 # ╔═╡ 36b63860-6074-47b4-8d97-58c846654550
 ex2out = Dict(10 => 90, 49 => 1878, 50 => 1940, 100 => 7645, 104 => 8288)

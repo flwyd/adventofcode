@@ -7,66 +7,31 @@
 
 """# Advent of Code 2023 day 21
 [Read the puzzle](https://adventofcode.com/2023/day/21)
+
+Input is a grid of walls `#`, open `.`, and start `S`.  Output is the number of possible positions
+after N steps.  In part 1, steps are 6 in the example and 64 for actual.  In part 2, the grid
+repeats infinitely and steps is 26501365.
 """
 module Day21
 
 function part1(lines)
   grid = parseinput(lines)
-  numrounds = size(grid, 1) < 100 ? 6 : 64
-  rounds = zeros(Bool, (size(grid)..., numrounds+1))
-  rounds[findfirst(==('S'), grid), 1] = true
-  for round in 1:numrounds
-    for i in eachindex(IndexCartesian(), grid)
-      if grid[i] != '#'
-        for x in neighbors(grid, i)
-          if rounds[x, round]
-            rounds[i, round + 1] = true
-          end
-        end
-      end
-    end
-  end
-  # for i in axes(rounds, 1)
-  #   println(join(map(j -> rounds[i,j,numrounds+1] ? 'O' : grid[i,j], axes(rounds, 2))))
-  # end
-  count(rounds[:,:,numrounds+1])
+  start = findfirst(==('S'), grid)
+  numrounds = size(grid, 1) < 20 ? 6 : 64
+  naivecount(grid, start, numrounds)
 end
 
 function part2(lines)
   grid = parseinput(lines)
-  totalsteps = 50
-  start = findfirst(==('S'), grid)
-  @show center = crawl(grid, start)
-  crawled = Dict(start => center)
-  cardinal = [crawl(grid, entrypoint(grid, center.exits[i], NEIGHBORS[i])) for i in 1:4]
-  @show cardinal
-  if true
-    return :TODO
+  if grid[2, size(grid, 2) ÷ 2 + 1] == '#'
+    # AoC example doesn't have the vertical/horizontal "highways"
+    start = size(grid, 1) * 5 + size(grid, 1) ÷ 2 + 1
+    return naivecount(repeat(grid, outer=[11, 11]), CartesianIndex(start, start), 50)
   end
-  for i in 1;4
-    crawled[cardinal[i].entry] = cardinal[i]
-  end
-  # actual input has straight openings through the center but example reaches some corners
-  # faster than others
-  corners = ((UP, LEFT), (RIGHT, UP), (DOWN, LEFT), (RIGHT, DOWN))
-  for (a, b) in corners
-    entry = entrypoint(grid, cardinal[a].exits[b])
-    crawled[entry] = crawl(grid, entry)
-  end
-  total = iseven(totalsteps) ? center.event : center.odd
-  for i in 1:4
-    dir = NEIGHBORS[i]
-    pos = start
-    crawl = crawled[start]
-    steps = 0
-    while steps < totalsteps
-      entry = entrypoint(grid, crawl.exits[dir])
-      steps += crawl.stepsacross[dir]
-    end
-    steps = crawl.stepsacross[i]
-  end
-  # println(join(cardinal, "\n"))
-  :TODO
+  # 26501365 for actual answer, scale by size of example2 which is adapted from AoC example
+  magicnumber = 202300 * size(grid, 1) + size(grid, 1) ÷ 2
+  keys = keysizes(grid)
+  keysolve(grid, keys, magicnumber)
 end
 
 parseinput(lines) = reduce(hcat, collect.(lines))
@@ -79,56 +44,72 @@ const NEIGHBORS = (UP, DOWN, LEFT, RIGHT)
 
 neighbors(grid, i) = filter(n -> checkbounds(Bool, grid, n), map(x -> i + x, NEIGHBORS))
 
-struct Crawl
-  oddcount::Int
-  evencount::Int
-  entry::CartesianIndex{2}
-  exits::Vector{CartesianIndex{2}}
-  stepsacross::Vector{Int}
-end
-
-function entrypoint(grid, exit, dir)
-  row, col = Tuple(exit)
-  if dir == UP
-    CartesianIndex(size(grid, 1), col)
-  elseif dir == DOWN
-    CartesianIndex(1, col)
-  elseif dir == LEFT
-    CartesianIndex(row, size(grid, 2))
-  elseif dir == RIGHT
-    CartesianIndex(row, 1)
-  end
-end
-
-function crawl(grid, start)
-  numrounds = sum(size(grid))
-  rounds = zeros(Bool, (size(grid)..., numrounds+1))
+function naivecount(grid, start, numrounds)
+  rounds = zeros(Bool, (size(grid)..., numrounds + 1))
   rounds[start, 1] = true
-  edges = repeat([CartesianIndex(0, 0)], 4)
-  edgesteps = repeat([0], 4)
-  for round in 1:numrounds
-    for i in eachindex(IndexCartesian(), grid)
-      if grid[i] != '#'
-        for x in neighbors(grid, i)
-          if rounds[x, round]
-            rounds[i, round + 1] = true
-            for j in 1:4
-              if edgesteps[j] == 0 && !checkbounds(Bool, grid, i + NEIGHBORS[j])
-                edges[j] = i
-                edgesteps[j] = round
-              end
-            end
-          end
+  for round in 1:numrounds, i in eachindex(IndexCartesian(), grid)
+    if grid[i] != '#'
+      for x in neighbors(grid, i)
+        if rounds[x, round]
+          rounds[i, round + 1] = true
         end
       end
     end
   end
-  odd, even = if iseven(numrounds)
-    count(rounds[:,:,numrounds+1]), count(rounds[:,:,numrounds]) 
-  else
-    count(rounds[:,:,numrounds]), count(rounds[:,:,numrounds+1])
+  count(rounds[:, :, numrounds + 1])
+end
+
+function keysizes(singlegrid)
+  height = size(singlegrid, 1)
+  extra = 2
+  bigsize = extra * 2 + 1
+  grid = repeat(singlegrid, outer=[bigsize, bigsize])
+  start = CartesianIndex(Tuple(x ÷ 2 + 1 for x in size(grid))) # dead center
+  open = findall(!=('#'), grid)
+  neighs = [c == '#' ? [] : neighbors(grid, i) for (i, c) in pairs(IndexCartesian(), grid)]
+  numrounds = height * extra + height ÷ 2
+  # TODO rather than taking numrounds steps, compute distance from start to each point and set count
+  # based on number of odds
+  rounds = zeros(Bool, (size(grid)..., numrounds + 1))
+  rounds[start, 1] = true
+  for round in 1:numrounds, i in open
+    rounds[i, round + 1] = any(n -> rounds[n, round], neighs[i])
   end
-  Crawl(odd, even, start, edges, edgesteps)
+  # return a 5x5 matrix with occupied counts after numrounds for each "copy" of singlegrid
+  f(rows, cols) = count(rounds[rows, cols, numrounds + 1])
+  reshape([f((i * height + 1):((1 + i) * height), (j * height + 1):((1 + j) * height))
+           for i in (1:bigsize) .- 1 for j in (1:bigsize) .- 1],
+    (5, 5))
+end
+
+function keysolve(grid, keymat, rounds)
+  cells = (rounds - size(grid, 1) ÷ 2) ÷ size(grid, 1)
+  odd = keymat[3, 3]
+  even = keymat[2, 3]
+  total = 0
+  for c in (-cells):cells
+    evens = max(cells - abs(c), 0)
+    odds = max(cells - abs(c) - 1, 0)
+    total += evens * even + odds * odd
+    if c < 0
+      total += keymat[1, 2] + keymat[1, 4]
+      if c == -cells
+        total += keymat[1, 3]
+      else
+        total += keymat[2, 2] + keymat[2, 4]
+      end
+    elseif c == 0
+      total += keymat[3, 1] + keymat[3, 5]
+    elseif c > 0
+      total += keymat[5, 2] + keymat[5, 4]
+      if c == cells
+        total += keymat[5, 3]
+      else
+        total += keymat[4, 2] + keymat[4, 4]
+      end
+    end
+  end
+  total
 end
 
 include("../Runner.jl")
