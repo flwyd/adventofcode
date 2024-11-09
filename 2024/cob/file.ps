@@ -1,0 +1,28 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Procedures for working with files.
+
+(cob/bootstrap.ps) runlibfile
+(cob/core.ps) cob.require
+(cob/stringbuf.ps) cob.require
+
+% readfile reads all content from filename and returns it as a single string.
+% The file is closed before returning.
+/readfile { % filename readfile string
+  (r) file stringbuf exch 1024 string
+  % stack: stringbuf file buffer
+  { 2 copy readstring exch 4 index exch sbappend } { } while
+  pop closefile sbstring
+} bind def %/readfile
+
+% fileexists? returns true if the named file exists.
+/fileexists? { % filename fileexists? boolean
+  false % return value, replaced with true on match
+  1 index { 2 index eq or } 1 index length string filenameforall
+  exch pop
+} bind def %/fileexists?

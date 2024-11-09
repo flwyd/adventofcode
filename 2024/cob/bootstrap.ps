@@ -1,0 +1,39 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Defines cob.require and cob.reload which take a library path like (cob/foo.ps)
+% and runs it if it hasn't already been run.
+
+currentdict /cob.Imported known not { %if
+  /cob.Imported 64 dict def
+
+  % cob.require imports a library file if not already imported.
+  /cob.require { % (cob/foo.ps) cob.require -
+    cob.Imported 1 index known { %ifelse
+      cob.Imported 1 index get { pop } { %else
+        % reload requested
+        cob.Imported 1 index true put
+        runlibfile
+      } ifelse
+    } { %else
+      cob.Imported 1 index true put
+      runlibfile
+    } ifelse
+  } bind def %/cob.require
+
+  % cob.require imports a library file even if it was already imported.
+  /cob.reload { % (cob/foo.ps) cob.reload -
+    cob.Imported 1 index false put
+    cob.require
+  } bind def %/cob.reload
+
+  /signalerror where { pop } { %else
+    /signalerror { % any errorname signalerror -
+      errordict exch get exec
+    } bind def
+  } ifelse
+} if

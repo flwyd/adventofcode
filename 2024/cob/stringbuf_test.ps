@@ -1,0 +1,91 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/testing.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(cob/ascii.ps) cob.require
+
+test.suite begin
+
+  (sbappend) { %test.case
+    stringbuf
+    dup sblength 0 assert.eq
+    dup (a) sbappend
+    dup 0 sbget ascii.a assert.eq
+    dup sblength 1 assert.eq
+    dup (bcd) sbappend
+    0 1 3 { 1 index 1 index sbget exch ascii.a add assert.eq } for
+    dup ( are the first four) sbappend
+    dup sbview (abcd are the first four) assert.eq
+    dup sblength (abcd are the first four) length assert.eq
+    pop
+  } test.case
+
+  (sbput) { %test.case
+    stringbuf
+    dup 3 ascii.x sbput
+    dup sblength 4 assert.eq
+    dup 0 sbget ascii.nul assert.eq
+    dup 1 sbget ascii.nul assert.eq
+    dup 2 sbget ascii.nul assert.eq
+    dup 3 sbget ascii.x assert.eq
+    dup 0 ascii.S sbput
+    dup sblength 4 assert.eq
+    dup sbview (S\000\000x) assert.eq
+    dup 1 ascii.t sbput
+    dup 2 ascii.y sbput
+    dup sbview (Styx) assert.eq
+    pop
+  } test.case
+
+  (sbview) { %test.case
+    stringbuf
+    dup (abcdefghij) sbappend
+    dup sbview
+    dup (abcdefghij) assert.eq
+    % sbview is a live view of the buffer until it grows
+    1 index 4 ascii.W sbput
+    dup (abcdWfghij) assert.eq
+    dup 2 (XYZ) putinterval
+    1 index 0 sbget ascii.a assert.eq
+    1 index 1 sbget ascii.b assert.eq
+    1 index 2 sbget ascii.X assert.eq
+    1 index 3 sbget ascii.Y assert.eq
+    1 index 4 sbget ascii.Z assert.eq
+    1 index (kl) sbappend
+    dup (abXYZfghij) assert.eq % buffer size happens to be 16
+    1 index (mnopqrst) sbappend % view is now disassociated
+    1 index 0 ascii.U sbput
+    dup (abXYZfghij) assert.eq
+    pop
+    dup sbview (UbXYZfghijklmnopqrst) assert.eq
+    pop
+  } test.case
+
+  (sbstring) { %test.case
+    stringbuf
+    dup (abcdefghij) sbappend
+    dup sbstring
+    dup (abcdefghij) assert.eq
+    % sbstring is a distinct copy
+    1 index 4 ascii.W sbput
+    dup (abcdefghij) assert.eq % sbstring unchanged
+    dup 2 (XYZ) putinterval
+    dup (abXYZfghij) assert.eq
+    1 index sbview (abcdWfghij) assert.eq
+    1 index (kl) sbappend
+    dup (abXYZfghij) assert.eq
+    1 index (mnopqrst) sbappend
+    dup (abXYZfghij) assert.eq
+    pop
+    dup sbstring (abcdWfghijklmnopqrst) assert.eq
+    pop
+  } test.case
+
+  test.run
+end

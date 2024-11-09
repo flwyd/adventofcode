@@ -1,0 +1,173 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% ASCII character codes.
+
+/ascii.nul 0 def
+/ascii.soh 1 def
+/ascii.stx 2 def
+/ascii.etx 3 def
+/ascii.eot 4 def
+/ascii.enq 5 def
+/ascii.ack 6 def
+/ascii.bel 7 def
+/ascii.bs 8 def
+/ascii.ht 9 def
+/ascii.nl 10 def
+/ascii.vt 11 def
+/ascii.np 12 def
+/ascii.cr 13 def
+/ascii.so 14 def
+/ascii.si 15 def
+/ascii.dle 16 def
+/ascii.dc1 17 def
+/ascii.dc2 18 def
+/ascii.dc3 19 def
+/ascii.dc4 20 def
+/ascii.nak 21 def
+/ascii.syn 22 def
+/ascii.etb 23 def
+/ascii.can 24 def
+/ascii.em 25 def
+/ascii.sub 26 def
+/ascii.esc 27 def
+/ascii.fs 28 def
+/ascii.gs 29 def
+/ascii.rs 30 def
+/ascii.us 31 def
+/ascii.sp 32 def
+/ascii.! 33 def
+/ascii." 34 def
+/ascii.# 35 def
+/ascii.$ 36 def
+/ascii.percent 37 def % %
+/ascii.& 38 def
+/ascii.' 39 def
+/ascii.lparen 40 def % (
+/ascii.rparen 41 def % )
+/ascii.* 42 def
+/ascii.+ 43 def
+/ascii., 44 def
+/ascii.- 45 def
+/ascii.. 46 def
+/ascii.slash 47 def % /
+/ascii.0 48 def
+/ascii.1 49 def
+/ascii.2 50 def
+/ascii.3 51 def
+/ascii.4 52 def
+/ascii.5 53 def
+/ascii.6 54 def
+/ascii.7 55 def
+/ascii.8 56 def
+/ascii.9 57 def
+/ascii.: 58 def
+/ascii.; 59 def
+/ascii.langle 60 def % <
+/ascii.= 61 def
+/ascii.rangle 62 def % >
+/ascii.? 63 def
+/ascii.@ 64 def
+/ascii.A 65 def
+/ascii.B 66 def
+/ascii.C 67 def
+/ascii.D 68 def
+/ascii.E 69 def
+/ascii.F 70 def
+/ascii.G 71 def
+/ascii.H 72 def
+/ascii.I 73 def
+/ascii.J 74 def
+/ascii.K 75 def
+/ascii.L 76 def
+/ascii.M 77 def
+/ascii.N 78 def
+/ascii.O 79 def
+/ascii.P 80 def
+/ascii.Q 81 def
+/ascii.R 82 def
+/ascii.S 83 def
+/ascii.T 84 def
+/ascii.U 85 def
+/ascii.V 86 def
+/ascii.W 87 def
+/ascii.X 88 def
+/ascii.Y 89 def
+/ascii.Z 90 def
+/ascii.lbracket 91 def % [
+/ascii.\ 92 def
+/ascii.rbracket 93 def % ]
+/ascii.^ 94 def
+/ascii._ 95 def
+/ascii.` 96 def
+/ascii.a 97 def
+/ascii.b 98 def
+/ascii.c 99 def
+/ascii.d 100 def
+/ascii.e 101 def
+/ascii.f 102 def
+/ascii.g 103 def
+/ascii.h 104 def
+/ascii.i 105 def
+/ascii.j 106 def
+/ascii.k 107 def
+/ascii.l 108 def
+/ascii.m 109 def
+/ascii.n 110 def
+/ascii.o 111 def
+/ascii.p 112 def
+/ascii.q 113 def
+/ascii.r 114 def
+/ascii.s 115 def
+/ascii.t 116 def
+/ascii.u 117 def
+/ascii.v 118 def
+/ascii.w 119 def
+/ascii.x 120 def
+/ascii.y 121 def
+/ascii.z 122 def
+/ascii.lbrace 123 def % {
+/ascii.| 124 def
+/ascii.rbrace 125 def % }
+/ascii.~ 126 def
+/ascii.del 127 def
+
+/ascii.digit? { % int ascii.digit? bool
+  dup //ascii.0 ge exch //ascii.9 le and
+} bind def %/ascii.digit?
+
+/ascii.letter? { % int ascii.letter? bool
+  dup dup dup //ascii.A ge exch //ascii.Z le and
+  3 1 roll //ascii.a ge exch //ascii.z le and or
+} bind def %/ascii.letter?
+
+/ascii.alphanumeric? { % int ascii.alphanumeric? bool
+  dup ascii.digit? exch ascii.letter? or
+} bind def %/ascii.alphanumeric?
+
+/ascii.Whitespaces [ //ascii.sp //ascii.ht //ascii.nl //ascii.cr //ascii.vt ] def
+/ascii.space? { % char ascii.space? bool
+  false ascii.Whitespaces { 2 index eq { pop true exit } if } forall exch pop
+} bind def %/ascii.space?
+
+/ascii.upper? { % int ascii.upper? bool
+  dup //ascii.A ge exch //ascii.Z le and
+} bind def %/ascii.upper?
+
+/ascii.lower? { % int ascii.lower? bool
+  dup //ascii.a ge exch //ascii.z le and
+} bind def %/ascii.lower?
+
+/ascii.CaseDiff ascii.a ascii.A sub def
+
+/ascii.toupper { % int ascii.toupper int
+  dup ascii.lower? { //ascii.CaseDiff sub } if
+} bind def %/ascii.toupper
+
+/ascii.tolower { % int ascii.tolower int
+  dup ascii.upper? { //ascii.CaseDiff add } if
+} bind def %/ascii.tolower

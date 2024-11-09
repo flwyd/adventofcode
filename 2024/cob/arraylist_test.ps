@@ -1,0 +1,83 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/testing.ps) cob.require
+(cob/arraylist.ps) cob.require
+
+test.suite begin
+
+  (alpush and alpop) { %test.case
+    alist
+    dup /a alpush
+    dup 0 alget /a assert.eq
+    dup alpop /a assert.eq
+    dup allength 0 assert.eq
+    dup /b alpush dup /c alpush dup /d alpush
+    << /b 0 /c 1 /d 2 >> { 2 index exch alget exch assert.eq } forall
+    3 { dup alpop exch } repeat 4 1 roll
+    /b assert.eq /c assert.eq /d assert.eq
+    allength 0 assert.eq
+  } test.case
+
+  (alput) { %test.case
+    alist
+    dup 42 /meaning alput
+    dup allength 43 assert.eq
+    dup 42 alget /meaning assert.eq
+    dup 41 alget null assert.eq
+    dup 7 alget null assert.eq
+    dup 7 /lucky alput
+    dup 7 alget /lucky assert.eq
+    dup 0 alget null assert.eq
+    dup 0 /hero alput
+    dup 0 alget /hero assert.eq
+    dup allength 43 assert.eq
+    dup alpop /meaning assert.eq
+    dup allength 42 assert.eq
+    dup alpop null assert.eq
+    dup 50 /states alput
+    dup 50 alget /states assert.eq
+    dup allength 51 assert.eq
+    dup 42 alget null assert.eq
+    pop
+  } test.case
+
+  (alview) { %test.case
+    alist
+    dup /a alpush
+    dup 2 /c alput
+    dup alview
+    dup [ /a null /c ] assert.deepeq
+    % alview is a live view on array list until it's resized
+    dup 1 /b put
+    dup [ /a /b /c ] assert.deepeq
+    1 index 1 alget /b assert.deepeq
+    1 index 2 /z alput
+    dup [ /a /b /z ] assert.deepeq
+    pop pop
+  } test.case
+
+  (alarray) { %test.case
+    alist
+    dup /a alpush
+    dup 2 /c alput
+    dup alarray
+    dup [ /a null /c ] assert.deepeq
+    dup 2 index alarray assert.ne % alarray twice is two distinct objects
+    % alarray is an independent copy
+    1 index 1 /b alput
+    dup [ /a null /c ] assert.deepeq
+    1 index alview [ /a /b /c ] assert.deepeq
+    dup 2 /z put
+    dup [ /a null /z ] assert.deepeq
+    1 index 2 alget /c assert.eq
+    pop pop
+  } test.case
+
+  test.run
+end

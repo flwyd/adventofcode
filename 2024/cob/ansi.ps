@@ -1,0 +1,78 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% ANSI escape code string constants.
+
+/ansi.CSI (\033[) def % Control Sequence Indicator "ESC[" starts ANSI codes
+
+/ansi.Reset (\033[0m) def % This sequence resets ANSI terminal effects
+/ansi.Bold (\033[1m) def
+/ansi.Faint (\033[2m) def
+/ansi.Italic (\033[3m) def
+/ansi.Underline (\033[4m) def
+/ansi.Blink (\033[5m) def
+/ansi.FastBlink (\033[6m) def
+/ansi.Reverse (\033[7m) def
+/ansi.Hide (\033[8m) def
+/ansi.Strike (\033[9m) def
+/ansi.DefaultFont (\033[10m) def
+/ansi.Font1 (\033[11m) def
+/ansi.Font2 (\033[12m) def
+/ansi.Font3 (\033[13m) def
+/ansi.Font4 (\033[14m) def
+/ansi.Font5 (\033[15m) def
+/ansi.Font6 (\033[16m) def
+/ansi.Font7 (\033[17m) def
+/ansi.Font8 (\033[18m) def
+/ansi.Font9 (\033[19m) def
+/ansi.Fraktur (\033[20m) def
+/ansi.NotBold (\033[21m) def % or double underline
+/ansi.NotFaint (\033[22m) def
+/ansi.NotItalic (\033[23m) def % also not Fraktur
+/ansi.NotUnderline (\033[24m) def
+/ansi.NotBlink (\033[25m) def
+/ansi.Proportional (\033[26m) def
+/ansi.NotReverse (\033[27m) def
+/ansi.NotHide (\033[28m) def % AKA reveal
+/ansi.NotStrike (\033[29m) def
+/ansi.FGblack (\033[30m) def
+/ansi.FGred (\033[31m) def
+/ansi.FGgreen (\033[32m) def
+/ansi.FGyellow (\033[33m) def
+/ansi.FGblue (\033[34m) def
+/ansi.FGmagenta (\033[35m) def
+/ansi.FGcyan (\033[36m) def
+/ansi.FGwhite (\033[37m) def
+/ansi.SetFG (\033[38m) def
+/ansi.FGdefault (\033[39m) def
+/ansi.BGblack (\033[40m) def
+/ansi.BGred (\033[41m) def
+/ansi.BGgreen (\033[42m) def
+/ansi.BGyellow (\033[43m) def
+/ansi.BGblue (\033[44m) def
+/ansi.BGmagenta (\033[45m) def
+/ansi.BGcyan (\033[46m) def
+/ansi.BGwhite (\033[47m) def
+/ansi.SetBG (\033[48m) def
+/ansi.BGdefault (\033[49m) def
+/ansi.NotProportional (\033[50m) def
+/ansi.FGbrightblack (\033[90m) def
+/ansi.FGbrightred (\033[91m) def
+/ansi.FGbrightgreen (\033[92m) def
+/ansi.FGbrightyellow (\033[93m) def
+/ansi.FGbrightblue (\033[94m) def
+/ansi.FGbrightmagenta (\033[95m) def
+/ansi.FGbrightcyan (\033[96m) def
+/ansi.FGbrightwhite (\033[97m) def
+/ansi.BGbrightblack (\033[100m) def
+/ansi.BGbrightred (\033[101m) def
+/ansi.BGbrightgreen (\033[102m) def
+/ansi.BGbrightyellow (\033[103m) def
+/ansi.BGbrightblue (\033[104m) def
+/ansi.BGbrightmagenta (\033[105m) def
+/ansi.BGbrightcyan (\033[106m) def
+/ansi.BGbrightwhite (\033[107m) def

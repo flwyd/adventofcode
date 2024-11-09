@@ -1,0 +1,105 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% An array list, growing geometrically as inputs are added.
+% Can be used as a flexible buffer, a stack, etc.
+
+% Array list is [/alisttype size buffer].
+
+/_alisttype 0 def
+/_alistlen 1 def
+/_alistbuf 2 def
+
+% alist creates an array list backed by a buffer which grows as needed to
+% accommodate items added to the list.
+/alist { % - alist arraylist
+  [ /alisttype 0 16 array ]
+} bind def %/alist
+
+% alisttypecheck raises a /typecheck error if the argument is not an array list.
+/alisttypecheck { % alist /procname alisttypecheck -
+  1 index type /arraytype ne { pop /arraylist cvx /typecheck signalerror } if
+  1 index length //_alisttype le { pop /arraylist cvx /typecheck signalerror } if
+  exch //_alisttype get /alisttype eq { pop } { cvx /typecheck signalerror } ifelse
+} bind def %/alisttypecheck
+
+% allength returns the number of items in an array list.  The size of the
+% underlying buffer is irrelevant.
+/allength { % alist allength int
+  dup /allength alisttypecheck
+  //_alistlen get
+} bind def %/allength
+
+/_alistgrow { % alist _alistgrow -
+  dup //_alistbuf get dup length 2 mul array
+  % stack: list buf newbuf
+  dup 0 4 -1 roll putinterval //_alistbuf exch put
+} bind def %/_alistgrow
+
+% alget returns the item in alist at index.  Raises a /rangecheck error if there
+% are index or fewer items in the list.
+/alget { % alist index alget value
+  1 index /alget alisttypecheck
+  dup 2 index allength ge { /alget cvx /rangecheck signalerror } if
+  exch //_alistbuf get exch get
+} bind def %/alget
+
+% alput assigns list position index to value, growing the list with null values
+% if there are fewer than index items.
+/alput { % alist index value alput -
+  2 index /alput alisttypecheck
+  { 2 index //_alistbuf get length 2 index gt { exit } if 2 index _alistgrow } loop
+  2 index allength 2 index lt { 2 index //_alistlen 3 index 1 add put } if
+  3 -1 roll //_alistbuf get 3 1 roll put
+} bind def %/alput
+
+% alpush adds value to the end of alist.
+/alpush { % alist value alpush -
+  1 index /alpush alisttypecheck
+  1 index dup allength exch //_alistbuf get length eq { 1 index _alistgrow } if
+  1 index dup allength exch //_alistbuf get exch 3 -1 roll put
+  dup allength 1 add //_alistlen exch put
+} bind def %/alpush
+
+% alpop removes the last value from alist and returns it.  Raises a /rangecheck
+% error if alist is empty.
+/alpop { % alist alpop value
+  dup /alpop alisttypecheck
+  dup allength dup 0 eq { /alpop cvx /rangecheck signalerror } if 1 sub
+  % stack: alist newlength
+  dup 2 index //_alistbuf get dup 3 index get 3 -2 roll exch null put
+  % stack: alist newlength value
+  3 1 roll //_alistlen exch put
+} bind def %/alpop
+
+% alclear removes all items from alist and discards the buffer.
+/alclear { % alist alclear -
+  dup /alclear alisttypecheck
+  dup //_alistlen 0 put //_alistbuf 16 array put
+} bind def %/alclear
+
+% alview returns a live view of the items in the list.  Changes to the returned
+% array are reflected in alist and vice versa, but only until the list buffer is
+% resized.
+/alview { % alist alview array
+  dup /alview alisttypecheck
+  dup allength exch //_alistbuf get 0 3 -1 roll getinterval
+} bind def %/alview
+
+% alararry returns a shallow copy of the items in the list.  Further changes to
+% alist are not reflected in the returned array and vice versa.  The objects in
+% the arrays are the same, so mutations to those objects are reflected.
+/alarray { % alist alarray array
+  dup /alarray alisttypecheck
+  alview dup length array copy
+} bind def %/alarray
+
+% alforall executes proc once for each item in the list.
+/alforall { % alist proc alforall procresults
+  1 index /alforall alisttypecheck
+  exch alview exch forall
+} bind def %/alforall

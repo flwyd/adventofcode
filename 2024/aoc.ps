@@ -1,0 +1,162 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/ansi.ps) cob.require
+(cob/arraylist.ps) cob.require
+(cob/core.ps) cob.require
+(cob/file.ps) cob.require
+(cob/log.ps) cob.require
+(cob/performance.ps) cob.require
+(cob/string.ps) cob.require
+
+/aoc.Context 16 dict def
+aoc.Context begin
+  /log.Enabled false def % -v on command line reenables
+  /ARGUMENTS where { %ifelse
+    /ARGUMENTS get dup empty? { pop [ (%stdin) ] } if
+    [ exch { %forall
+      dup dup (-v) eq exch (--verbose) eq or { %ifelse
+        /log.Enabled true def pop
+      } { %else
+        dup (-) eq { pop (%stdin) } if
+      } ifelse
+    } forall ]
+    /filenames exch def
+  } { %else
+    % /filenames [ (%stdin) ] def
+    /filenames [] def
+  } ifelse
+
+  /STDOUT (%stdout) (w) file def
+
+  /results alist def
+  /inputlines [] def
+  /curfilename () def
+  /dayname /DayNotSet def
+  /curpart /PartNotSet def
+  /timings 2 dict def
+  /expected 2 dict begin /part1 () def /part2 () def currentdict end def
+end
+
+/aoc.runday { % /DayN aoc.runday -
+  dup load type /dicttype ne { /dict cvx /typecheck signalerror } if
+  aoc.Context /dayname 3 -1 roll put
+  aoc.Context /filenames get { %forall
+    aoc.Context begin
+      dup (-) eq { pop (%stderr) } if
+      /curfilename exch def
+      curfilename readfile splitlines /inputlines exch def
+      2 dict begin
+        /part1 () def /part2 () def
+        curfilename (.txt) endswith? { %ifelse
+          curfilename 0 curfilename length 4 sub getinterval (.expected) cat
+          dup fileexists? { %if
+            readfile splitlines { %forall
+              (:) search { %ifelse
+                cvn 3 -1 roll trimspace def pop
+                % TODO if expected has (\n) sequence replace with (\\n)
+              } { pop } ifelse
+            } forall
+          } if
+        } if
+        currentdict
+      end /expected exch def
+    end %aoc.Context
+    /part1 aoc.runpart /part2 aoc.runpart
+    % [ /part1 /part2 ] { %forall
+    %   aoc.runpart
+    % } forall
+  } forall
+} bind def %/aoc.runday
+
+/aoc.runpart { % /partN aoc.runpart result
+  dup aoc.Context begin
+    /curpart exch def
+    inputlines
+    [ (Running) dayname curpart (on) curfilename
+      counttomark 1 add index length (lines) ] log.info
+    count /expectedcount exch def
+    timings curpart timing.start put
+  end
+  % stack: /partN [ input lines ]
+  { % stopped
+    aoc.Context /dayname get load begin
+    exch cvx exec
+  } stopped { handleerror /ERROR } if
+  end
+  aoc.Context begin
+    timings curpart get timing.finish
+    count expectedcount ne {
+      count [ (WARNING: unexpected stack count) 3 -1 roll
+        (expected) expectedcount ] log.info
+    } if
+    expected curpart get curpart aoc.result
+    /curresult exch def
+    curpart tostring print (: ) print curresult /got get = STDOUT flushfile
+    % TODO more details on expected vs actual error
+    % [ curresult /symbol get curresult /outcome get ] log.info
+    curresult aoc.resultmessage log.info
+    [ curpart (took) timings curpart get /fmttime get
+      (and) timings curpart get /fmtmem get ] log.info
+    (========================================) log.info
+  end
+} bind def %/aoc.runpart
+
+/aoc.result { % got want /partN aoc.result dict
+  % TODO time measurement
+  8 dict begin
+    /part exch def
+    /want exch def
+    /got exch tostring def
+    got (TODO) eq { %ifelse
+      /outcome /todo def
+      /symbol (❗) def
+      /bgcolor ansi.BGbrightcyan def
+    } { %else
+      want empty? { %ifelse
+        /outcome /unknown def
+        /symbol (❓) def
+        /bgcolor ansi.BGbrightmagenta def
+      } { %else
+        got want eq { %ifelse
+          /outcome /success def
+          /symbol (✅) def
+          /bgcolor ansi.BGbrightgreen def
+        } { %else
+          /outcome /failure def
+          /symbol (❌) def
+          /bgcolor ansi.BGbrightred def
+        } ifelse
+      } ifelse
+    } ifelse
+    currentdict
+  end
+} bind def %/aoc.result
+
+/aoc.resultmessage { % aoc.result aoc.resultmessage string
+  begin
+    outcome /failure eq { %ifelse
+      (got ) got tostring (, want ) want 4 cat
+    } { %else
+      outcome /todo eq { %ifelse
+        want () eq { (implement it) } { (implement it, want ) want cat } ifelse
+      } { %else
+        (got ) got tostring cat
+      } ifelse
+    } ifelse
+    [ exch symbol bgcolor ansi.FGblack outcome tostring toupper ansi.Reset 4 cat
+      counttomark -1 roll ] ( ) join
+    % symbol ( ) outcome tostring toupper ( ) 5 -1 roll 5 cat
+  end
+} bind def %/aoc.resultmessage
+
+/aoc.addfile { % filename aoc.addfile -
+  aoc.Context begin
+    [ exch filenames aload length 1 add -1 roll ] /filenames exch def
+  end
+} bind def %/aoc.addfile

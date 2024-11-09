@@ -1,0 +1,57 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/string.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (join empty array) {
+    [] (#) join () assert.eq
+  } test.case
+
+  (join singleton array) {
+    [ (foo) ] (#) join (foo) assert.eq
+    [ /hello ] (#) join (hello) assert.eq
+    [ 123 ] (#) join (123) assert.eq
+  } test.case
+
+  (join two element array) {
+    [ (foo) (bar) ] (#) join (foo#bar) assert.eq
+    [ /hello /world! ] ( ) join (hello world!) assert.eq
+    [ 123 42 ] ( > ) join (123 > 42) assert.eq
+    [ 1.23 4.2 ] () join (1.234.2) assert.eq
+  } test.case
+
+  (join multi array) {
+    [ (Lorem) (ipsum) (dolor) (sit) (amet) ] ( ) join (Lorem ipsum dolor sit amet) assert.eq
+    [ /hello 2 (world) ] (/) join (hello/2/world) assert.eq
+    [ 123 42 -3 1024 ] (\r\n) join (123\r\n42\r\n-3\r\n1024) assert.eq
+    [ [ /nested /array ] [ 1 2 3 ] [] ] () join ([nested array][1 2 3][]) assert.eq
+  } test.case
+
+  (join empty dict) {
+    <<>> (=) ( ) join () assert.eq
+  } test.case
+
+  (join singleton dict) {
+    << /bar (foo) >> (=) ( ) join (bar=foo) assert.eq
+    << /hello /world >> ( is ) (/) join (hello is world) assert.eq
+    << 123 456 >> ( to ) (/) join (123 to 456) assert.eq
+  } test.case
+
+  (join multi dict) {
+    << /foo 123 /bar 42 >> (=) ( and ) join
+      % don't depend on dict iteration order
+      dup dup (foo=123 and bar=42) eq
+      exch (bar=42 and foo=123) eq or
+      { dup assert.eq } { (foo=123 and bar=42) assert.eq } ifelse
+  } test.case
+
+  test.run
+end

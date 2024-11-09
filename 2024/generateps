@@ -1,0 +1,16 @@
+#!/bin/zsh
+# Copyright 2024 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+foreach i ($@) do
+  mkdir -p $i
+  for f in input.actual.txt input.actual.expected ; do
+    if [ ! -e $i/$f ]; then
+      ln -s ../input/${${i:t}#day}/$f $i/$f
+    fi
+  done
+done
+exec gsnd -q -dNOSAFER -I${0:h} -- ${0:h}/generate.ps $@

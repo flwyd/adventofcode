@@ -1,0 +1,255 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Basic utilities, many used by other libraries.
+
+% unless works like `if` with the condition reversed: Example:
+% currentdict /foo known { (foo is unknown) print } unless
+/unless { exch not exch if } bind def % bool proc unless ?
+
+% until executes proc1 in a loop as long as proc2 returns true.  Note the loop
+% always executes at least once.  Skip a block of text in a program:
+% { currentfile token } { /END_OF_BLOCK eq } until
+/until { 2 dict begin % proc1 proc2:bool until -
+  [ /proc /exec cvx /cond /exec cvx { exit } /if cvx ]
+  pstack
+  dup 2 4 -1 roll put
+  dup 0 4 -1 roll put
+  cvx bind
+  loop
+  % /_cond exch def
+  % /_proc exch def
+  % { _proc exec _cond exec { exit } if } bind loop
+end } bind def
+
+% while executes proc1 in a loop until proc2 returns false. Note the loop always
+% executes at least once.  Read file lines into an array:
+% /f (file.txt) (r) file def
+% [ { f 128 string readline } { } while pop ]
+% f closefile
+% The conditional block is empty because readline leaves a boolean on the stack,
+% the pop is needed to remove the trailing blank line (assuming no dangling
+% line without a newline.)
+/while { 2 dict begin % proc1 proc2:bool while -
+  /_cond exch def
+  /_proc exch def
+  { _proc exec _cond exec not { exit } if } bind loop
+end } bind def
+
+% empty? returns true if the argument has no elements, false if it has any.
+/empty? { % string|array|dict empty? bool
+  length 0 eq
+} bind def %/empty?
+
+% all? returns true if a predicate returns true for each item in an iterable
+% (string, array, or dict), false if the predicate returns false for any item.
+% Returns true if the iterable is empty.
+/all? { % iter predicate all? bool
+  true 3 -1 roll { 2 index exec and dup not { exit } if } forall exch pop
+} bind def %/all?
+
+% any? returns true if a predicate returns true for any item in an iterable
+% (string, array, or dict), false if the predicate returns false for all items.
+% Returns false if the iterable is empty.
+/any? { % iter predicate any? bool
+  false 3 -1 roll { 2 index exec or dup { exit } if } forall exch pop
+} bind def %/any?
+
+% contains? returns true if any element in array eq the given value or if any
+% character in a string eq the given char.
+/contains? { % array any contains? boolean
+             % string char contains? boolean
+  false 3 -1 roll { 2 index eq { pop true exit } if } forall exch pop
+} bind def %/contains?
+
+/new.IMPL 4 dict def
+new.IMPL begin
+  /arraytype { array } def
+  /dicttype { dict } def
+  /nametype { string } def
+  /stringtype { string } def
+end
+
+% cat allocates a new compound object of the same type as the two args and with
+% twice the length, then copies arg1 and then arg2 into the new object.
+% If both args were executable, the result will be executable too.
+% If the final arg is an integer >= 2, that many items will be concatenated.
+% TODO handle array+packedarray or name+string
+/cat { % (str1) (str2) cat (str1str2)
+       % /name1 /name2 cat /name1name2
+       % [a1 ... an] [b1 ... bn] cat [a1 ... an b1 ... bn]
+       % <</k1 v1 /k2 v2>> </k3 v3 /k1 v4> cat <</k2 v2 /k3 v3 /k1 v4>>
+       % x1 x2 ... xn n cat x1x2...xn
+  % save executable status for end
+  % dup type /integertype eq { %ifelse
+  %   dup true 2 1 4 -1 roll 1 add { index xcheck and } for 1 index 1 add 1 roll
+  % } { %else
+  %   1 index xcheck 1 index xcheck and 3 1 roll
+  % } ifelse
+  cat.IMPL begin dup type exec end
+  % set new item executable if both args were
+  % exch { cvx } if
+} bind def %/cat
+
+% Adapted from Thinking in PostScript example 11.7.
+/cat.IMPL 4 dict def
+cat.IMPL begin % stack: arg1 arg1
+  { % string/array impl:
+    % save executable status for end
+    1 index xcheck 1 index xcheck and 3 1 roll
+    dup length 2 index length add 1 index new.IMPL begin type exec end
+    % stack: xcheck arg1 arg2 new on all three lines below
+    dup 0 4 index putinterval
+    dup 4 -1 roll length 4 -1 roll putinterval
+    % stack: xcheck new
+    % set new item executable if both args were
+    exch { cvx } if
+  } bind dup
+  /arraytype exch def
+  /stringtype exch def
+  /nametype {
+    2 { exch dup xcheck exch dup length string cvs exch { cvx } if} repeat
+    cat cvn
+  } bind def
+  /packedarraytype { % TODO N packedarray after aload, but need length
+    exch aload length dup 2 add -1 roll
+    % stack: items... length array
+    aload length dup 2 add -1 roll add packedarray
+  } bind def
+  /dicttype {
+    dup length 2 index length add 2 mul dict
+    % stack: dict1 dict2 new
+    3 -1 roll { 2 index 3 1 roll put } forall
+    % stack: dict2 new
+    exch { 2 index 3 1 roll put } forall
+    % stack: new
+  } bind def %/dicttype
+  /integertype { 1 sub { cat } repeat } bind def
+end
+
+% clone makes a deep copy of its argument.  Any string, array, or dict is copied
+% to a new instance of the same type, and any nested compound objects are also
+% copied.  packedarray objects are returned as-is, without cloning nested
+% objects.  Behavior is undefined on other mutable objects, e.g. files.
+/clone { % any clone any
+  dup rcheck { %if
+    dup type /stringtype eq { %ifelse
+      dup length string copy
+    } { %else
+      dup type /arraytype eq { %ifelse
+        dup [ exch { clone } forall ] exch xcheck { cvx } if
+      } { %else
+        dup type /dicttype eq { %if
+          dup length 2 mul dict begin
+            { exch clone exch clone def } forall currentdict
+          end
+        } if % other objects are either immutable or not easy to clone
+      } ifelse
+    } ifelse
+  } if
+} bind def %/clone
+
+% deepeq recursively compares two objects for equality.
+/deepeq { % any1 any2 deepeq bool
+  2 copy type exch type ne { pop pop false } { %else
+    2 copy eq { pop pop true } { %else
+      dup type dup /arraytype eq exch /packedarraytype eq or { deepeq.array } { %else
+        dup type /dicttype eq { deepeq.dict } { %else
+          pop pop false
+        } ifelse
+      } ifelse
+    } ifelse
+  } ifelse
+} bind def %/deepeq
+
+% deepne is a convenient way to spell `deepeq not`.
+/deepne { deepeq not } bind def
+
+% deepeq.array recursively compares (using deepeq) two arrays for equality.
+/deepeq.array { % array1 array2 deepeq.array bool
+  2 copy length exch length ne { false } { %else
+    % loop invariant: a1 a2 result; result popped and added again
+    true 0 1 3 index length 1 sub {
+      exch pop 2 index 1 index get 2 index 3 -1 roll get
+      deepeq { true } { false exit } ifelse
+    } for
+  } ifelse
+  3 1 roll pop pop
+} bind def %/deepeq.array
+
+% deepeq.dict recursively compares (using deepeq) two dicts for equality.
+/deepeq.dict { % dict1 dict2 deepeq.dict bool
+  2 copy length exch length ne { false } { %else
+    % loop invariant: a1 a2 result; result popped and added again
+    true 2 index {
+      3 -1 roll pop exch % stack: a1 a2 value key
+      2 index exch { pop false exit } getorelse
+      deepeq { true } { false exit } ifelse
+    } forall
+  } ifelse
+  3 1 roll pop pop
+} bind def %/deepeq.dict
+
+% endswith? takes either a pair of strings/arrays or a string/array and a
+% byte/object.  In the first form, returns true if the N characters/objects in
+% the second argument are the final N items in the first argument, returning
+% false if the second argument is longer than the first.  In the second form,
+% returns true if the second argument eq the last item in the first argument,
+% returning false if the first argument is empty.
+% TODO factor out index (from-end vs. 0) and implement startswith?
+/endswith? { % string string endswith? boolean
+             % array array endswith? boolean
+             % packedarray packedarray endswith? boolean
+             % string char endswith? boolean
+             % array any endswith? boolean
+  % 1 index type /stringtype eq 1 index type /stringtype eq and { %ifelse
+  2 copy /stringtype /stringtype 2 types?
+  3 copy pop /arraytype /arraytype 2 types? or
+  3 copy pop /packedarraytype /packedarraytype 2 types? or { %ifelse
+    1 index length 1 index length ge { %ifelse
+      exch dup length 2 index length sub 2 index length getinterval deepeq
+    } { pop pop false } ifelse
+  } { %else
+    exch dup length 0 gt { dup length 1 sub get eq } { pop pop false } ifelse
+  } ifelse
+} bind def %/endswith?
+
+% getor returns `dict key get` if key is known, otherwise returns default.
+/getor { % dict key default getor value | default
+  2 index 2 index known { pop get } { 3 1 roll pop pop } ifelse
+} bind def %/getor
+
+% getorget returns `dict key get` if key is known, otherwise `get elsekey get`.
+/getorget { % dict key elsekey getorget value
+  2 index 2 index known { pop get } { exch pop get } ifelse
+} bind def %/getorget
+
+% getor returns `dict key get` if key is known.  Otherwise it executes proc,
+% passing key as an argument.
+/getorelse { % dict key proc getorelse value | key proc exec
+  2 index 2 index known { pop get } { 3 -1 roll pop exec } ifelse
+} bind def %/getorelse
+
+% keys takes a dict and returns an array of all its keys.
+/keys { % dict keys [k1 k2 ...]
+  [ exch { pop } forall ]
+} bind def %/keys
+
+% values takes a dict and returns an array of all its values.
+/values { % dict values [k1 k2 ...]
+  [ exch { exch pop } forall ]
+} bind def %/values
+
+% types? takes n objects, n type names, and the integer n and returns true if
+% all n objects have the corresponding n types.  Example use:
+% 2 copy /stringtype /stringtype 2 types? {concatstrings} {[3 1 roll]} ifelse
+/types? { % any1 ... anyn type1 ... typen n types? boolean
+  % count result stay at the top of the stack, each iteration pops a type
+  true 1 index { 3 -1 roll 2 index 2 add index type eq and } repeat
+  % pop all the objects, leave result
+  exch { exch pop } repeat
+} bind def %/types?

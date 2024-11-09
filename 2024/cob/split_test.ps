@@ -1,0 +1,91 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/string.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (split empty string) {
+    () (/) split [ () ] assert.deepeq
+  } test.case
+
+  (split no delimiter) {
+    (hello world) (/) split [ (hello world) ] assert.deepeq
+  } test.case
+
+  (split mid delimiter) {
+    (either/or) (/) split [ (either) (or) ] assert.deepeq
+    (hello, world) (, ) split [ (hello) (world) ] assert.deepeq
+    (foo,bar,baz) (,) split [ (foo) (bar) (baz) ] assert.deepeq
+  } test.case
+
+  (split leading delimiter) {
+    (/usr/local/bin) (/) split [ () (usr) (local) (bin) ] assert.deepeq
+    (word) (word) split [ () () ] assert.deepeq
+  } test.case
+
+  (split trailing delimiter) {
+    (list, of, words, ) (, ) split [ (list) (of) (words) () ] assert.deepeq
+    (fish??) (?) split [ (fish) () () ] assert.deepeq
+  } test.case
+
+  (split empty delimiter) {
+    (hello) () split [ (h) (e) (l) (l) (o) ] assert.deepeq
+    () () split [ ] assert.deepeq
+  } test.case
+
+  (splitlines empty string) {
+    () splitlines [] assert.deepeq
+  } test.case
+
+  (splitlines no newline) {
+    (\t) splitlines [ (\t) ] assert.deepeq
+    (az) splitlines [ (az) ] assert.deepeq
+    (Hello, world!) splitlines [ (Hello, world!) ] assert.deepeq
+  } test.case
+
+  (splitlines trailing newline) {
+    (\n) splitlines [ () ] assert.deepeq
+    (X\n) splitlines [ (X) ] assert.deepeq
+    (one line\n) splitlines [ (one line) ] assert.deepeq
+    (first\nsecond\n) splitlines [ (first) (second) ] assert.deepeq
+    (Lorem\tipsum\nsic\ndolor amet,\n) splitlines
+      [ (Lorem\tipsum) (sic) (dolor amet,) ] assert.deepeq
+  } test.case
+
+  (splitlines no trailing newline) {
+    (first\nsecond) splitlines [ (first) (second) ] assert.deepeq
+    (Lorem\tipsum\nsic\ndolor amet,) splitlines
+      [ (Lorem\tipsum) (sic) (dolor amet,) ] assert.deepeq
+  } test.case
+
+  (splitlines CRLF) {
+    (\t\r\n) splitlines [ (\t) ] assert.deepeq
+    (az\r\n) splitlines [ (az) ] assert.deepeq
+    (Hello,\r\nworld!) splitlines [ (Hello,) (world!) ] assert.deepeq
+    (Hello,\r\nworld!\r\n) splitlines [ (Hello,) (world!) ] assert.deepeq
+    (Lorem\tipsum\r\nsic\r\ndolor amet,\r\n) splitlines
+      [ (Lorem\tipsum) (sic) (dolor amet,) ] assert.deepeq
+    (Lorem\tipsum\r\nsic\r\ndolor amet,) splitlines
+      [ (Lorem\tipsum) (sic) (dolor amet,) ] assert.deepeq
+  } test.case
+
+  (splitlines CR without LF) {
+    (\r) splitlines [ (\r) ] assert.deepeq
+    (a\rz) splitlines [ (a\rz) ] assert.deepeq
+    (Hello,\rworld!\r\n) splitlines [ (Hello,\rworld!) ] assert.deepeq
+    (one\rtwo\r\nthree) splitlines [ (one\rtwo) (three) ] assert.deepeq
+    (one\rtwo\r\nthree\r\n) splitlines [ (one\rtwo) (three) ] assert.deepeq
+    (one line\ntrailing CR\r) splitlines
+      [ (one line) (trailing CR\r) ] assert.deepeq
+  } test.case
+
+  test.run
+end
+

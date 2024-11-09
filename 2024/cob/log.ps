@@ -1,0 +1,24 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% A simple logging interface.
+
+(cob/bootstrap.ps) runlibfile
+(cob/string.ps) cob.require
+
+% Code can selectively disable logging by setting /log.Enabled to false
+% somewhere in the dict stack.
+/log.Enabled true def
+
+/log.File (%stderr) (w) file def
+
+/log.info { % any log.info -
+  log.Enabled { %ifelse
+    log.File exch tostring writestring
+    log.File (\n) writestring log.File flushfile
+  } { pop } ifelse
+} bind def %/log.info

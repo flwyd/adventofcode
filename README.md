@@ -4,7 +4,7 @@ This is a repository containing solutions for [Advent of
 Code](https://adventofcode.com/). Each AoC year has its own directory and the
 solution for each day is in its own subdirectory.  Each day’s solution is
 generally a standalone program which takes input either on standard input
-(2020) or one or more input files on the command line (2021, 2022, 2023). 2022
+(2020) or one or more input files on the command line (2021 and forward). 2022
 introduced a separate solution runner library rather than including a few dozen
 lines of orchestration code in the template, but they still run as standalone
 scripts with more spartan output.  The scripts take an optional `-v` or
@@ -24,6 +24,7 @@ Year           | Language | Thoughts
 [2021](./2021) | [Raku](https://raku.org/) plus [Go](https://go.dev/) when Raku was too slow | [Blog post](https://flwyd.dreamwidth.org/400979.html)
 [2022](./2022) | [Elixir](https://elixir-lang.org/) | [Blog post](https://flwyd.dreamwidth.org/405717.html)
 [2023](./2023) | [Julia](https://julialang.org/) |
+[2024](./2024) | [PostScript](https://en.wikipedia.org/wiki/PostScript) |
 
 This code is made available under an [MIT-style license](./LICENSE). I do not
 accept pull requests to this repo, but you’re welcome to point out anything you

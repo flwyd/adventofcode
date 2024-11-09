@@ -1,0 +1,110 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+
+/exists? { % filename exists? bool
+  [ exch dup length string {} exch filenameforall ] length 0 gt
+} bind def %/exists?
+
+/writetofile { % str filename writetofile -
+  dup exists? not { %ifelse
+    dup (writing to ) print =
+    (w) file exch { %loop
+      (DAYNUM) search { %ifelse
+        3 index dup 3 -1 roll writestring DayNum writestring pop
+      } { %else
+        1 index exch writestring exit
+      } ifelse
+    } loop
+    closefile
+  } { %else
+    (%stderr) (w) file dup dup 4 -1 roll
+    writestring ( already exists\n) writestring flushfile
+    pop % arg string
+  } ifelse
+} bind def %/writetofile
+
+/trailingnum { % (abc123) trailingnum (123)
+  % For each index in the string (starting with 0), see if the string starting
+  % at that point is all digits.
+  % XXX O(n^2) in the worst case if there's just one non-digit, near the end
+  dup length { %repeat
+    dup length 0 eq { exit } if
+    dup { ascii.digit? } all? { exit } { %else
+      dup length 1 sub 1 exch getinterval
+    } ifelse
+  } repeat
+} bind def %/trailingnum
+
+/generateinto { % (dir) generateinto -
+  (/) cat % ensure dir ends with a /
+
+(%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day DAYNUM https://adventofcode.com/2024/day/DAYNUM
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/DayDAYNUM 8 dict def
+DayDAYNUM begin
+
+/part1 { 8 dict begin % [lines] part1 result
+  % { (line: ) print = } forall
+  /TODO
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  % { (line: ) print = } forall
+  /TODO
+end } bind def %/part2
+
+end %DayDAYNUM
+
+/ARGUMENTS where { pop /DayDAYNUM aoc.runday } if
+) 1 index (day) DayNum (.ps) 4 cat writetofile
+
+() (input.example.txt) 2 index exch cat writetofile
+
+(part1:\040
+part2:\040
+) (input.example.expected) 2 index exch cat writetofile
+
+  pop
+} bind def %/generateinto
+
+/ARGUMENTS where { %if
+  /ARGUMENTS get { %forall
+    dup trailingnum /DayNum exch def
+    dup (generating files in ) print print (\n) print flush
+    generateinto
+  } forall
+} if
+% /DirName where { %if
+%   /DirName get
+%   dup trailingnum /DayNum exch def
+%   generateinto
+% } if
+% % TODO take DirName as arg and infer DayNum from that
+% /DayNum where { %if
+%   DayNum type /integertype eq { DayNum 8 string cvs /DayNum exch def } if
+%   /DayNum load (/tmp/day42/) generateinto
+%   quit
+% } if

@@ -1,0 +1,106 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% String buffer is a string that grows as text is appended.
+
+% String buffer is [/stringbuftype size str].
+
+/_sbuftype 0 def
+/_sbuflen 1 def
+/_sbufstr 2 def
+
+% stringbuf creates a string buffer which grows as needed to accommodate
+% incrementally added strings.
+/stringbuf { % - stringbuf [0 (\0...)]
+  [ /stringbuftype 0 16 string ]
+} bind def %/stringbuf
+
+/stringbuftypecheck { % stringbuf /procname stringbuftypecheck -
+  1 index type /arraytype ne { pop /stringbuf cvx /typecheck signalerror } if
+  1 index length //_sbuftype le { pop /stringbuf cvx /typecheck signalerror } if
+  exch //_sbuftype get /stringbuftype eq { pop } { %else
+    cvx /typecheck signalerror
+  } ifelse
+} bind def %/stringbuftypecheck
+
+% sblength returns the number of number of bytes added to a string buffer thus
+% far  The size of the underlying buffer is irrelevant.
+/sblength { % stringbuf sblength int
+  dup /sblength stringbuftypecheck
+  //_sbuflen get
+} bind def %/sblength
+
+/_stringbufgrow { % stringbuf _stringbufgrow -
+  dup /_stringbufgrow stringbuftypecheck
+  dup //_sbufstr get dup length 2 mul string
+  % stack: sb buf newbuf
+  dup 0 4 -1 roll putinterval //_sbufstr exch put
+} bind def %/_stringbufgrow
+
+% sbget returns the byte in stringbuf at index.  Raises a /rangecheck error if
+% index is greater than or equal to the length.
+/sbget { % stringbuf index sbget byte
+  1 index /sbget stringbuftypecheck
+  dup 2 index sblength ge { /sbget cvx /rangecheck signalerror } if
+  exch //_sbufstr get exch get
+} bind def %/sbget
+
+% sbput assigns string position index to byte, growing the string with null
+% bytes if there are fewer than index characters.
+/sbput { % stringbuf index byte sbput -
+  2 index /sbput stringbuftypecheck
+  { %loop
+    2 index //_sbufstr get length 2 index gt { exit } if 2 index _stringbufgrow
+  } loop
+  2 index sblength 2 index le { 2 index //_sbuflen 3 index 1 add put } if
+  3 -1 roll //_sbufstr get 3 1 roll put
+} bind def %/sbput
+
+% sbappend appends a string to the end of a string buffer.
+/sbappend { % stringbuf string sbappend -
+  1 index /sbappend stringbuftypecheck
+  { %loop
+    2 copy length exch sblength add 2 index //_sbufstr get length le { exit }
+    if 1 index _stringbufgrow
+  } loop
+  2 copy exch dup //_sbufstr get exch sblength 3 -1 roll putinterval
+  length exch dup sblength 3 -1 roll add //_sbuflen exch put
+} bind def %/sbappend
+
+% sbappendall
+/sbappendall { % stringbuf [str1 ... strn] sbappendall -
+               % stringbuf <<key1 str1 ... keyn strn>> sbappendall -
+  1 index /sbappendall stringbuftypecheck
+  dup type /dicttype eq { %ifelse
+    { exch dup length string cvs 2 index dup 4 1 roll exch sbappend sbappend }
+  } { %else
+    { 1 index exch sbappend }
+  } ifelse
+  forall
+  pop
+} bind def %/sbappendall
+
+% sbclear discards stringbuf's buffer and resets the length to zero.
+/sbclear { % stringbuf sbclear -
+  dup /sbclear stringbuftypecheck
+  dup //_sbuflen 0 put //_sbufstr 16 string put
+} bind def %/sbclear
+
+% sbview returns a live view of the string in a buffer.  Changes to the returned
+% string are reflected in stringbuf and vice versa, but only until the buffer is
+% resized.
+/sbview { % stringbuf sbview array
+  dup /sbview stringbuftypecheck
+  dup sblength exch //_sbufstr get 0 3 -1 roll getinterval
+} bind def %/sbview
+
+% sbstring returns a copy of the string in a buffer.  Further changes to
+% stringbuf are not reflected in the returned string and vice versa.
+/sbstring { % stringbuf sbstring string
+  dup /sbstring stringbuftypecheck
+  sbview dup length string copy
+} bind def %/sbstring

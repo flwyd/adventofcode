@@ -1,0 +1,60 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Utilities for measuring performance.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/stringbuf.ps) cob.require
+
+% timing.struct creates an object to capture performance details.
+/timing.struct { 8 dict begin % - timing.struct -
+  /fmttime /stillrunning def
+  /fmtmem /stillrunning def
+  vmstatus pop exch pop /startmem exch def
+  /endtime 0 def
+  /starttime realtime def
+  currentdict
+end } bind def %/timing.struct
+
+% timing.start creates a timing struct and record the current time and memory.
+/timing.start { % - timing.start timing.struct
+  timing.struct
+} bind def %/timing.start
+
+% timing.finish records the ending time and memory and sets fmttime and fmtmem.
+/timing.finish { % timing.struct timing.finish
+  realtime exch begin
+    /endtime exch def
+    vmstatus pop exch pop /endmem exch def
+    /fmttime stringbuf def
+    endtime starttime sub
+    dup 1000 lt { %ifelse
+      fmttime exch tostring sbappend fmttime (ms) sbappend
+    } { %else
+      dup 60000 lt { %ifelse
+        1000 div tostring fmttime exch sbappend fmttime (s) sbappend
+      } { %else
+        dup 60000 idiv tostring fmttime exch sbappend fmttime (:) sbappend
+        dup 10000 lt { fmttime (0) sbappend } if
+        1000 div fmttime exch sbappend
+      } ifelse
+    } ifelse
+    /fmttime fmttime sbview def
+    endmem startmem sub
+    dup 16#100000 ge { %ifelse
+      16#100000 div tostring ( MiB) cat
+    } { %else
+      dup 1024 ge { %ifelse
+        1024 div tostring ( kiB) cat
+      } { %else
+        tostring ( bytes) cat
+      } ifelse
+    } ifelse
+    /fmtmem exch def
+  end
+} bind def %/timing.finish

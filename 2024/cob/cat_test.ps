@@ -1,0 +1,123 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/core.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (two strings) {
+    () () cat () assert.eq
+    (a) () cat (a) assert.eq
+    () (Z) cat (Z) assert.eq
+    (A) (Z) cat (AZ) assert.eq
+    (abc) (z) cat (abcz) assert.eq
+    (Lorem ipsum\n) (\tdolor sit amet,) cat (Lorem ipsum\n\tdolor sit amet,) assert.eq
+    (control characters ) <0001027f> cat (control characters \000\001\002\177) assert.eq
+    (Þor) ( Mjölnir) cat (Þor Mjölnir) assert.eq
+  } test.case
+
+  (two names) {
+    /a /b cat /ab assert.eq
+    /foo /bar cat /foobar assert.eq
+    (two words) /? cat (two words?) cvn assert.eq
+    /empty () cvn cat /empty assert.eq
+  } test.case
+
+  (two arrays) {
+    [] [] cat [] assert.deepeq
+    [42] [37] cat [42 37] assert.deepeq
+    [42] [] cat [42] assert.deepeq
+    [] [37] cat [37] assert.deepeq
+    [/mixed 42] [(type)] cat [/mixed 42 (type)] assert.deepeq
+    [/nested [/array 1]] [[/another] [(nested) [3]]] cat
+      [/nested [/array 1] [/another] [(nested) [3]]] assert.deepeq
+  } test.case
+
+  (two packedarrays) {
+    0 packedarray 0 packedarray cat 0 packedarray assert.deepeq
+    42 1 packedarray 37 1 packedarray cat 42 37 2 packedarray assert.deepeq
+    42 1 packedarray 0 packedarray cat 42 1 packedarray assert.deepeq
+    0 packedarray 37 1 packedarray cat 37 1 packedarray assert.deepeq
+    /mixed 42 2 packedarray (type) 1 packedarray cat
+    /mixed 42 (type) 3 packedarray assert.deepeq
+    /nested [/array 1] 2 packedarray
+      /another 1 packedarray [(nested) [3]] 2 packedarray
+      cat
+      /nested [/array 1] /another 1 packedarray [(nested) [3]] 4 packedarray assert.deepeq
+  } test.case
+
+  (two dicts) {
+    <<>> <<>> cat <<>> assert.deepeq
+    <</foo 42>> <<>> cat <</foo 42>> assert.deepeq
+    <<>> <</bar 12.3>> cat <</bar 12.3>> assert.deepeq
+    <</duplicate (entry) /fruit (apple)>> <</nut (pecan) /duplicate (other)>> cat
+      <</duplicate (other) /fruit (apple) /nut (pecan)>> assert.deepeq
+  } test.case
+
+  (executable name) {
+    {=} 0 get {=} 0 get cat dup /== assert.eq xcheck true assert.eq
+    /close cvx /file cvx cat dup /closefile assert.eq xcheck true assert.eq
+    % only second argument executable, TODO consider changing this
+    /show /page cvx cat dup /showpage assert.eq xcheck false assert.eq
+    % neither argument is executable
+    /deep /eq cat dup /deepeq assert.eq xcheck false assert.eq
+  } test.case
+
+  (executable string) {
+    (write) cvx (string) cvx cat dup (writestring) assert.eq xcheck true assert.eq
+    % second argument executable
+    (type) (check) cvx cat dup /typecheck assert.eq xcheck false assert.eq
+    % neither executable
+    (get) (interval) cat dup (getinterval) assert.eq xcheck false assert.eq
+  } test.case
+
+  (executable array) {
+    {1 2} {add} cat dup {1 2 add} assert.deepeq xcheck true assert.eq
+    [3 4] cvx [/mul] cvx cat dup {3 4 mul} assert.deepeq xcheck true assert.eq
+    % second argument executable
+    [1 2] {add} cat dup {1 2 add} assert.deepeq xcheck false assert.eq
+    [3 4] [/mul] cvx cat dup {3 4 mul} assert.deepeq xcheck false assert.eq
+    % neither executable
+    [3 4] [/mul] cat dup [3 4 /mul] assert.deepeq xcheck false assert.eq
+  } test.case
+
+  (N strings) {
+    (foo) 1 cat (foo) assert.eq
+    (Hello,) ( world!) 2 cat (Hello, world!) assert.eq
+    (empty) () (middle) 3 cat (emptymiddle) assert.eq
+    (AB) (C) (DE) 3 cat (ABCDE) assert.eq
+    (Lorem ) (Ipsum ) (Dolor ) (Sit ) (Amet) 5 cat (Lorem Ipsum Dolor Sit Amet) assert.eq
+  } test.case
+
+  (N names) {
+    /one 1 cat /one assert.eq
+    /foo /bar 2 cat /foobar assert.eq
+    /^ /| /$ 3 cat /^|$ assert.eq
+    /e cvx /x cvx /c cvx /h cvx 4 cat dup /exch assert.eq xcheck true assert.eq
+  } test.case
+
+  (N arrays) {
+    [] 1 cat [] assert.deepeq
+    [12.345] 1 cat [12.345] assert.deepeq
+    [(hello) (world)] [/lorem /ipsum /sic /dolor /amet] 2 cat
+      [(hello) (world)  /lorem /ipsum /sic /dolor /amet] assert.deepeq
+    [/empty /third] [/array] [] 3 cat [/empty /third /array] assert.deepeq
+    {42 5} {sub} {dup mul} {1000 gt} 4 cat {42 5 sub dup mul 1000 gt} assert.deepeq
+  } test.case
+
+  (N packedarrays) {
+    0 packedarray 1 cat 0 packedarray assert.deepeq
+    42 137 2 packedarray 1 cat 42 137 2 packedarray assert.deepeq
+    42 1 packedarray 137 1 packedarray 2 cat 42 137 2 packedarray assert.deepeq
+    /a /b /c 3 packedarray /d 1 packedarray /e/f/g/h/i/j 6 packedarray 3 cat
+      /a/b/c/d/e/f/g/h/i/j 10 packedarray assert.deepeq
+  } test.case
+
+  test.run
+end

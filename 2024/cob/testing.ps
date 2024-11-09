@@ -1,0 +1,197 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% An xUnit style testing framework with Test Anything Protocol output.
+
+(cob/bootstrap.ps) runlibfile
+(cob/core.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/arraylist.ps) cob.require
+(cob/string.ps) cob.require
+
+% test.casestruct creates an object to hold a test case and its result.
+/test.casestruct { 8 dict begin % - test.casestruct testcase
+  /name () def
+  /proc {} def
+  /status /notrun def
+  /message () def
+  /actual null def
+  /expected null def
+  /assertioncount 0 def
+  currentdict
+end } bind def %/test.casestruct
+
+% test.suite returns a dict with a context for defining and running unit tests.
+% Usage:
+% test.case begin
+%   (description) { got want assert.eq } test.case
+%   (another test) { [my func] [expected result] [ assert.deepeq } test.case
+%   test.run
+% end
+% The test.run call runs each defined test case and outputs the result in TAP
+% format, including mostly-compliant YAML details for failures.
+% In addition to assertion failures, tests fail if they leave too much or too
+% little on the stack or don't make any assertions.
+/test.suite { 32 dict begin % - test.suite dict
+  /$test.dict currentdict def
+  /$test.cases alist def
+  /$test.current null def
+  /$test.stderr (%stderr) (w) file def
+
+  /test.case { % (test name) proc test.case -
+    test.casestruct begin
+      /proc exch def
+      /name exch def
+      $test.cases currentdict alpush
+    end
+    % $test.cases 3 1 roll [ exch /notrun () ] put
+  } bind def %/test.case
+
+  /test.run { 16 dict begin % - test.run -
+    (TAP Version 14) =
+    count 0 gt { %if
+      dup type xcheck { %if
+        $test.stderr (Executable on stack before test.run: ) writestring
+        dup tostring $test.stderr exch writestring
+        $test.stderr (\nDid you forget to call test.case?\n) writestring
+        $test.stderr flushfile
+      } if
+    } if
+    (1..) print $test.cases allength =
+    /$test.run.count 0 def
+    $test.cases { %alforall
+      $test.run.count 1 add /$test.run.count exch def
+      /$test.current exch def
+      % avoid underflow
+      /$test.run.extracount 9 def
+      $test.run.extracount -1 0 { %for
+        (stack_buffer_\000) dup dup length 1 sub 4 -1 roll ascii.0 add put cvn
+      } for
+      count /$test.run.stackcount exch def
+      $test.current /status get /notrun ne {
+        $test.stderr dup $test.current /name get writestring
+          ( has already been run\n) writestring
+      } if
+      $test.current /assertioncount 0 put
+      $test.current /status /running put
+      { $test.current /proc get exec } stopped { %ifelse
+        $test.current /status get /fail ne { %if
+          $test.stderr $test.current /name get writestring
+            $test.stderr ( got error ) writestring
+            $test.stderr $error /errorname get 32 string cvs writestring
+          $test.current /status /error put
+          $test.current /message (ERROR test case exited with error )
+            $error /errorname get 32 string cvs cat put
+            handleerror
+        } if
+      } { %else
+        count $test.run.stackcount eq { %ifelse
+          $test.current /status /ok put
+          $test.run.extracount 1 add { pop } repeat
+        } { %else
+          pstack
+          $test.current /status /error put
+          count $test.run.stackcount sub dup
+          2 dict begin
+            dup /_count exch 8 string cvs def
+            { (left on) } { (taken from) } ifelse 0 gt /_state exch def
+            $test.current /message
+              (ERROR ) _count ( items ) _state ( the stack) 5 cat put
+          end
+          $test.run.extracount add 1 add { pop } repeat
+        } ifelse
+      } ifelse
+      $test.current /status get /ok eq { (ok ) } { (not ok ) } ifelse print
+      $test.run.count tostring print ( - ) print
+        $test.current /name get print
+        $test.current /assertioncount get 0 eq { ( # SKIP no assertions made) print } if
+        (\n) print
+      $test.current /status get /ok ne { %if
+        (  ---\n  outcome: ) print $test.current /status get =
+        % TODO toyaml with appropriate escaping
+        (  message: ) print $test.current /message get =
+        $test.current /actual get dup null eq { pop } { %else
+          (  actual: ) print ==
+        } ifelse
+        $test.current /expected get dup null eq { pop } { %else
+          (  expected: ) print ==
+        } ifelse
+        (  assertions: ) print $test.current /assertioncount get =
+        (  ...\n) print
+      } if
+      flush
+    } alforall
+  end } bind def %/test.run
+
+  /assert.pass { % - assert.pass -
+    $test.current /assertioncount $test.current /assertioncount get 1 add put
+  } bind def %/assert.pass
+
+  /assert.fail { % (message) assert.fail -
+    $test.current /assertioncount $test.current /assertioncount get 1 add put
+    $test.current /message 3 -1 roll put $test.current /status /fail put stop
+  } bind def %/assert.fail
+
+  /assert.countatleast { % int assert.countatleast -
+    assert.countatleast
+    % TODO less hacky way to only increment once per user-called assertion
+    assert.pass
+  } def %/assert.countatleast
+
+  /assert._countatleast { % int assert._countatleast -
+    count 0 eq { %ifelse
+      (ERROR assert.countatleast must be called with expected stack size) assert.fail
+    } { %else
+      count 1 sub 2 copy le { pop pop } { %else
+       (FAIL expected stack size at least ) 3 -1 roll 4 string cvs
+       ( got ) 4 -1 roll 4 string cvs
+       4 cat pstack assert.fail
+     } ifelse
+    } ifelse
+  } bind def %/assert.count
+
+  /assert.eq { % actual expected assert.eq -
+    2 assert._countatleast
+    2 copy eq { %ifelse
+      pop pop
+    } { % else
+      $test.current /actual 3 index put
+      $test.current /expected 2 index put
+      (FAIL not equal ) 2 { 3 -1 roll tostring } repeat ( and ) exch
+      4 cat assert.fail
+    } ifelse
+    assert.pass
+  } bind def %/assert.eq
+
+  /assert.ne { % actual expected assert.ne -
+    2 assert._countatleast
+    2 copy ne { %ifelse
+      pop pop
+    } { % else
+      $test.current /actual 3 index put
+      $test.current /expected 2 index put
+      (FAIL values equal, expected ne ) 2 { 3 -1 roll tostring } repeat ( and ) exch
+      4 cat assert.fail
+    } ifelse
+    assert.pass
+  } bind def %/assert.ne
+
+  /assert.deepeq { % actual expected assert.deepeq -
+    2 assert._countatleast
+    2 copy deepeq { %ifelse
+      pop pop
+    } { % else
+      $test.current /actual 3 index put
+      $test.current /expected 2 index put
+      (FAIL not equal ) 2 { 3 -1 roll tostring } repeat ( and ) exch
+      4 cat assert.fail
+    } ifelse
+    assert.pass
+  } bind def %/assert.deepeq
+
+  $test.dict
+end } bind def %/test.suite

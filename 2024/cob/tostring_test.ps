@@ -1,0 +1,86 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/string.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (string tostring) {
+    () tostring () assert.eq
+    (_) tostring (_) assert.eq
+    (my string) tostring (my string) assert.eq
+    (To be, or not to be, that is the question,\nWhether 'tis nobler in the mind to suffer) dup tostring exch assert.eq
+  } test.case
+
+  (name tostring) {
+    /X tostring (X) assert.eq
+    /print tostring (print) assert.eq
+    /a_really*long#name_with!lots@of^junk tostring (a_really*long#name_with!lots@of^junk) assert.eq
+  } test.case
+
+  (operator tostring) {
+    { dup } bind 0 get tostring (dup) assert.eq
+  } test.case
+
+  (null tostring) { null tostring (null) assert.eq } test.case
+
+  (boolean tostring) {
+    true tostring (true) assert.eq
+    false tostring (false) assert.eq
+  } test.case
+
+  (integer tostring) {
+    0 tostring (0) assert.eq
+    42 tostring (42) assert.eq
+    -1 tostring (-1) assert.eq
+    1234567890123456789 tostring (1234567890123456789) assert.eq
+    -1234567890123456789 tostring (-1234567890123456789) assert.eq
+  } test.case
+
+  (real tostring) {
+    0.0 tostring (0.0) assert.eq
+    -0.12345 tostring (-0.12345) assert.eq
+    12.345 tostring (12.345) assert.eq
+    6.22e23 tostring (6.22e+23) assert.eq
+    1.61625e-35 tostring (1.61625e-35) assert.eq
+    -123456789012345678901234567890 tostring (-1.23457e+29) assert.eq
+  } test.case
+
+  (array tostring) {
+    [] tostring ([]) assert.eq
+    [ 42 ] tostring ([42]) assert.eq
+    [ 123.45 67 ] tostring ([123.45 67]) assert.eq
+    [ /a /bi /cat ] tostring ([a bi cat]) assert.eq
+    [ (Lorem ipsum) (sic dolor) (amet) ] tostring ([Lorem ipsum sic dolor amet]) assert.eq
+  } test.case
+
+  (nested array tostring) {
+    [ [ true ] ] tostring ([[true]]) assert.eq
+    [ 42 [ 6 9 null ] ] tostring ([42 [6 9 null]]) assert.eq
+    [ [ /A /B ] [ /J [ /K /L [ /X /Y /Z ] ] ] ] tostring
+      ([[A B] [J [K L [X Y Z]]]]) assert.eq
+  } test.case
+
+  (packed array tostring) {
+    0 packedarray tostring ([]) assert.eq
+    (hello world) 1 packedarray tostring ([hello world]) assert.eq
+    /nested [ true false ] 2 packedarray tostring ([nested [true false]]) assert.eq
+  } test.case
+
+  (dict tostring) {
+    <<>> tostring (<<>>) assert.eq
+    << /foo /bar >> tostring (<</foo bar>>) assert.eq
+    << (string) (key) 42 /number >> tostring (<</string key 42 number>>) assert.eq
+    % reparse the string so we don't depend on iteration order
+    << /array [ 9 8 7 ] /nested << /foo 42 /bar true >> >> tostring cvx exec
+      << /array [ 9 8 7 ] /nested << /foo 42 /bar true >> >> assert.deepeq
+  } test.case
+
+  test.run
+end
