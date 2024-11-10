@@ -79,7 +79,7 @@ end
     /curpart exch def
     inputlines
     [ (Running) dayname curpart (on) curfilename
-      counttomark 1 add index length (lines) ] log.info
+      1 indexfrommark length (lines) ] log.info
     count /expectedcount exch def
     timings curpart timing.start put
   end

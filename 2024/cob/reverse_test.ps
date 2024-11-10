@@ -1,0 +1,84 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/iter.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (reverse string) {
+    () dup reverse () assert.eq
+    (@) dup reverse (@) assert.eq
+    (<>) dup reverse (><) assert.eq
+    (world) dup reverse (dlrow) assert.eq
+    (Mexico) dup reverse (ocixeM) assert.eq
+    (race car) dup reverse (rac ecar) assert.eq
+    (one line\r\nanother\r\n) dup reverse (\n\rrehtona\n\renil eno) assert.eq
+  } test.case
+
+  (reverse array) {
+    [] dup reverse [] assert.deepeq
+    [ /foo ] dup reverse [ /foo ] assert.deepeq
+    [ (hello) (world) ] dup reverse [ (world) (hello) ] assert.deepeq
+    [ -1.2 /foo (bar) 42 true ] dup reverse [ true 42 (bar) /foo -1.2 ] assert.deepeq
+    [ [ /a /b /c ] [ /j /k /l ] [ /x /y /z ] ] dup reverse
+      [ [ /x /y /z ] [ /j /k /l ] [ /a /b /c ] ] assert.deepeq
+  } test.case
+
+  (reversed string) {
+    () reversed () assert.eq
+    (@) reversed (@) assert.eq
+    (<>) reversed (><) assert.eq
+    (world) reversed (dlrow) assert.eq
+    (Mexico) reversed (ocixeM) assert.eq
+    (race car) reversed (rac ecar) assert.eq
+    (one line\r\nanother\r\n) reversed (\n\rrehtona\n\renil eno) assert.eq
+    % Make sure it's an independent copy
+    (forwards) dup reversed (sdrawrof) assert.eq (forwards) assert.eq
+  } test.case
+
+  (reversed array) {
+    [] reversed [] assert.deepeq
+    [ /foo ] reversed [ /foo ] assert.deepeq
+    [ (hello) (world) ] reversed [ (world) (hello) ] assert.deepeq
+    [ -1.2 /foo (bar) 42 true ] reversed [ true 42 (bar) /foo -1.2 ] assert.deepeq
+    [ [ /a /b /c ] [ /j /k /l ] [ /x /y /z ] ] reversed
+      [ [ /x /y /z ] [ /j /k /l ] [ /a /b /c ] ] assert.deepeq
+    % Make sure it's an independent copy
+    [ /a /b /c ] dup reversed [ /c /b /a ] assert.deepeq
+      [ /a /b /c ] assert.deepeq
+  } test.case
+
+  (reversed name) {
+    /x reversed /x assert.eq
+    /AZ reversed /ZA assert.eq
+    /pop reversed /pop assert.eq
+    /count reversed /tnuoc assert.eq
+    /count cvx reversed xcheck true assert.eq
+  } test.case
+
+  (reversed packedarray) {
+    0 packedarray reversed 0 packedarray assert.deepeq
+    (hello) 1 packedarray reversed (hello) 1 packedarray assert.deepeq
+    /foo /bar 2 packedarray reversed /bar /foo 2 packedarray assert.deepeq
+    9 8 7 6 5 5 packedarray reversed 5 6 7 8 9 5 packedarray assert.deepeq
+  } test.case
+
+  (reversed dict) {
+    <<>> reversed <<>> assert.deepeq
+    << /foo /bar >> reversed << /bar /foo >> assert.deepeq
+    << /foo (hello) /bar (world) >> reversed
+      << /world /bar /hello /foo >> assert.deepeq
+    % Make sure it's an independent copy
+    << /foo 42 >> dup reversed dup << 42 /foo >> assert.deepeq
+      dup /bar 137 put << 42 /foo /bar 137 >> assert.deepeq
+      << /foo 42 >> assert.deepeq % the original
+  } test.case
+
+  test.run
+end

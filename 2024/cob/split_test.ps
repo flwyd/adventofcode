@@ -12,32 +12,39 @@
 test.suite begin
 
   (split empty string) {
-    () (/) split [ () ] assert.deepeq
+    () (/) split () assert.deepeq
   } test.case
 
   (split no delimiter) {
-    (hello world) (/) split [ (hello world) ] assert.deepeq
+    (hello world) (/) split (hello world) 1 assert.stack
   } test.case
 
   (split mid delimiter) {
-    (either/or) (/) split [ (either) (or) ] assert.deepeq
-    (hello, world) (, ) split [ (hello) (world) ] assert.deepeq
-    (foo,bar,baz) (,) split [ (foo) (bar) (baz) ] assert.deepeq
+    (either/or) (/) split (either) (or) 2 assert.stack
+    (hello, world) (, ) split (hello) (world) 2 assert.stack
   } test.case
 
   (split leading delimiter) {
-    (/usr/local/bin) (/) split [ () (usr) (local) (bin) ] assert.deepeq
-    (word) (word) split [ () () ] assert.deepeq
+    [ (/usr/local/bin) (/) split ] [ () (usr) (local) (bin) ] assert.deepeq
+    (word) (word) split () () 2 assert.stack
   } test.case
 
   (split trailing delimiter) {
-    (list, of, words, ) (, ) split [ (list) (of) (words) () ] assert.deepeq
-    (fish??) (?) split [ (fish) () () ] assert.deepeq
+    [ (list, of, words, ) (, ) split ] [ (list) (of) (words) () ] assert.deepeq
+    [ (fish??) (?) split ] [ (fish) () () ] assert.deepeq
   } test.case
 
   (split empty delimiter) {
-    (hello) () split [ (h) (e) (l) (l) (o) ] assert.deepeq
-    () () split [ ] assert.deepeq
+    (hello) () split (h) (e) (l) (l) (o) 5 assert.stack
+    [ () () split ] [ ] assert.deepeq
+  } test.case
+
+  (split to dict) {
+    << (Lorem ipsum dolor amet) ( ) split >>
+      << /Lorem (ipsum) /dolor (amet) >> assert.deepeq
+    [ (CN:Beijing, IN:New Delhi, NP:Kathmandu) (, ) split ]
+      << exch { (:) split } forall >>
+      << /CN (Beijing) /IN (New Delhi) /NP (Kathmandu) >> assert.deepeq
   } test.case
 
   (splitlines empty string) {

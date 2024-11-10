@@ -1,0 +1,54 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/core.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (index past mark) {
+    /foo /bar mark /baz 2 indexfrommark /foo /bar mark /baz /foo 5 assert.stack
+    42 [ [ 4 -3 9 ] { 1 indexfrommark add } forall ]
+      [ 46 39 51 ] assert.deepeq pop
+  } test.case
+
+  (index before mark) {
+    /a /b mark /c /d /e -2 indexfrommark /a /b mark /c /d /e /d 7 assert.stack
+    [ (hello ) [ (world) (kitty) (dolly) ]
+      { -1 indexfrommark exch cat } forall ]
+      [ (hello ) (hello world) (hello kitty) (hello dolly) ] assert.deepeq
+    << /foo 42 /bar -2 indexfrommark /second -3 indexfrommark >>
+      << /foo 42 /bar 42 /second /bar >> assert.deepeq
+  } test.case
+
+  (0 indexfrommark gets mark) {
+    /a /b mark /c /d 0 indexfrommark /e /a /b mark /c /d mark /e 7 assert.stack
+    [ 1 2 3 0 indexfrommark 4 5 6 ] ] [1 2 3 [ 4 5 6 ] ] assert.deepeq
+  } test.case
+
+  (roll past mark) {
+    /foo /bar mark /baz 2 -1 rollfrommark /bar mark /baz /foo 4 assert.stack
+    (to) (the) [ (hello) 2 -2 rollfrommark (world) ]
+      [ (hello) (to) (the) (world) ] assert.deepeq
+    /a /b [ /c /d /e /f 2 3 rollfrommark ] /d /e /f /a /b [ /c ] 6 assert.stack
+  } test.case
+
+  (roll before mark) {
+    mark /a /b /c /d -2 -1 rollfrommark mark /a /c /d /b 5 assert.stack
+    [ /third /fourth /first /second -1 2 rollfrommark /fifth ]
+      [ /first /second /third /fourth /fifth ] assert.deepeq
+  } test.case
+
+  (0 rollfrommark moves mark) {
+    /a /b mark /c /d /e 0 2 rollfrommark /a /b /d /e mark /c 6 assert.stack
+    [ /outside /next 0 -1 rollfrommark /inside ]
+      /outside /next [ /inside ] 3 assert.stack
+  } test.case
+
+  test.run
+end

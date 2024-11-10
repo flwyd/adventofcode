@@ -8,9 +8,10 @@
 (cob/bootstrap.ps) runlibfile
 (cob/ascii.ps) cob.require
 (cob/core.ps) cob.require
+(cob/iter.ps) cob.require
 
 /exists? { % filename exists? bool
-  [ exch dup length string {} exch filenameforall ] length 0 gt
+  [ exch dup length string {} exch filenameforall ] empty? not
 } bind def %/exists?
 
 /writetofile { % str filename writetofile -
@@ -97,14 +98,3 @@ part2:\040
     generateinto
   } forall
 } if
-% /DirName where { %if
-%   /DirName get
-%   dup trailingnum /DayNum exch def
-%   generateinto
-% } if
-% % TODO take DirName as arg and infer DayNum from that
-% /DayNum where { %if
-%   DayNum type /integertype eq { DayNum 8 string cvs /DayNum exch def } if
-%   /DayNum load (/tmp/day42/) generateinto
-%   quit
-% } if

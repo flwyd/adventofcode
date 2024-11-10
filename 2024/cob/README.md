@@ -16,15 +16,17 @@ In 2024 Cob isn’t ready to be an independent repository, so you’ll need to `
 clone https://github.com/flwyd/adventofcode` or otherwise extract this
 directory.   When you run your PostScript program, ensure either the parent of
 the `cob` directory or the directory itself (which contains a `cob` symlink to
-itself) is in the library path, and that the PostScript environment is allowed
-to perform file I/O (the `NOSAFER` Ghostscript property).  For example, `gsnd
--q -dNOSAFER -Iadventofcode/2024 -- myprogram.ps` Inside your program, run the
-bootstrap file and then `cob.require` the libraries used by your program:
+itself) is in the library path.  Cob uses `runlibfile` to load libraries, but if
+you intend to do other I/O ensure the `NOSAFER` Ghostscript property is set.
+For example, `gsnd -q -dNOSAFER -Iadventofcode/2024 -- myprogram.ps`
+Inside your program, run the bootstrap file and then `cob.require` the
+libraries used by your program:
 
 ```postscript
 %!PS
 (cob/bootstrap.ps) runlibfile
 (cob/core.ps) cob.require
+(cob/iter.ps) cob.require
 (cob/string.ps) cob.require
 
 % Check if all words in the string have odd length.

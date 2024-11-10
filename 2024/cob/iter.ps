@@ -1,0 +1,86 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Functions which apply to multiple types of compound objects, typically at
+% least arrays and strings.
+
+(cob/core.ps) cob.require
+
+% all? returns true if a predicate returns true for each item in an iterable
+% (string, array, or dict), false if the predicate returns false for any item.
+% Returns true if the iterable is empty.
+/all? { % iter predicate all? bool
+  true 3 -1 roll { 2 index exec and dup not { exit } if } forall exch pop
+} bind def %/all?
+
+% any? returns true if a predicate returns true for any item in an iterable
+% (string, array, or dict), false if the predicate returns false for all items.
+% Returns false if the iterable is empty.
+/any? { % iter predicate any? bool
+  false 3 -1 roll { 2 index exec or dup { exit } if } forall exch pop
+} bind def %/any?
+
+% empty? returns true if the argument has no elements, false if it has any.
+/empty? { % string|array|dict empty? bool
+  length 0 eq
+} bind def %/empty?
+
+% endswith? takes either a pair of strings/arrays or a string/array and a
+% byte/object.  In the first form, returns true if the N characters/objects in
+% the second argument are the final N items in the first argument, returning
+% false if the second argument is longer than the first.  In the second form,
+% returns true if the second argument eq the last item in the first argument,
+% returning false if the first argument is empty.
+% TODO factor out index (from-end vs. 0) and implement startswith?
+/endswith? { % string string endswith? bool
+             % array array endswith? bool
+             % packedarray packedarray endswith? bool
+             % string char endswith? bool
+             % array any endswith? bool
+  % 1 index type /stringtype eq 1 index type /stringtype eq and { %ifelse
+  2 copy /stringtype /stringtype 2 types?
+  3 copy pop /arraytype /arraytype 2 types? or
+  3 copy pop /packedarraytype /packedarraytype 2 types? or { %ifelse
+    1 index length 1 index length ge { %ifelse
+      exch dup length 2 index length sub 2 index length getinterval deepeq
+    } { pop pop false } ifelse
+  } { %else
+    exch dup length 0 gt { dup length 1 sub get eq } { pop pop false } ifelse
+  } ifelse
+} bind def %/endswith?
+
+% reverse modifies an array or string, putting elements in the reverse order.
+/reverse { % array reverse -
+           % string reverse -
+  0 1 2 index length 2 idiv 1 sub { %for
+    1 index dup 3 1 roll length 1 index sub 1 sub
+    % stack: iter i1 i2
+    2 index 2 index get 3 index dup 3 index get
+    % stack: iter i1 i2 v1 iter v2
+    5 -1 roll exch put put
+  } for
+  pop
+} bind def %/reverse
+
+/reversed.IMPL 8 dict def
+reversed.IMPL begin
+  /arraytype { clone dup reverse } bind def
+  /stringtype { clone dup reverse } bind def
+  /nametype {
+    dup xcheck exch dup length string cvs dup reverse cvn exch { cvx } if
+  } bind def
+  /packedarraytype {
+    [ exch aload pop ] dup reverse aload length packedarray
+  } bind def
+  /dicttype { << exch { exch } forall >> } bind def
+end %/reversed.IMPL
+
+% reversed returns a new composite object of the same type as the input and
+% elements in reverse order.
+/reversed { % [a1 ... an] reversed [an ... a1]
+  reversed.IMPL begin dup type load end exec
+} bind def %/reversed

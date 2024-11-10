@@ -1,0 +1,81 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/core.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (clone primitives) {
+    true clone true assert.eq
+    false clone false assert.eq
+    0 clone 0 assert.eq
+    137 clone 137 assert.eq
+    -1.23 clone -1.23 assert.eq
+  } test.case
+
+  (clone string) {
+    () clone () assert.eq
+    (foo bar) clone (foo bar) assert.eq
+    % TODO (count) cvx clone xcheck true assert.eq
+    % Make sure it's an independent copy
+    (Original) dup clone
+    dup 0 (Seaso) putinterval (Seasonal) assert.eq
+    (Original) assert.eq
+  } test.case
+
+  (clone name) {
+    /foo clone /foo assert.eq
+    /count cvx clone xcheck true assert.eq
+    /bar clone xcheck false assert.eq
+  } test.case
+
+  (clone operator) {
+    { count } bind 0 get clone
+    dup type /operatortype assert.eq
+    dup xcheck true assert.eq
+    { count } bind 0 get assert.eq
+  } test.case
+
+  (clone array) {
+    [] clone [] assert.deepeq
+    [ (hello) (world) ] clone [ (hello) (world) ] assert.deepeq
+    [ 1 2 3 ] clone [ 1 2 3 ] assert.deepeq
+    [ /a /b /c /d ] clone [ /a /b /c /d ] assert.deepeq
+    { 1 2 add } clone { 1 2 add } assert.deepeq
+    { 1 2 add } clone xcheck true assert.eq
+    % Make sure it's an independent copy
+    [ 1 2 3 4 5 ] dup clone
+    dup 0 [ 9 8 7 ] putinterval [ 9 8 7 4 5 ] assert.deepeq
+    [ 1 2 3 4 5 ] assert.deepeq
+  } test.case
+
+  (clone packedarray) {
+    0 packedarray clone 0 packedarray assert.deepeq
+    /foo 1 packedarray clone /foo 1 packedarray assert.deepeq
+    (hello) (world) 2 packedarray clone (hello) (world) 2 packedarray assert.deepeq
+    /count 1 packedarray cvx clone xcheck true assert.eq
+  } test.case
+
+  (clone dict) {
+    <<>> clone <<>> assert.deepeq
+    << /foo 42 >> clone << /foo 42 >> assert.deepeq
+    << /foo 42 >> clone << /foo 42 >> assert.deepeq
+    << /mixed 1 (types) 2 0 3 >> clone << /mixed 1 (types) 2 0 3 >> assert.deepeq
+    % Make sure it's an independent copy
+    << /kilo 3 /mega 6 >> dup clone
+    dup /giga 9 put << /kilo 3 /mega 6 /giga 9 >> assert.deepeq
+    << /kilo 3 /mega 6 >> assert.deepeq
+  } test.case
+
+  (clone file) {
+    (%stdout) (w) file dup clone assert.eq
+  } test.case
+
+  test.run
+end

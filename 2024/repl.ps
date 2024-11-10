@@ -1,0 +1,48 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/file.ps) cob.require
+(cob/file.ps) cob.require
+(cob/log.ps) cob.require
+(cob/string.ps) cob.require
+(aoc.ps) cob.require
+
+aoc.Context /log.Enabled true put
+aoc.Context /filenames [ InputExample InputActual ] put
+
+DayName load begin
+
+/readlines where { pop } { %else
+  /readlines { % fiiename readlines [strings]
+    dup fileexists? {
+      { readfile splitlines }
+        stopped { pop (Error reading ) exch cat log.info [] } if
+    } { %else
+      dup ( does not exist) cat log.info []
+    } ifelse
+  } bind def
+} ifelse %/readlines
+
+/runexample { % - runexample -
+  aoc.Context /filenames [ InputExample ] put
+  DayName aoc.runday
+} bind def %/runexample
+
+/runactual { % - runexample -
+  aoc.Context /filenames [ InputActual ] put
+  DayName aoc.runday
+} bind def %/runexample
+
+[ DayName (is the current dict, try runexample or runactual) ] log.info
+[/InputExample /InputActual] { %forall
+  [ exch dup load dup readlines length (lines) ] log.info
+} forall
+
+% [ DayName (begin) [ /InputExample /InputActual ]
+%   { dup load dup readlines length (lines) } forall ] ( ) join =
+

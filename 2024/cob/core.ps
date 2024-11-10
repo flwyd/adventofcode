@@ -7,6 +7,23 @@
 
 % Basic utilities, many used by other libraries.
 
+% indexfrommark adds a copy of the object n positions before the closest mark to
+% the top of the stack.  0 indexfrommark adds another mark.  Negative values
+% access items after the mark, so -1 indexfrommark copies the first element of
+% an array under construction.
+/indexfrommark { % anyn ... any1 mark ... n indexfrommark n
+  counttomark add 1 sub index
+} bind def %/indexfrommark
+
+% rollfrommark performs a roll covering the stack up to mark and then n more
+% items.  Positive numbers extend the roll window before the mark, negative
+% numbers shrink the roll window closer to the top of the stack than the mark,
+% 0 makes mark the first item in the roll window.
+/rollfrommark { % an ... a1 mark ... x n -1 rollfrommark ... a1 mark ... x an
+                % an ... a1 mark ... x n 1 rollfrommark x an ... a1 mark ...
+  exch counttomark add 1 sub exch roll
+} bind def
+
 % unless works like `if` with the condition reversed: Example:
 % currentdict /foo known { (foo is unknown) print } unless
 /unless { exch not exch if } bind def % bool proc unless ?
@@ -40,29 +57,10 @@ end } bind def
   { _proc exec _cond exec not { exit } if } bind loop
 end } bind def
 
-% empty? returns true if the argument has no elements, false if it has any.
-/empty? { % string|array|dict empty? bool
-  length 0 eq
-} bind def %/empty?
-
-% all? returns true if a predicate returns true for each item in an iterable
-% (string, array, or dict), false if the predicate returns false for any item.
-% Returns true if the iterable is empty.
-/all? { % iter predicate all? bool
-  true 3 -1 roll { 2 index exec and dup not { exit } if } forall exch pop
-} bind def %/all?
-
-% any? returns true if a predicate returns true for any item in an iterable
-% (string, array, or dict), false if the predicate returns false for all items.
-% Returns false if the iterable is empty.
-/any? { % iter predicate any? bool
-  false 3 -1 roll { 2 index exec or dup { exit } if } forall exch pop
-} bind def %/any?
-
 % contains? returns true if any element in array eq the given value or if any
 % character in a string eq the given char.
-/contains? { % array any contains? boolean
-             % string char contains? boolean
+/contains? { % array any contains? bool
+             % string char contains? bool
   false 3 -1 roll { 2 index eq { pop true exit } if } forall exch pop
 } bind def %/contains?
 
@@ -84,15 +82,7 @@ end
        % [a1 ... an] [b1 ... bn] cat [a1 ... an b1 ... bn]
        % <</k1 v1 /k2 v2>> </k3 v3 /k1 v4> cat <</k2 v2 /k3 v3 /k1 v4>>
        % x1 x2 ... xn n cat x1x2...xn
-  % save executable status for end
-  % dup type /integertype eq { %ifelse
-  %   dup true 2 1 4 -1 roll 1 add { index xcheck and } for 1 index 1 add 1 roll
-  % } { %else
-  %   1 index xcheck 1 index xcheck and 3 1 roll
-  % } ifelse
   cat.IMPL begin dup type exec end
-  % set new item executable if both args were
-  % exch { cvx } if
 } bind def %/cat
 
 % Adapted from Thinking in PostScript example 11.7.
@@ -136,7 +126,7 @@ end
 % copied.  packedarray objects are returned as-is, without cloning nested
 % objects.  Behavior is undefined on other mutable objects, e.g. files.
 /clone { % any clone any
-  dup rcheck { %if
+  dup safercheck { %if
     dup type /stringtype eq { %ifelse
       dup length string copy
     } { %else
@@ -194,30 +184,6 @@ end
   3 1 roll pop pop
 } bind def %/deepeq.dict
 
-% endswith? takes either a pair of strings/arrays or a string/array and a
-% byte/object.  In the first form, returns true if the N characters/objects in
-% the second argument are the final N items in the first argument, returning
-% false if the second argument is longer than the first.  In the second form,
-% returns true if the second argument eq the last item in the first argument,
-% returning false if the first argument is empty.
-% TODO factor out index (from-end vs. 0) and implement startswith?
-/endswith? { % string string endswith? boolean
-             % array array endswith? boolean
-             % packedarray packedarray endswith? boolean
-             % string char endswith? boolean
-             % array any endswith? boolean
-  % 1 index type /stringtype eq 1 index type /stringtype eq and { %ifelse
-  2 copy /stringtype /stringtype 2 types?
-  3 copy pop /arraytype /arraytype 2 types? or
-  3 copy pop /packedarraytype /packedarraytype 2 types? or { %ifelse
-    1 index length 1 index length ge { %ifelse
-      exch dup length 2 index length sub 2 index length getinterval deepeq
-    } { pop pop false } ifelse
-  } { %else
-    exch dup length 0 gt { dup length 1 sub get eq } { pop pop false } ifelse
-  } ifelse
-} bind def %/endswith?
-
 % getor returns `dict key get` if key is known, otherwise returns default.
 /getor { % dict key default getor value | default
   2 index 2 index known { pop get } { 3 1 roll pop pop } ifelse
@@ -247,9 +213,36 @@ end
 % types? takes n objects, n type names, and the integer n and returns true if
 % all n objects have the corresponding n types.  Example use:
 % 2 copy /stringtype /stringtype 2 types? {concatstrings} {[3 1 roll]} ifelse
-/types? { % any1 ... anyn type1 ... typen n types? boolean
+/types? { % any1 ... anyn type1 ... typen n types? bool
   % count result stay at the top of the stack, each iteration pops a type
   true 1 index { 3 -1 roll 2 index 2 add index type eq and } repeat
   % pop all the objects, leave result
   exch { exch pop } repeat
 } bind def %/types?
+
+% CheckableTypes is a list of types which rcheck, wcheck, and xcheck can all
+% be used.  Note that /nametype is not in the list since it can only be used
+% with xcheck.
+/CheckableTypes [
+  /stringtype /dicttype /arraytype /packedarraytype /filetype
+] def %/CheckableTypes
+
+% safercheck calls rcheck on its argument if the type is valid for rcheck and
+% returns true otherwise.
+/safercheck { % any safercheck bool
+  dup type //CheckableTypes exch contains? { rcheck } { pop true } ifelse
+} bind def %/safercheck
+
+% safewcheck calls wcheck on its argument if the type is valid for wcheck and
+% returns false otherwise.
+/safewcheck { % any safewcheck bool
+  dup type //CheckableTypes exch contains? { wcheck } { pop false } ifelse
+} bind def %/safewcheck
+
+% safexcheck calls xcheck on its argument if the type is valid for xcheck and
+% returns false otherwise.
+/safexcheck { % any safexcheck bool
+  dup type //CheckableTypes exch contains? { xcheck } { %else
+    dup /nametype eq { xcheck } { pop false } ifelse
+  } ifelse
+} bind def %/safexcheck

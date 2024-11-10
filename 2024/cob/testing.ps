@@ -137,7 +137,7 @@ end } bind def %/test.casestruct
   } bind def %/assert.fail
 
   /assert.countatleast { % int assert.countatleast -
-    assert.countatleast
+    assert._countatleast
     % TODO less hacky way to only increment once per user-called assertion
     assert.pass
   } def %/assert.countatleast
@@ -192,6 +192,40 @@ end } bind def %/test.casestruct
     } ifelse
     assert.pass
   } bind def %/assert.deepeq
+
+  /assert.stack { % any1 ... anyn [any1 ... anyn] asssert.stack -
+    dup type /integertype eq { %ifelse
+      dup 2 mul 1 add assert._countatleast
+      array astore assert.stack
+    } { %else
+      dup length 1 add assert._countatleast
+      4 dict begin
+        /expected exch def
+        expected length array astore /actual exch def
+        /wrong alist def
+        /pass true def
+        0 1 expected length 1 sub { %for
+          actual 1 index get expected 2 index get 2 copy deepeq { %ifelse
+            pop pop pop
+          } { %else
+            % stack: index act expect
+            [ (index) 3 -1 rollfrommark expected length exch sub
+              (not equal) 2 -1 rollfrommark
+              (and) 1 -1 rollfrommark ] ( ) join wrong exch alpush
+            /pass false def
+          } ifelse
+        } for
+        pass { true } { %else
+          $test.current /actual actual put
+          $test.current /expected expected put
+          [ (FAIL top) expected length (stack elements did not match:)
+            wrong alview (; ) join ] ( ) join
+          false
+        } ifelse
+      end
+      { assert.pass } { assert.fail } ifelse
+    } ifelse
+  } bind def %/asssert.stack
 
   $test.dict
 end } bind def %/test.suite

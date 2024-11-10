@@ -7,9 +7,18 @@
 
 foreach i ($@) do
   mkdir -p $i
+  daynum=${${i:t}#day}
+  if [[ -d input ]]; then
+    mkdir -p input/$daynum
+    touch input/$daynum/input.actual.txt
+    expectfile="input/$daynum/input.actual.expected"
+    if [[ ! -f $expectfile ]]; then
+      echo "part1: \npart2: " > $expectfile
+    fi
+  fi
   for f in input.actual.txt input.actual.expected ; do
     if [ ! -e $i/$f ]; then
-      ln -s ../input/${${i:t}#day}/$f $i/$f
+      ln -s ../input/$daynum/$f $i/$f
     fi
   done
 done

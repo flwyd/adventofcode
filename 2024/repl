@@ -1,0 +1,25 @@
+#!/bin/zsh
+# Copyright 2024 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+if [ $# -eq 0 ]; then
+  print -u 2 "Usage: repl day1"
+  exit 1
+fi
+BASEDIR="${0:h}"
+DAY="$1"
+PROGRAM="$DAY/$DAY.ps"
+if [[ ! -f $PROGRAM ]]; then
+  print -u 2 "$PROGRAM does not exist"
+  exit 1
+fi
+DAYNAME="${(C)1}"
+
+CMD=(rlwrap gsnd -q -dNOSAFER "-I$BASEDIR" "-dDayName=/$DAYNAME"
+  "-dInputExample=($DAY/input.example.txt)"
+  "-dInputActual=($DAY/input.actual.txt)"
+  $PROGRAM repl.ps)
+exec $CMD

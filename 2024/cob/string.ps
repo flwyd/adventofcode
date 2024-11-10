@@ -8,9 +8,10 @@
 % Procedures for converting to or otherwise working with strings.
 
 (cob/bootstrap.ps) runlibfile
-(cob/core.ps) cob.require
-(cob/stringbuf.ps) cob.require
 (cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/stringbuf.ps) cob.require
 
 /tostring.IMPL 16 dict begin % type tostring.IMPL proc:any
   /stringtype { dup rcheck not { pop (--string:xo--) } if } def % else the input
@@ -116,17 +117,18 @@ end def %tostring.IMPL
   } ifelse
 } bind def %/join
 
-% split returns an array with one element for each substring before or after
+% split returns one element on the stack for each substring before or after
 % separator in the input string.  Separators at the beginning or end of the
-% string result in an empty string in the first or last position in the array.
-% A string with no separator results in a one-element array.  An empty string
-% results in an array with just an empty string.  An empty string separator
-% splits the string into single-character strings.
-/split { % string separator split array
-  dup length 0 eq { %ifelse
-    pop [ exch { 1 string exch 1 index 0 3 -1 roll put } forall ]
+% string result in an empty string in the first or last position in the stack.
+% A string with no separator returns that string, including the case of an empty
+% string.  An empty string separator splits the string into single-character
+% strings.  If the number of delimiters in the string are unknown, insert a
+% mark before calling split: `[ whatever (,) split ]`.
+/split { % string separator split string1 ... stringn
+  dup empty? { %ifelse
+    pop { 1 string dup 0 4 -1 roll put } forall
   } { %else
-    [ 3 1 roll { search not { exit } if 3 1 roll } loop ]
+     { search not { exit } if 3 1 roll } loop
   } ifelse
 } bind def %/split
 
@@ -138,7 +140,7 @@ end def %tostring.IMPL
   [ 0 0 3 index { %forall
     % loop stack: string [ lines... start length
     ascii.nl eq { %ifelse
-      2 copy counttomark 1 add index 3 1 roll getinterval
+      2 copy 1 indexfrommark 3 1 roll getinterval
       % Remove \r from \r\n sequences
       dup ascii.cr endswith? { dup length 1 sub 0 exch getinterval } if
       % put line before start, add length to start, reset length
@@ -146,7 +148,7 @@ end def %tostring.IMPL
     } { 1 add } ifelse
   } forall
   % stack: string [ lines... start unterminatedlen ]
-  dup 0 gt { counttomark 1 add index 3 1 roll getinterval  } { pop pop } ifelse
+  dup 0 gt { 1 indexfrommark 3 1 roll getinterval  } { pop pop } ifelse
   ] exch pop
 } bind def %/splitlines
 
