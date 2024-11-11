@@ -33,6 +33,10 @@ libraries used by your program:
 (hello/world) (/) split { length 2 mod 1 eq } all?
 ```
 
+For interactive development, load the bootstrap file and use `cob.require` as
+above.  When making changes to a library you can pick up changes to a file with
+`(path/to/library.ps) cob.reload`.
+
 ### Unit testing
 
 `cob/testing.ps` provides an xUnit-style test framework with

@@ -10,10 +10,15 @@ foreach i ($@) do
   daynum=${${i:t}#day}
   if [[ -d input ]]; then
     mkdir -p input/$daynum
-    touch input/$daynum/input.actual.txt
+    actualfile=input/$daynum/input.actual.txt
+    if [[ ! -f $actualfile ]]; then
+      echo "Wrriting to $actualfile"
+      touch $actualfile
+    fi
     expectfile="input/$daynum/input.actual.expected"
     if [[ ! -f $expectfile ]]; then
-      echo "part1: \npart2: " > $expectfile
+      echo "Writing to $expectfile"
+      echo "part1: \npart2: \n" > $expectfile
     fi
   fi
   for f in input.actual.txt input.actual.expected ; do
