@@ -13,11 +13,29 @@
 (cob/iter.ps) cob.require
 (cob/stringbuf.ps) cob.require
 
+% ": ascii.H ascii.e ascii.l ascii.l ascii.o :" is a verbose way to construct
+% the string (Hello). This is useful in constructing a string from non-printable
+% characters if you don't want to inline the ASCII escape codes, or for
+% programmatically constructing a string from characters, e.g.
+% ": 64 1 126 { } for :"
+/": { mark } bind def
+/:" { %:"
+  counttomark dup string exch 1 sub -1 0 { %for
+    1 index exch 4 -1 roll dup null eq { pop 0 } if put
+  } for
+  exch pop % remove mark
+} bind def %:"
+
+% charstostring creates a string from an array of chars/bytes.
+/charstostring { % [ char1 ... charn ] charstostring (char1...charn)
+  ": exch {} forall :"
+} bind def %/charstostring
+
 /tostring.IMPL 16 dict begin % type tostring.IMPL proc:any
   /stringtype { dup rcheck not { pop (--string:xo--) } if } def % else the input
   /nametype { dup length string cvs } bind def
   /operatortype { 32 string cvs } bind def
-  /nulltype { pop (null) } def
+  /nulltype { pop (-null-) } def
   /booleantype { 5 string cvs } bind def
   /integertype { 20 string cvs } bind def
   /realtype { 20 string cvs } bind def
@@ -163,3 +181,9 @@ end def %tostring.IMPL
   } loop
   getinterval
 } bind def %/trimspace
+
+% zipstrings takes an array of strings or byte arrays, runs zip, and converts
+% each resulting array to a string.
+/zipstrings { % arrayofstrings zipstrings arrayofstrings
+  zip [ exch { charstostring } forall ]
+} bind def %/zipstrings

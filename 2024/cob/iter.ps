@@ -8,6 +8,7 @@
 % Functions which apply to multiple types of compound objects, typically at
 % least arrays and strings.
 
+(cob/arraylist.ps) cob.require
 (cob/core.ps) cob.require
 
 % all? returns true if a predicate returns true for each item in an iterable
@@ -28,6 +29,16 @@
 /empty? { % string|array|dict empty? bool
   length 0 eq
 } bind def %/empty?
+
+% first returns element zero of an array or character of a string.
+/first { % a first a[0]
+  0 get
+} bind def %/first
+
+% last returns the final element of an array or character of a string.
+/last { % a last a[-1]
+  dup length 1 sub get
+} bind def %/last
 
 % endswith? takes either a pair of strings/arrays or a string/array and a
 % byte/object.  In the first form, returns true if the N characters/objects in
@@ -84,3 +95,100 @@ end %/reversed.IMPL
 /reversed { % [a1 ... an] reversed [an ... a1]
   reversed.IMPL begin dup type load end exec
 } bind def %/reversed
+
+% compare performs a natural comparison of x and y using the lt and gt
+% operators, returning -1 if x < y, 1 if x > y, and 0 if x = y.
+/compare { % x y compare int
+  2 copy lt { pop pop -1 } { gt { 1 } { 0 } ifelse } ifelse
+} bind def %/compare
+
+% descending takes a comparator and returns a comparator which compares values
+% in the opposite direction.  `arr /compare cvx descending isorted` returns an
+% array sorted largest to smallest.
+/descending { % comparator descending -comparator
+  [ exch /exec cvx -1 /mul cvx ] cvx
+} bind def %/descending
+
+% isort performs an insertion sort on array with comparison function comparator,
+% which must return -1 if two elements are in ascending order, 1 if they are in
+% descending order, and 0 if they are equal.
+/isort { % array comparator isort -
+  mark 1 1 4 index length 1 sub { %for
+    2 indexfrommark 1 index get dup 2 indexfrommark 3 index 1 sub get
+    % stack: array compare mark i a[i] a[i] a[i-1]
+    1 indexfrommark exec 0 lt { %ifelse
+      1 index 1 sub -1 0 { %for
+        % stack: array compare mark i a[i] j
+        2 indexfrommark 1 index get 2 index 1 indexfrommark exec 0 le { %ifelse
+          1 add exit
+        } { % else
+          0 eq { 0 } if
+        } ifelse
+      } for
+      % stack: array compare mark i a[i] j
+      dup 2 indexfrommark exch 4 index 1 index sub getinterval
+      % stack: array compare mark i a[i] j a[j:i]
+      2 indexfrommark 2 index 1 add 3 -1 roll putinterval
+      % stack: array compare mark i a[i] j
+      exch 2 indexfrommark 3 1 roll put
+    } { %else
+      pop % a[i]
+    } ifelse
+    pop % i
+  } for
+  pop pop pop
+} bind def %/isort
+
+% isortby sorts array based on the result of calling proc on each element.
+% proc must take one argument and leave one value on the stack.
+/isortby { % array proc isortby -
+  [ exch /exec cvx /exch cvx 2 index /exec cvx /exch cvx /compare cvx ] cvx isort
+} bind def %/isortby
+
+% isort clones array and performs isort, returning the sorted array.
+% The initial array is not modified.
+/isorted { % array comparator isorted arraycopy
+  exch clone dup 3 -1 roll isort
+} bind def %/isorted
+
+% isortedby clones array and performs isortby, returning the sorted array by
+% proc.  The initial array is not modified.
+/isortedby { % array proc isortedby arraycopy
+  exch clone dup 3 -1 roll isortby
+} bind def %/isortedby
+
+% sorted? returns true if comparator returns negative or zero for each
+% successive pair of elements in array (or string).
+/sorted? { % array comparator sorted? boolean
+  true 2 index empty? not { %if
+    2 index first 3 index { %forall
+      dup 3 1 roll 4 index exec 0 gt { pop false exch exit } if
+    } forall
+    pop
+  } if
+  3 1 roll pop pop
+} bind def %/sorted?
+
+% sortedby? returns true if each element in the array or string, transformed by
+% proc, is less than or equal to each successive element.
+/sortedby? { % array proc sortedby? boolean
+  [ exch /exec cvx /exch cvx 2 index /exec cvx /exch cvx /compare cvx ] cvx sorted?
+} bind def %/sortedby?
+
+% zip takes an array of arrays or strings and returns an array of arrays where
+% the i'th array has the i'th value from each input array.
+/zip { % [ a0 a1 ... an ] zip [ [ a00 a10 ... an0 ] ... [ a0n a1n ... ann ] ]
+  0 1 index { length max } forall dup [ exch { alist } repeat ]
+  % stack: input ziplen output
+  3 -1 roll { %forall
+    % stack: ziplen output input[i]
+    0 1 4 index 1 sub { %for
+      % stack: ziplen output input[i] j
+      dup 2 index length ge { null } { 2 copy get } ifelse
+      % stack: ziplen output input[i] j value
+      3 index 3 -1 roll get exch alpush
+    } for
+    pop
+  } forall
+  exch pop [ exch { alview } forall ]
+} bind def %/zip

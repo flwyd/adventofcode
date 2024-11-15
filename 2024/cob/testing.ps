@@ -193,6 +193,54 @@ end } bind def %/test.casestruct
     assert.pass
   } bind def %/assert.deepeq
 
+  /assert.lt { % actual expected assert.lt -
+    2 assert._countatleast
+    2 copy lt { %ifelse
+      pop pop assert.pass
+    } { % else
+      $test.current /actual 3 index put
+      $test.current /expected 2 index put
+      (FAIL ) 3 -1 roll tostring ( not less than ) 4 -1 roll tostring
+      4 cat assert.fail
+    } ifelse
+  } bind def %/assert.lt
+
+  /assert.le { % actual expected assert.le -
+    2 assert._countatleast
+    2 copy le { %ifelse
+      pop pop assert.pass
+    } { % else
+      $test.current /actual 3 index put
+      $test.current /expected 2 index put
+      (FAIL ) 3 -1 roll tostring ( not less than or equal to ) 4 -1 roll tostring
+      4 cat assert.fail
+    } ifelse
+  } bind def %/assert.le
+
+  /assert.gt { % actual expected assert.gt -
+    2 assert._countatleast
+    2 copy gt { %ifelse
+      pop pop assert.pass
+    } { % else
+      $test.current /actual 3 index put
+      $test.current /expected 2 index put
+      (FAIL ) 3 -1 roll tostring ( not greater than ) 4 -1 roll tostring
+      4 cat assert.fail
+    } ifelse
+  } bind def %/assert.gt
+
+  /assert.ge { % actual expected assert.ge -
+    2 assert._countatleast
+    2 copy ge { %ifelse
+      pop pop assert.pass
+    } { % else
+      $test.current /actual 3 index put
+      $test.current /expected 2 index put
+      (FAIL ) 3 -1 roll tostring ( not greater than or equal to ) 4 -1 roll tostring
+      4 cat assert.fail
+    } ifelse
+  } bind def %/assert.ge
+
   /assert.stack { % any1 ... anyn [any1 ... anyn] asssert.stack -
     dup type /integertype eq { %ifelse
       dup 2 mul 1 add assert._countatleast

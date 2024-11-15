@@ -1,0 +1,81 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/string.ps) cob.require
+(cob/testing.ps) cob.require
+
+% NOTE: Some functions in string.ps have their own test files.
+
+test.suite begin
+
+  (string from chars) {
+    ": :" () assert.eq
+    ": 58 :" (:) assert.eq
+    ": ascii.f ascii.o ascii.o :" (foo) assert.eq
+    ": ascii.sp ascii.ht ascii.cr ascii.nl :" ( \t\r\n) assert.eq
+    ": ascii.nul ascii.soh ascii.stx ascii.etx ascii.eot ascii.enq ascii.ack ascii.bel :"
+      (\000\001\002\003\004\005\006\007) assert.eq
+    ": ascii.C ascii.s ascii.t ascii.r ascii.i ascii.n ascii.g null :"
+      (Cstring\000) assert.eq
+  } test.case
+
+  (charstostring) {
+    [ ] charstostring () assert.eq
+    [ 58 ] charstostring (:) assert.eq
+    [ ascii.f ascii.o ascii.o ] charstostring (foo) assert.eq
+    [ ascii.sp ascii.ht ascii.cr ascii.nl ] charstostring ( \t\r\n) assert.eq
+    [ ascii.nul ascii.soh ascii.stx ascii.etx ascii.eot ascii.enq ascii.ack ascii.bel ]
+      charstostring (\000\001\002\003\004\005\006\007) assert.eq
+    [ ascii.C ascii.s ascii.t ascii.r ascii.i ascii.n ascii.g null ] charstostring
+      (Cstring\000) assert.eq
+  } test.case
+
+  (string lower) {
+    () tolower () assert.eq
+    (!) tolower (!) assert.eq
+    (X) tolower (x) assert.eq
+    (FOO) tolower (foo) assert.eq
+    (bAr) tolower (bar) assert.eq
+    (Hello World!) tolower (hello world!) assert.eq
+    (already\nlower) tolower (already\nlower) assert.eq
+  } test.case
+
+  (string upper) {
+    () toupper () assert.eq
+    (!) toupper (!) assert.eq
+    (x) toupper (X) assert.eq
+    (foo) toupper (FOO) assert.eq
+    (bAr) toupper (BAR) assert.eq
+    (Guinea-Bissau) toupper (GUINEA-BISSAU) assert.eq
+    (ALREADY\tUPPER STRING) toupper (ALREADY\tUPPER STRING) assert.eq
+  } test.case
+
+  (trimspace) {
+    () trimspace () assert.eq
+    ( ) trimspace () assert.eq
+    (     ) trimspace () assert.eq
+    (\t \r \n) trimspace () assert.eq
+    ( foo ) trimspace (foo) assert.eq
+    ( bar) trimspace (bar) assert.eq
+    (baz ) trimspace (baz) assert.eq
+    (   lots   of  extra space\r\n) trimspace (lots   of  extra space) assert.eq
+    (\r\nblank\r\nlines\r\n\r\n) trimspace (blank\r\nlines) assert.eq
+  } test.case
+
+  (zipstrings) {
+    [] zipstrings [] assert.deepeq
+    [(foo)] zipstrings [(f) (o) (o)] assert.deepeq
+    [(hello) (world)] zipstrings [(hw) (eo) (lr) (ll) (od)] assert.deepeq
+    [(foo) (bar) (baz)] zipstrings [(fbb) (oaa) (orz)] assert.deepeq
+    [(long) (short)] zipstrings [(ls) (oh) (no) (gr) (\000t)] assert.deepeq
+    [(what) (to) (wear?)] zipstrings
+      [(wtw) (hoe) (a\000a) (t\000r) (\000\000?)] assert.deepeq
+  } test.case
+
+  test.run
+end

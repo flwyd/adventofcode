@@ -28,7 +28,7 @@ test.suite begin
     { dup } bind 0 get tostring (dup) assert.eq
   } test.case
 
-  (null tostring) { null tostring (null) assert.eq } test.case
+  (null tostring) { null tostring (-null-) assert.eq } test.case
 
   (boolean tostring) {
     true tostring (true) assert.eq
@@ -62,7 +62,7 @@ test.suite begin
 
   (nested array tostring) {
     [ [ true ] ] tostring ([[true]]) assert.eq
-    [ 42 [ 6 9 null ] ] tostring ([42 [6 9 null]]) assert.eq
+    [ 42 [ 6 9 null ] ] tostring ([42 [6 9 -null-]]) assert.eq
     [ [ /A /B ] [ /J [ /K /L [ /X /Y /Z ] ] ] ] tostring
       ([[A B] [J [K L [X Y Z]]]]) assert.eq
   } test.case

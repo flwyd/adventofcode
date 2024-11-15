@@ -1,0 +1,159 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/ascii.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/string.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (sorted? empty) {
+    [] /compare cvx sorted? true assert.eq
+    () /compare cvx sorted? true assert.eq
+    [] /length cvx sortedby? true assert.eq
+    () /ascii.toupper cvx sortedby? true assert.eq
+  } test.case
+
+  (sorted? single) {
+    [42] /compare cvx sorted? true assert.eq
+    (*) /compare cvx sorted? true assert.eq
+    [/bar] /length cvx sortedby? true assert.eq
+    (*) /ascii.toupper cvx sortedby? true assert.eq
+  } test.case
+
+  (sorted? sorted pair) {
+    [-5 42] /compare cvx sorted? true assert.eq
+    [12.34 56] /compare cvx sorted? true assert.eq
+    [12.34 -56] /compare cvx descending sorted? true assert.eq
+    [/yo /world] /length cvx sortedby? true assert.eq
+    (Db) /compare cvx sorted? true assert.eq
+    (XX) /compare cvx sorted? true assert.eq
+    (to) /compare cvx descending sorted? true assert.eq
+    (gO) /ascii.toupper cvx sortedby? true assert.eq
+  } test.case
+
+  (sorted? unsorted pair) {
+    [0 -1] /compare cvx sorted? false assert.eq
+    [6.02e23 9876543210] /compare cvx sorted? false assert.eq
+    [(hello) (world)] /compare cvx descending sorted? false assert.eq
+    [(car) (vroom)] /reversed cvx sortedby? false assert.eq
+    (to) /compare cvx sorted? false assert.eq
+    (be) /compare cvx descending sorted? false assert.eq
+  } test.case
+
+  (sorted? sorted triple) {
+    [-1 0 1] /compare cvx sorted? true assert.eq
+    [(hello) (to the) (world)] /compare cvx sorted? true assert.eq
+    [(fall) (down) (boom)] /compare cvx descending sorted? true assert.eq
+    [8 6 3] { 4 mod } sortedby? true assert.eq
+    (<=>) /compare cvx sorted? true assert.eq
+    (foo) /compare cvx sorted? true assert.eq
+    (ahh) /compare cvx sorted? true assert.eq
+    (oof) /compare cvx descending sorted? true assert.eq
+  } test.case
+
+  (sorted? unsorted triple) {
+    [3.142 2.718 1.618] /compare cvx sorted? false assert.eq
+    [0 10 -100] /compare cvx sorted? false assert.eq
+    [(one) (two) (three)] /compare cvx sorted? false assert.eq
+    [(get) (on) (up)] /compare cvx descending sorted? false assert.eq
+    [(apple) (banana) (cherry) (durian) (eggplant) (fig)] /length cvx sortedby? false assert.eq
+    (}|{) /compare cvx sorted? false assert.eq
+    (pig) /compare cvx sorted? false assert.eq
+    (nog) /compare cvx descending sorted? false assert.eq
+  } test.case
+
+  (sorted? sorted longer) {
+    [ -1234 5 678 {} for ] /compare cvx sorted? true assert.eq
+    [ 10 -1 -10 {} for ]  /compare cvx descending sorted? true assert.eq
+    [ (Albania) (Belgium) (Czechia) (Denmark) (England) (France) (Germany) ]
+      /compare cvx sorted? true assert.eq
+    [ /and /ELSE /not /OR /xor ] { tostring toupper } sortedby? true assert.eq
+    <0f1e2d3c4b5a6978> /compare cvx sorted? true assert.eq
+    (zyxCBA) /compare cvx descending sorted? true assert.eq
+  } test.case
+
+  (sorted? unsorted longer) {
+    [ 8 6 7 5 3 0 9 ] /compare cvx sorted? false assert.eq
+    [ 0 1 20 {} for 19 ] /compare cvx sorted? false assert.eq
+    [ 16 32 8 4 2 1 ] /compare cvx descending sorted? false assert.eq
+    [ (Lorem) (ipsum) (dolor) (sit) (amet) ] /compare cvx sorted? false assert.eq
+    [ (Alice) (Bob) (Carol) (Dan) (Eve) ] /length cvx sortedby? false assert.eq
+    (MRS_black) /compare cvx sorted? false assert.eq
+    (achoo) /compare cvx descending sorted? false assert.eq
+    <0f0e1e2d3c4b5a6978> /compare cvx sorted? false assert.eq
+  } test.case
+
+  (insertion sort empty) {
+    () dup /compare cvx isort () assert.eq
+    [] dup /compare cvx isort [] assert.eq
+    () /compare cvx isorted () assert.eq
+    [] /compare cvx isorted [] assert.eq
+    () dup /ascii.tolower cvx isortby () assert.eq
+    [] dup /length cvx isortby [] assert.eq
+    () /ascii.tolower cvx isortedby () assert.eq
+    [] /length cvx isortedby [] assert.eq
+  } test.case
+
+  (insertion sort single) {
+    (X) dup /compare cvx isort (X) assert.eq
+    [/foo] dup /compare cvx isort [/foo] assert.deepeq
+    (\t) /compare cvx isorted (\t) assert.eq
+    [42] /compare cvx isorted [42] assert.deepeq
+    (:) dup /ascii.tolower cvx isortby (:) assert.eq
+    [12.34] dup /length cvx isortby [12.34] assert.deepeq
+    (g) /ascii.tolower cvx isortedby (g) assert.eq
+    [null] /length cvx isortedby [null] assert.deepeq
+  } test.case
+
+  (insertion sort already sorted pair) {
+    (AB) dup /compare cvx isort (AB) assert.eq
+    [-12.34 5.67] dup /compare cvx isort [-12.34 5.67] assert.deepeq
+    ([]) /compare cvx isorted ([]) assert.eq
+    [42 137] /compare cvx isorted [42 137] assert.deepeq
+    (jK) dup /ascii.tolower cvx isortby (jK) assert.eq
+    [(the) (view)] dup /length cvx isortby [(the) (view)] assert.deepeq
+    (^c) /ascii.tolower cvx isortedby (^c) assert.eq
+    [/new /idea] /length cvx isortedby [/new /idea] assert.deepeq
+  } test.case
+
+  (insertion sort unsorted pair) {
+    (BA) dup /compare cvx isort (AB) assert.eq
+    [5.67 -12.34] dup /compare cvx isort [-12.34 5.67] assert.deepeq
+    (][) /compare cvx isorted ([]) assert.eq
+    [137 42] /compare cvx isorted [42 137] assert.deepeq
+    (Kj) dup /ascii.tolower cvx isortby (jK) assert.eq
+    [(view) (the)] dup /length cvx isortby [(the) (view)] assert.deepeq
+    (c^) /ascii.tolower cvx isortedby (^c) assert.eq
+    [/idea /new] /length cvx isortedby [/new /idea] assert.deepeq
+  } test.case
+
+  (insertion sort reverse) {
+    (zaZA) dup /compare cvx isort (AZaz) assert.eq
+    [1234 0.123 -98.7] dup /compare cvx isort [-98.7 0.123 1234] assert.deepeq
+    (_@) /compare cvx isorted (@_) assert.eq
+    [(Zulu) (Yankee) (X-Ray) (Whiskey)] /compare cvx isorted
+      [(Whiskey) (X-Ray) (Yankee) (Zulu)] assert.deepeq
+    (ZtNiHc) dup /ascii.tolower cvx isortby (cHiNtZ) assert.eq
+    [/eggplant /durian /cherry /banana /grape /apple /haw /fig] dup /length cvx isortby
+      [/haw /fig /grape /apple /durian /cherry /banana /eggplant] assert.deepeq
+    (\117\136\165\064\133\072\171\040) { 8 mod } isortedby
+      (\040\171\072\133\064\165\136\117) assert.eq
+    [(SiT) (Lorem) (iPsUm) (DOLOR) (amet)] /toupper cvx isortedby
+      [(amet) (DOLOR) (iPsUm) (Lorem) (SiT)] assert.deepeq
+  } test.case
+
+  (insertion sort descending) {
+    ( /inuZ|) { ascii.toupper exch ascii.toupper exch compare } descending isorted (|Zuni/ ) assert.eq
+    [<</foo 123>> [/two /vals] ({!}) /four] { length exch length exch sub } descending isorted
+      [/four ({!}) [/two /vals] <</foo 123>>] assert.deepeq
+  } test.case
+
+  test.run
+end
