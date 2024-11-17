@@ -23,7 +23,7 @@ function part2(lines)
     cache = Dict{String, Int}()
     copies = [pat.chars for _ in 1:5]
     big = Pattern(join(copies, "?"), repeat(pat.runs, 5))
-    count_permutations(big, Dict{String, Int})
+    count_permutations(big, Dict{String, Int}())
   end |> sum
 end
 

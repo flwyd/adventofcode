@@ -141,7 +141,6 @@ function parseinput(lines)
   end
   for name in keys(inputs)
     if !haskey(outputs, name)
-      @show name
       outputs[name] = AbstractString[]
       push!(broadcasters, name)
     end
