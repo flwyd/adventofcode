@@ -1,0 +1,109 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/core.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (inc current dict) {
+    2 dict begin
+      /a 0 def
+      /a inc a 1 assert.eq
+      /a inc a 2 assert.eq
+      /a 42 def
+      /a inc a 43 assert.eq
+      /b -2.5 def
+      /b inc b -1.5 assert.eq
+      /b inc b -0.5 assert.eq
+      /b inc b 0.5 assert.eq
+      /a inc a 44 assert.eq
+      currentdict
+    end
+    dup /a get 44 assert.eq
+    /b get 0.5 assert.eq
+  } test.case
+
+  (dec current dict) {
+    2 dict begin
+      /a 0 def
+      /a dec a -1 assert.eq
+      /a dec a -2 assert.eq
+      /a 42 def
+      /a dec a 41 assert.eq
+      /b 1.5 def
+      /b dec b 0.5 assert.eq
+      /b dec b -0.5 assert.eq
+      /b dec b -1.5 assert.eq
+      /a dec a 40 assert.eq
+      currentdict
+    end
+    dup /a get 40 assert.eq
+    /b get -1.5 assert.eq
+  } test.case
+
+  (inc dict) {
+    2 dict
+    dup /a 0 put
+    dup /a exch inc dup /a get 1 assert.eq
+    dup /a exch inc dup /a get 2 assert.eq
+    dup /a 42 put
+    dup /a exch inc dup /a get 43 assert.eq
+    dup /b -2.5 put
+    dup /b exch inc dup /b get -1.5 assert.eq
+    dup /b exch inc dup /b get -0.5 assert.eq
+    dup /b exch inc dup /b get 0.5 assert.eq
+    dup /a exch inc dup /a get 44 assert.eq
+    pop
+  } test.case
+
+  (dec dict) {
+    2 dict
+    dup /a 0 put
+    dup /a exch dec dup /a get -1 assert.eq
+    dup /a exch dec dup /a get -2 assert.eq
+    dup /a 42 put
+    dup /a exch dec dup /a get 41 assert.eq
+    dup /b 1.5 put
+    dup /b exch dec dup /b get 0.5 assert.eq
+    dup /b exch dec dup /b get -0.5 assert.eq
+    dup /b exch dec dup /b get -1.5 assert.eq
+    dup /a exch dec dup /a get 40 assert.eq
+    pop
+  } test.case
+
+  (inc dict stack) {
+    2 dict dup begin /a 23.45 def /b -12 def end
+    1 dict dup begin /b 137 def end
+    exch begin
+      b -12 assert.eq
+      begin
+        b 137 assert.eq
+        /b inc b 138 assert.eq
+        /a inc a 24.45 assert.eq
+      end
+      /b inc b -11 assert.eq
+    end
+  } test.case
+
+  (dec dict stack) {
+    2 dict dup begin /a 23.45 def /b -12 def end
+    1 dict dup begin /b 137 def end
+    exch begin
+      b -12 assert.eq
+      begin
+        b 137 assert.eq
+        /b dec b 136 assert.eq
+        /a dec a 22.45 assert.eq
+      end
+      /b dec b -13 assert.eq
+    end
+  } test.case
+
+  test.run
+end

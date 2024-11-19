@@ -35,7 +35,7 @@
   /stringtype { dup rcheck not { pop (--string:xo--) } if } def % else the input
   /nametype { dup length string cvs } bind def
   /operatortype { 32 string cvs } bind def
-  /nulltype { pop (-null-) } def
+  /nulltype { pop (--null--) } def
   /booleantype { 5 string cvs } bind def
   /integertype { 20 string cvs } bind def
   /realtype { 20 string cvs } bind def
@@ -84,9 +84,9 @@ end def %tostring.IMPL
   tostring.RECURSION_LEVEL 8 eq { %ifelse
     type dup length string cvs (--) exch (:recursionlimit--) 3 cat
   } { %else
-    /tostring.RECURSION_LEVEL tostring.RECURSION_LEVEL 1 add def
+    /tostring.RECURSION_LEVEL inc
     tostring.IMPL 1 index type /else getorget exec
-    /tostring.RECURSION_LEVEL tostring.RECURSION_LEVEL 1 sub def
+    /tostring.RECURSION_LEVEL dec
   } ifelse
 } bind def %/tostring
 
@@ -160,7 +160,7 @@ end def %tostring.IMPL
     ascii.nl eq { %ifelse
       2 copy 1 indexfrommark 3 1 roll getinterval
       % Remove \r from \r\n sequences
-      dup ascii.cr endswith? { dup length 1 sub 0 exch getinterval } if
+      dup 0 lastor ascii.cr eq { dup length 1 sub 0 exch getinterval } if
       % put line before start, add length to start, reset length
       3 1 roll add 1 add 0
     } { 1 add } ifelse

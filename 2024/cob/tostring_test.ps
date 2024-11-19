@@ -28,7 +28,7 @@ test.suite begin
     { dup } bind 0 get tostring (dup) assert.eq
   } test.case
 
-  (null tostring) { null tostring (-null-) assert.eq } test.case
+  (null tostring) { null tostring (--null--) assert.eq } test.case
 
   (boolean tostring) {
     true tostring (true) assert.eq
@@ -62,7 +62,7 @@ test.suite begin
 
   (nested array tostring) {
     [ [ true ] ] tostring ([[true]]) assert.eq
-    [ 42 [ 6 9 null ] ] tostring ([42 [6 9 -null-]]) assert.eq
+    [ 42 [ 6 9 null ] ] tostring ([42 [6 9 --null--]]) assert.eq
     [ [ /A /B ] [ /J [ /K /L [ /X /Y /Z ] ] ] ] tostring
       ([[A B] [J [K L [X Y Z]]]]) assert.eq
   } test.case
@@ -80,6 +80,13 @@ test.suite begin
     % reparse the string so we don't depend on iteration order
     << /array [ 9 8 7 ] /nested << /foo 42 /bar true >> >> tostring cvx exec
       << /array [ 9 8 7 ] /nested << /foo 42 /bar true >> >> assert.deepeq
+  } test.case
+
+  (recursive structure tostring) {
+    1 1 10 { [ exch } for 10 { ] } repeat tostring
+      ([1 [2 [3 [4 [5 [6 [7 [--integertype:recursionlimit-- --arraytype:recursionlimit--]]]]]]]]) assert.eq
+    2 array dup 0 /x put dup dup 1 exch put tostring
+      ([x [x [x [x [x [x [x [--nametype:recursionlimit-- --arraytype:recursionlimit--]]]]]]]]) assert.eq
   } test.case
 
   test.run

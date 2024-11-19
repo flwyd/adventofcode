@@ -35,33 +35,53 @@
   0 get
 } bind def %/first
 
+% firstor returns element 0 element of an array or string if it's not empty, otherwise
+% returns default.
+/firstor { % a default firstor a[-1]|default
+  1 index empty? { exch pop } { pop first } ifelse
+} bind def %/firstor
+
 % last returns the final element of an array or character of a string.
 /last { % a last a[-1]
   dup length 1 sub get
 } bind def %/last
 
-% endswith? takes either a pair of strings/arrays or a string/array and a
-% byte/object.  In the first form, returns true if the N characters/objects in
-% the second argument are the final N items in the first argument, returning
-% false if the second argument is longer than the first.  In the second form,
-% returns true if the second argument eq the last item in the first argument,
-% returning false if the first argument is empty.
-% TODO factor out index (from-end vs. 0) and implement startswith?
-/endswith? { % string string endswith? bool
-             % array array endswith? bool
-             % packedarray packedarray endswith? bool
-             % string char endswith? bool
-             % array any endswith? bool
-  % 1 index type /stringtype eq 1 index type /stringtype eq and { %ifelse
-  2 copy /stringtype /stringtype 2 types?
-  3 copy pop /arraytype /arraytype 2 types? or
-  3 copy pop /packedarraytype /packedarraytype 2 types? or { %ifelse
-    1 index length 1 index length ge { %ifelse
-      exch dup length 2 index length sub 2 index length getinterval deepeq
-    } { pop pop false } ifelse
-  } { %else
-    exch dup length 0 gt { dup length 1 sub get eq } { pop pop false } ifelse
+% lastor returns the final element of an array or string if it's not empty,
+% otherwise returns default.
+/lastor { % a default lastor a[-1]|default
+  1 index empty? { exch pop } { pop last } ifelse
+} bind def %/lastor
+
+% startswithat? returns true if the N items of string1/array1 starting at pos
+% are deeply equal to the N items of string2/array2.  Returns false If the
+% second item is longer than the first or the comparison would run off the end
+% of the first item.
+/startswithat? { % iter1 iter2 pos startswithat? bool
+  dup 0 lt { pop pop pop false } { %else
+    3 copy exch length add exch length gt { pop pop pop false } { %else
+      3 -1 roll exch 2 index length getinterval
+      true 0 1 3 index length 1 sub { %for
+        3 index 1 index get exch 3 index exch get deepne { pop false exit } if
+      } for 3 1 roll pop pop
+      % 3 -1 roll exch 2 index length getinterval deepeq
+    } ifelse
   } ifelse
+} bind def %/startswithat?
+
+% startswith? returns whether if the first N items of iter1 are deeply equal to
+% all N elements of iter2.  Returns false if iter2 is longer than iter1.  Note
+% that `[(foo) (bar)] (foo) startswith?` returns false, wrap the latter in an
+% array or do `[(foo) (bar)] first (foo) deepeq`.
+/startswith? { % iter1 iter2 startswith? bool
+  0 startswithat?
+} bind def %/startswith?
+
+% endswith? returns whether if the last N items of iter1 are deeply equal to
+% all N elements of iter2.  Returns false if iter2 is longer than iter1.  Note
+% that `[(foo) (bar)] (bar) endswith?` returns false, wrap the latter in an
+% array.  or do `[(foo) (bar)] last (foo) deepeq`.
+/endswith? { % iter1 iter2 endswith? bool
+  1 index length 1 index length sub startswithat?
 } bind def %/endswith?
 
 % reverse modifies an array or string, putting elements in the reverse order.
@@ -113,30 +133,30 @@ end %/reversed.IMPL
 % which must return -1 if two elements are in ascending order, 1 if they are in
 % descending order, and 0 if they are equal.
 /isort { % array comparator isort -
-  mark 1 1 4 index length 1 sub { %for
-    2 indexfrommark 1 index get dup 2 indexfrommark 3 index 1 sub get
-    % stack: array compare mark i a[i] a[i] a[i-1]
-    1 indexfrommark exec 0 lt { %ifelse
+  1 1 3 index length 1 sub { %for
+    2 index 1 index get dup 4 index 3 index 1 sub get
+    % stack: array compare i a[i] a[i] a[i-1]
+    4 index exec 0 lt { %ifelse
       1 index 1 sub -1 0 { %for
-        % stack: array compare mark i a[i] j
-        2 indexfrommark 1 index get 2 index 1 indexfrommark exec 0 le { %ifelse
+        % stack: array compare i a[i] j
+        4 index 1 index get 2 index 5 index exec 0 le { %ifelse
           1 add exit
         } { % else
           0 eq { 0 } if
         } ifelse
       } for
-      % stack: array compare mark i a[i] j
-      dup 2 indexfrommark exch 4 index 1 index sub getinterval
-      % stack: array compare mark i a[i] j a[j:i]
-      2 indexfrommark 2 index 1 add 3 -1 roll putinterval
-      % stack: array compare mark i a[i] j
-      exch 2 indexfrommark 3 1 roll put
+      % stack: array compare i a[i] j
+      dup 5 index exch 4 index 1 index sub getinterval
+      % stack: array compare i a[i] j a[j:i]
+      5 index 2 index 1 add 3 -1 roll putinterval
+      % stack: array compare i a[i] j
+      exch 4 index 3 1 roll put
     } { %else
       pop % a[i]
     } ifelse
     pop % i
   } for
-  pop pop pop
+  pop pop
 } bind def %/isort
 
 % isortby sorts array based on the result of calling proc on each element.
@@ -160,6 +180,7 @@ end %/reversed.IMPL
 % sorted? returns true if comparator returns negative or zero for each
 % successive pair of elements in array (or string).
 /sorted? { % array comparator sorted? boolean
+  dup xcheck not { /sorted cvx /typecheck signalerror } if
   true 2 index empty? not { %if
     2 index first 3 index { %forall
       dup 3 1 roll 4 index exec 0 gt { pop false exch exit } if
