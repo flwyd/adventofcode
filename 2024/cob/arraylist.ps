@@ -8,6 +8,9 @@
 % An array list, growing geometrically as inputs are added.
 % Can be used as a flexible buffer, a stack, etc.
 
+(cob/bootstrap.ps) runlibfile
+(cob/stackeffect.ps) cob.require
+
 % Array list is [/alisttype size buffer].
 
 /_alisttype 0 def
@@ -37,14 +40,14 @@
 /_alistgrow { % alist _alistgrow -
   dup //_alistbuf get dup length 2 mul array
   % stack: list buf newbuf
-  dup 0 4 -1 roll putinterval //_alistbuf exch put
+  0 abc:bbca putinterval //_alistbuf exch put
 } bind def %/_alistgrow
 
 % alget returns the item in alist at index.  Raises a /rangecheck error if there
 % are index or fewer items in the list.
 /alget { % alist index alget value
   1 index /alget alisttypecheck
-  dup 2 index allength ge { /alget cvx /rangecheck signalerror } if
+  ab:abba allength ge { /alget cvx /rangecheck signalerror } if
   exch //_alistbuf get exch get
 } bind def %/alget
 
@@ -60,8 +63,8 @@
 % alpush adds value to the end of alist.
 /alpush { % alist value alpush -
   1 index /alpush alisttypecheck
-  1 index dup allength exch //_alistbuf get length eq { 1 index _alistgrow } if
-  1 index dup allength exch //_alistbuf get exch 3 -1 roll put
+  ab:abaa allength exch //_alistbuf get length eq { 1 index _alistgrow } if
+  ab:abaa allength exch //_alistbuf get abc:cba put
   dup allength 1 add //_alistlen exch put
 } bind def %/alpush
 
@@ -71,7 +74,7 @@
   dup /alpop alisttypecheck
   dup allength dup 0 eq { /alpop cvx /rangecheck signalerror } if 1 sub
   % stack: alist newlength
-  dup 2 index //_alistbuf get dup 3 index get 3 -2 roll exch null put
+  ab:abba //_alistbuf get abc:abcca get abc:cba null put
   % stack: alist newlength value
   3 1 roll //_alistlen exch put
 } bind def %/alpop

@@ -1,0 +1,495 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Stack manipulation functions that describe the existing state (always
+% alphabetic order) and the resulting state, e.g. abc:bac has the stack effect
+% `a b c -- b a c`.  A function name like abc:abcab copies some stack elements.
+% All functions must have the top of the stack somewhere in the output,
+% otherwise just call pop first.
+
+/a:a {} def
+/a:aa { dup } bind def
+/a:aaa { dup dup } bind def
+
+/ab:b { exch pop } bind def
+/ab:ab {} def
+/ab:ba { exch } bind def
+/ab:bb { exch pop dup } bind def
+
+/ab:aba { 1 index } bind def
+/ab:aab { 1 index exch } bind def
+/ab:abb { dup } bind def
+/ab:baa { exch dup } bind def
+/ab:bab { exch 1 index } bind def
+/ab:bba { dup 3 -1 roll } bind def
+/ab:bbb { exch pop dup dup } bind def
+
+/ab:aaab { 1 index dup 3 2 roll } bind def
+/ab:aaba { 1 index dup 3 1 roll } bind def
+/ab:abaa { 1 index dup } bind def
+/ab:abab { 2 copy } bind def
+/ab:abba { 2 copy exch } bind def
+/ab:aabb { 1 index exch dup } bind def
+/ab:abbb { dup dup } bind def
+/ab:baaa { exch dup dup } bind def
+/ab:baab { exch 2 copy exch } bind def
+/ab:baba { exch 2 copy } bind def
+/ab:babb { exch 1 index dup } bind def
+/ab:bbaa { dup 3 -1 roll dup } bind def
+/ab:bbab { dup 3 -1 roll 1 index } bind def
+/ab:bbba { dup dup 4 -1 roll } bind def
+/ab:bbbb { exch pop dup dup dup } bind def
+
+/abc:c { exch pop exch pop } bind def
+/abc:ac { exch pop } bind def
+/abc:bc { 3 -1 roll pop } bind def
+/abc:ca { exch pop exch } bind def
+/abc:cb { 3 -1 roll pop exch } bind def
+/abc:cc { 3 1 roll pop pop dup } bind def
+
+/abc:aac { exch pop 1 index exch } bind def
+/abc:abc {} def
+/abc:aca { exch pop 1 index } bind def
+/abc:acb { exch } bind def
+/abc:acc { exch pop dup } bind def
+/abc:bac { exch 3 1 roll exch } bind def
+/abc:bbc { 3 -1 roll pop 1 index exch } bind def
+/abc:bca { 3 -1 roll } bind def
+/abc:bcb { 3 -1 roll pop 1 index } bind def
+/abc:bcc { 3 -1 roll pop dup } bind def
+/abc:caa { 3 1 roll pop dup } bind def
+/abc:cab { 3 1 roll } bind def
+/abc:cac { exch pop dup 3 1 roll } bind def
+/abc:cba { exch 3 -1 roll } bind def
+/abc:cbb { exch 3 -1 roll pop dup } bind def
+/abc:cbc { exch 3 -1 roll pop 1 index } bind def
+/abc:cca { dup 4 2 roll pop } bind def
+/abc:ccb { dup 4 2 roll exch pop } bind def
+/abc:ccc { 3 1 roll pop pop dup dup } bind def
+
+/abc:aaac { 3 1 roll pop dup dup 4 -1 roll } bind def
+/abc:aabc { 2 index 3 1 roll } bind def
+/abc:aaca { exch pop 1 index dup 3 1 roll } bind def
+/abc:aacb { 2 index 3 1 roll exch } bind def
+/abc:aacc { exch pop dup 2 index 3 1 roll } bind def
+/abc:abac { 2 index exch } bind def
+/abc:abbc { 1 index exch } bind def
+/abc:abca { 2 index } bind def
+/abc:abcb { 1 index } bind def
+/abc:abcc { dup } bind def
+/abc:acba { exch 2 index } bind def
+/abc:acaa { exch pop 1 index dup } bind def
+/abc:acab { exch 2 index exch } bind def
+/abc:acac { exch pop 2 copy } bind def
+/abc:acba { exch 2 index } bind def
+/abc:acbb { exch dup } bind def
+/abc:acbc { dup 3 1 roll } bind def
+/abc:acca { exch pop dup 2 index } bind def
+/abc:accb { dup 3 -1 roll } bind def
+/abc:accc { exch pop dup dup } bind def
+/abc:baac { 3 -1 roll dup 3 -1 roll } bind def
+/abc:babc { 3 1 roll exch 1 index 4 -1 roll } bind def
+/abc:baca { 3 -1 roll exch 1 index } bind def
+/abc:bacb { 3 -1 roll exch 2 index } bind def
+/abc:bacc { 3 -1 roll exch dup } bind def
+/abc:bbac { exch dup 4 2 roll } bind def
+/abc:bbbc { 3 -1 roll pop exch dup dup 4 -1 roll } bind def
+/abc:bbca { exch dup 4 2 roll exch } bind def
+/abc:bbcb { 3 -1 roll pop exch dup dup 4 2 roll } bind def
+/abc:bbcc { 3 -1 roll pop 2 copy exch 3 1 roll } bind def
+/abc:bcaa { 3 -1 roll dup } bind def
+/abc:bcab { 3 -1 roll 2 index } bind def
+/abc:bcac { 3 -1 roll 1 index } bind def
+/abc:bcba { 1 index 4 -1 roll } bind def
+/abc:bcbb { 3 -1 roll pop 1 index dup } bind def
+/abc:bcbc { 3 -1 roll pop 2 copy } bind def
+/abc:bcca { dup 4 -1 roll } bind def
+/abc:bccb { 3 -1 roll pop dup 2 index } bind def
+/abc:bccc { 3 -1 roll pop dup dup } bind def
+/abc:caaa { exch pop exch dup dup } bind def
+/abc:caab { 3 1 roll 1 index exch } bind def
+/abc:caac { exch pop exch 2 copy exch } bind def
+/abc:caba { 3 1 roll 1 index } bind def
+/abc:cabb { 3 1 roll dup } bind def
+/abc:cabc { dup 4 1 roll } bind def
+/abc:caca { exch pop exch 2 copy } bind def
+/abc:cacb { dup 4 1 roll exch } bind def
+/abc:cacc { exch pop exch 1 index dup } bind def
+/abc:cbaa { exch 3 -1 roll dup } bind def
+/abc:cbab { exch 3 -1 roll 1 index } bind def
+/abc:cbac { exch 3 -1 roll 2 index } bind def
+/abc:cbba { exch dup 4 -1 roll } bind def
+/abc:cbbb { 3 -1 roll pop exch dup dup } bind def
+/abc:cbbc { 3 -1 roll pop exch 2 copy exch } bind def
+/abc:cbca { exch 3 -1 roll 2 index exch } bind def
+/abc:cbcb { 3 -1 roll pop exch 2 copy } bind def
+/abc:cbcc { 3 -1 roll pop exch 1 index dup } bind def
+/abc:ccaa { exch pop dup 3 -1 roll dup } bind def
+/abc:ccab { dup 4 2 roll } bind def
+/abc:ccac { exch pop dup dup 4 2 roll } bind def
+/abc:ccba { dup 4 2 roll exch } bind def
+/abc:ccbb { 3 -1 roll pop dup 3 -1 roll dup } bind def
+/abc:ccbc { 3 -1 roll pop dup dup 4 2 roll } bind def
+/abc:ccca { exch pop dup dup 4 -1 roll } bind def
+/abc:cccb { 3 -1 roll pop dup dup 4 -1 roll } bind def
+/abc:cccc { 3 1 roll pop pop dup dup dup } bind def
+
+/abc:aaaac { 3 1 roll pop dup dup dup 5 -1 roll } bind def
+/abc:aaabc { 2 index dup dup 3 1 roll } bind def
+/abc:aaaca { 3 1 roll pop dup dup dup 5 3 roll } bind def
+/abc:aaacb { exch 2 index dup 4 2 roll } bind def
+/abc:aaacc { exch pop 1 index dup 3 -1 roll dup } bind def
+/abc:aabac { 2 index dup 4 1 roll exch } bind def
+/abc:aabbc { 2 index 3 1 roll 1 index exch } bind def
+/abc:aabca { 2 index dup 4 1 roll } bind def
+/abc:aabcb { 2 index 3 1 roll 1 index } bind def
+/abc:aabcc { 2 index 3 1 roll dup } bind def
+/abc:aacaa { exch pop 1 index dup dup 4 1 roll } bind def
+/abc:aacab { 2 index 3 1 roll exch 2 index exch } bind def
+/abc:aacac { exch pop 1 index 3 1 roll 1 index 1 index } bind def
+/abc:aacba { exch 2 index 3 1 roll 2 index } bind def
+/abc:aacbb { 2 index 3 1 roll exch dup } bind def
+/abc:aacbc { 2 index 3 1 roll exch 1 index } bind def
+/abc:aacca { exch pop 2 copy exch dup 4 1 roll } bind def
+/abc:aaccb { 2 index 3 1 roll dup 3 -1 roll } bind def
+/abc:aaccc { exch pop 1 index exch dup dup } bind def
+/abc:abaac { 2 index dup 3 -1 roll } bind def
+/abc:ababc { 3 copy pop 3 -1 roll } bind def
+/abc:abaca { 2 index exch 1 index } bind def
+/abc:abacb { 2 index exch 2 index } bind def
+/abc:abacc { 2 index exch dup } bind def
+/abc:abbac { 3 1 roll dup 2 index 5 -1 roll } bind def
+/abc:abbca { 1 index exch 3 index } bind def
+/abc:abbcb { 1 index exch 1 index } bind def
+/abc:abbcc { 1 index exch dup } bind def
+/abc:abcaa { 2 index dup } bind def
+/abc:abcab { 3 copy pop } bind def
+/abc:abcac { 2 index 1 index } bind def
+/abc:abcba { 3 copy pop exch } bind def
+/abc:abcbb { 1 index dup } bind def
+/abc:abcbc { 2 copy } bind def
+/abc:abcca { dup 3 index } bind def
+/abc:abccb { dup 2 index } bind def
+/abc:abccc { dup dup } bind def
+/abc:acaaa { exch pop 1 index dup dup } bind def
+/abc:acaab { exch 2 index dup 3 -1 roll } bind def
+/abc:acaac { exch pop 2 copy 1 index exch } bind def
+/abc:acaba { exch 2 index exch 1 index } bind def
+/abc:acabb { exch 2 index exch dup } bind def
+/abc:acabc { 2 index 1 index 5 2 roll } bind def
+/abc:acaca { exch pop 2 copy 1 index } bind def
+/abc:acacb { 2 index 1 index 5 2 roll exch } bind def
+/abc:acacc { exch pop 2 copy dup } bind def
+/abc:acbaa { exch 2 index dup } bind def
+/abc:acbab { exch 2 index 1 index } bind def
+/abc:acbac { exch 2 index 2 index } bind def
+/abc:acbba { exch dup 3 index } bind def
+/abc:acbbb { exch dup dup } bind def
+/abc:acbbc { exch 2 copy exch } bind def
+/abc:acbca { exch 1 index 3 index } bind def
+/abc:acbcb { exch 2 copy } bind def
+/abc:acbcc { exch 1 index dup } bind def
+/abc:accaa { exch pop dup 2 index dup } bind def
+/abc:accab { 3 1 roll 1 index 3 index 5 2 roll } bind def
+/abc:accac { exch pop 2 copy dup 3 1 roll } bind def
+/abc:accba { dup 3 -1 roll 3 index } bind def
+/abc:accbb { dup 3 -1 roll dup } bind def
+/abc:accbc { dup dup 4 2 roll } bind def
+/abc:accca { exch pop dup dup 3 index } bind def
+/abc:acccb { dup dup 4 -1 roll } bind def
+/abc:acccc { exch pop dup dup dup } bind def
+/abc:baaac { exch 3 2 roll dup dup dup 5 -1 roll } bind def
+/abc:baabc { 2 index 3 1 roll 1 index 5 -1 roll } bind def
+/abc:baaca { 3 -1 roll dup dup 4 2 roll } bind def
+/abc:baacb { 3 -1 roll dup 3 -1 roll 3 index } bind def
+/abc:baacc { exch 2 index 4 2 roll dup } bind def
+/abc:babac { 1 index 4 1 roll 2 index exch } bind def
+/abc:babbc { 1 index 4 1 roll 1 index exch } bind def
+/abc:babca { 2 index 2 index 5 1 roll } bind def
+/abc:babcb { 1 index dup 5 1 roll } bind def
+/abc:babcc { 1 index 4 1 roll dup } bind def
+/abc:bacaa { exch 3 1 roll 1 index dup } bind def
+/abc:bacab { exch dup 4 1 roll 2 index exch } bind def
+/abc:bacac { exch 3 1 roll dup 2 index exch } bind def
+/abc:bacba { exch dup 4 1 roll 2 index } bind def
+/abc:bacbb { exch dup dup 5 1 roll } bind def
+/abc:bacbc { exch 2 copy 5 1 roll } bind def
+/abc:bacca { exch 3 1 roll dup 2 index } bind def
+/abc:baccb { exch dup 4 1 roll 1 index exch } bind def
+/abc:baccc { exch 3 1 roll dup dup } bind def
+/abc:bbaac { exch dup 4 2 roll 1 index exch } bind def
+/abc:bbabc { 1 index dup 5 2 roll } bind def
+/abc:bbaca { 1 index exch 4 -1 roll exch 1 index } bind def
+/abc:bbacb { exch dup dup 5 2 roll } bind def
+/abc:bbacc { exch dup 4 2 roll dup } bind def
+/abc:bbbac { exch dup dup 5 3 roll } bind def
+/abc:bbbbc { 3 1 roll dup dup dup 6 -2 roll pop } bind def
+/abc:bbbca { 3 -1 roll 2 index dup 5 2 roll } bind def
+/abc:bbbcb { 3 -1 roll pop 1 index dup dup 5 2 roll } bind def
+/abc:bbbcc { 3 1 roll dup dup 5 3 roll pop dup } bind def
+/abc:bbcaa { 3 -1 roll dup 3 index 5 1 roll } bind def
+/abc:bbcab { 1 index exch 4 -1 roll 2 index } bind def
+/abc:bbcac { 3 -1 roll 1 index 3 index 5 1 roll } bind def
+/abc:bbcba { 1 index 4 -1 roll 3 index 5 1 roll } bind def
+/abc:bbcbb { 3 -1 roll pop 1 index dup dup 5 1 roll } bind def
+/abc:bbcbc { 3 -1 roll pop 1 index dup 3 1 roll 1 index } bind def
+/abc:bbcca { 2 copy exch 3 1 roll 5 -1 roll } bind def
+/abc:bbccb { 3 -1 roll pop 2 copy exch dup 4 1 roll } bind def
+/abc:bbccc { 3 -1 roll pop 1 index exch dup dup } bind def
+/abc:bcaaa { 3 -1 roll dup dup } bind def
+/abc:bcaab { 3 -1 roll dup 3 index } bind def
+/abc:bcaac { 3 -1 roll dup 2 index } bind def
+/abc:bcaba { 3 copy pop 5 -1 roll } bind def
+/abc:bcabb { 3 -1 roll 2 index dup } bind def
+/abc:bcabc { 3 copy 6 -1 roll pop } bind def
+/abc:bcaca { 3 -1 roll 2 copy } bind def
+/abc:bcacb { 3 -1 roll 3 copy pop exch } bind def
+/abc:bcacc { 3 -1 roll 1 index dup } bind def
+/abc:bcbaa { 1 index 4 -1 roll dup } bind def
+/abc:bcbab { 1 index 4 -1 roll 1 index } bind def
+/abc:bcbac { 1 index 4 -1 roll 2 index } bind def
+/abc:bcbba { 1 index dup 5 -1 roll } bind def
+/abc:bcbbb { 3 -1 roll pop 1 index dup dup } bind def
+/abc:bcbbc { 3 -1 roll pop 2 copy 1 index exch } bind def
+/abc:bcbca { 2 copy 5 -1 roll } bind def
+/abc:bcbcb { 2 copy 5 -1 roll pop 1 index } bind def
+/abc:bcbcc { 3 -1 roll pop 2 copy dup } bind def
+/abc:bccaa { dup 4 -1 roll dup } bind def
+/abc:bccab { dup 4 -1 roll 3 index } bind def
+/abc:bccac { dup 4 -1 roll 1 index } bind def
+/abc:bccba { 2 copy exch 5 -1 roll } bind def
+/abc:bccbb { 3 -1 roll pop 2 copy exch dup } bind def
+/abc:bccbc { 3 -1 roll pop 2 copy exch 1 index } bind def
+/abc:bccca { dup dup 5 -1 roll } bind def
+/abc:bcccb { 3 -1 roll pop 2 copy exch 1 index exch } bind def
+/abc:bcccc { 3 -1 roll pop dup dup dup } bind def
+/abc:caaaa { exch pop exch dup dup dup } bind def
+/abc:caaab { 3 -1 roll dup dup 5 -1 roll } bind def
+/abc:caaac { exch pop exch dup dup 3 index } bind def
+/abc:caaba { 3 1 roll exch dup dup 4 2 roll } bind def
+/abc:caabb { 3 1 roll 2 copy exch 3 1 roll } bind def
+/abc:caabc { 3 -1 roll dup 4 -1 roll 3 index } bind def
+/abc:caaca { exch pop exch dup 2 index 1 index } bind def
+/abc:caacb { 3 -1 roll dup 4 -1 roll 3 index exch } bind def
+/abc:caacc { exch pop exch dup 2 index dup } bind def
+/abc:cabaa { 3 1 roll 1 index dup } bind def
+/abc:cabab { 3 1 roll 2 copy } bind def
+/abc:cabac { 3 1 roll 1 index 3 index } bind def
+/abc:cabba { 3 1 roll 2 copy exch } bind def
+/abc:cabbb { 3 1 roll dup dup } bind def
+/abc:cabbc { 3 1 roll dup 3 index } bind def
+/abc:cabca { 3 1 roll 3 copy pop } bind def
+/abc:cabcb { 2 copy 5 1 roll } bind def
+/abc:cabcc { dup dup 5 1 roll } bind def
+/abc:cacaa { 3 1 roll pop 2 copy dup } bind def
+/abc:cacab { 2 index 1 index 5 3 roll } bind def
+/abc:cacac { exch pop 2 copy dup 5 1 roll } bind def
+/abc:cacba { exch 2 index 2 index 5 1 roll } bind def
+/abc:cacbb { dup 4 1 roll exch dup } bind def
+/abc:cacbc { exch 1 index dup 5 1 roll } bind def
+/abc:cacca { exch pop exch 2 copy 1 index exch } bind def
+/abc:caccb { dup dup 5 1 roll 3 -1 roll } bind def
+/abc:caccc { exch pop dup dup dup 5 1 roll } bind def
+/abc:cbaaa { exch 3 -1 roll dup dup } bind def
+/abc:cbaab { 3 1 roll exch 2 copy exch } bind def
+/abc:cbaac { 3 1 roll exch dup 3 index } bind def
+/abc:cbaba { 3 1 roll exch 2 copy  } bind def
+/abc:cbabb { 3 1 roll exch 1 index dup } bind def
+/abc:cbabc { 2 copy exch 5 2 roll } bind def
+/abc:cbaca { 3 -1 roll exch 2 copy 5 1 roll } bind def
+/abc:cbacb { 3 1 roll exch 3 copy pop } bind def
+/abc:cbacc { 3 -1 roll exch dup dup 5 1 roll } bind def
+/abc:cbbaa { exch dup 4 -1 roll dup } bind def
+/abc:cbbab { exch dup 4 -1 roll 1 index } bind def
+/abc:cbbac { exch dup 4 -1 roll 3 index } bind def
+/abc:cbbba { exch dup dup 5 -1 roll } bind def
+/abc:cbbbb { 3 -1 roll pop exch dup dup dup } bind def
+/abc:cbbbc { 3 -1 roll pop exch dup dup 3 index } bind def
+/abc:cbbca { exch 2 copy exch 5 -1 roll } bind def
+/abc:cbbcb { 3 -1 roll pop 2 copy 1 index 5 2 roll } bind def
+/abc:cbbcc { 3 -1 roll pop exch 2 copy exch dup } bind def
+/abc:cbcaa { 3 -1 roll dup 2 index 5 1 roll } bind def
+/abc:cbcab { 3 -1 roll 3 copy pop 5 1 roll } bind def
+/abc:cbcac { 3 -1 roll 1 index dup 5 1 roll } bind def
+/abc:cbcba { exch 2 copy 5 -1 roll } bind def
+/abc:cbcbb { 3 -1 roll pop exch 2 copy dup } bind def
+/abc:cbcbc { 3 -1 roll pop exch 2 copy 1 index } bind def
+/abc:cbcca { exch 1 index dup 5 -1 roll } bind def
+/abc:cbccb { 3 -1 roll pop exch 2 copy 1 index 3 1 roll } bind def
+/abc:cbccc { 3 -1 roll pop dup dup dup 5 1 roll } bind def
+/abc:ccaaa { exch pop dup 3 -1 roll dup dup } bind def
+/abc:ccaab { dup 4 2 roll 1 index exch } bind def
+/abc:ccaac { exch pop 1 index exch dup dup 5 2 roll } bind def
+/abc:ccaba { dup 4 2 roll 1 index } bind def
+/abc:ccabb { dup 4 2 roll dup } bind def
+/abc:ccabc { dup dup 5 2 roll } bind def
+/abc:ccaca { exch pop 2 copy dup 5 2 roll } bind def
+/abc:ccacb { dup dup 5 2 roll exch } bind def
+/abc:ccacc { exch pop dup dup dup 5 2 roll } bind def
+/abc:ccbaa { dup 4 2 roll exch dup } bind def
+/abc:ccbab { dup 4 2 roll exch 1 index } bind def
+/abc:ccbac { exch 3 -1 roll 2 index dup 5 1 roll } bind def
+/abc:ccbba { 2 copy exch 5 -2 roll exch } bind def
+/abc:ccbbb { 3 -1 roll pop dup 3 -1 roll dup dup } bind def
+/abc:ccbbc { 3 -1 roll pop dup dup 4 2 roll 1 index exch } bind def
+/abc:ccbca { dup dup 4 2 roll 5 -1 roll } bind def
+/abc:ccbcb { 3 -1 roll pop 2 copy dup 5 2 roll } bind def
+/abc:ccbcc { 3 -1 roll pop dup dup dup 5 2 roll } bind def
+/abc:cccaa { exch pop dup dup 4 -1 roll dup } bind def
+/abc:cccab { dup dup 5 3 roll } bind def
+/abc:cccac { exch pop dup dup dup 5 3 roll } bind def
+/abc:cccba { dup dup 5 3 roll exch } bind def
+/abc:cccbb { dup dup 5 -2 roll exch pop dup } bind def
+/abc:cccbc { 3 -1 roll pop dup dup dup 5 3 roll } bind def
+/abc:cccca { exch pop dup dup dup 5 -1 roll } bind def
+/abc:ccccb { dup dup dup 6 -2 roll exch pop } bind def
+/abc:ccccc { 3 1 roll pop pop dup dup dup dup } bind def
+
+% TODO abcd: tests
+/abcd:d { 4 1 roll pop pop pop } bind def
+/abcd:ad { 4 1 roll pop pop exch } bind def
+/abcd:bd { exch pop 3 -1 roll pop } bind def
+/abcd:cd { 4 2 roll pop pop } bind def
+/abcd:da { 4 1 roll pop pop } bind def
+/abcd:db { 4 1 roll pop exch pop } bind def
+/abcd:dc { exch 4 2 roll pop pop } bind def
+/abcd:dd { 4 1 roll pop pop pop dup } bind def
+
+/abcd:abd { exch pop } bind def
+/abcd:acd { 3 -1 roll pop } bind def
+/abcd:adb { exch pop exch } bind def
+/abcd:adc { 3 -1 roll pop exch } bind def
+/abcd:bad { 4 1 roll pop exch 3 -1 roll } bind def
+/abcd:bcd { 4 -1 roll pop } bind def
+/abcd:bda { exch pop 3 -1 roll } bind def
+/abcd:bdb { exch pop 3 -1 roll pop 1 index } bind def
+/abcd:bdc { exch 4 -1 roll pop } bind def
+/abcd:bdd { exch pop 3 -1 roll pop dup } bind def
+/abcd:cad { 4 -2 roll pop exch } bind def
+/abcd:cbd { 4 -2 roll exch pop exch } bind def
+/abcd:ccd { 4 -2 roll pop pop 1 index exch } bind def
+/abcd:cda { 4 -2 roll pop } bind def
+/abcd:cdb { 4 -2 roll exch pop } bind def
+/abcd:cdc { 4 -2 roll pop pop 1 index } bind def
+/abcd:cdd { 4 -1 roll pop pop dup } bind def
+/abcd:daa { 4 1 roll pop pop dup } bind def
+/abcd:dab { 4 1 roll pop } bind def
+/abcd:dac { 4 1 roll exch pop } bind def
+/abcd:dad { 4 1 roll pop pop 1 index } bind def
+/abcd:dba { 4 1 roll pop exch } bind def
+/abcd:dbb { 4 1 roll pop exch pop dup } bind def
+/abcd:dbc { 4 -1 roll pop 3 1 roll } bind def
+/abcd:dbd { exch pop 3 -1 roll pop dup 3 1 roll } bind def
+/abcd:dca { exch 4 -1 roll pop } bind def
+/abcd:dcb { 4 1 roll 3 1 roll exch pop } bind def
+/abcd:dcc { 4 -2 roll pop pop exch dup } bind def
+/abcd:dcd { 4 -2 roll pop pop exch 1 index } bind def
+/abcd:dda { dup 5 1 roll pop pop } bind def
+/abcd:ddb { dup 5 1 roll pop exch pop } bind def
+/abcd:ddc { 4 -2 roll pop dup 3 -1 roll } bind def
+/abcd:ddd { 4 1 roll pop pop pop dup dup } bind def
+
+% Rearrange the top four.
+/abcd:abcd {} def
+/abcd:abdc { exch } bind def
+/abcd:acbd { exch 3 1 roll } bind def
+/abcd:acdb { 3 -1 roll } bind def
+/abcd:adbc { 3 1 roll } bind def
+/abcd:adcb { 3 1 roll exch } bind def
+/abcd:bacd { 3 -1 roll 4 1 roll } bind def
+/abcd:badc { 3 -1 roll 4 1 roll exch } bind def
+/abcd:bcad { 4 -1 roll exch } bind def
+/abcd:bcda { 4 -1 roll } bind def
+/abcd:bdac { exch 4 -1 roll exch } bind def
+/abcd:bdca { exch 4 -1 roll } bind def
+/abcd:cabd { exch 4 1 roll } bind def
+/abcd:cadb { exch 4 1 roll exch } bind def
+/abcd:cbad { exch 3 1 roll 4 -1 roll exch } bind def
+/abcd:cbda { exch 3 1 roll 4 -1 roll } bind def
+/abcd:cdab { 4 2 roll } bind def
+/abcd:cdba { 4 2 roll exch } bind def
+/abcd:dabc { 4 1 roll } bind def
+/abcd:dacb { 4 1 roll exch } bind def
+/abcd:dbac { 3 1 roll 4 -1 roll exch } bind def
+/abcd:dbca { 4 1 roll 3 -1 roll } bind def
+/abcd:dcab { exch 4 2 roll } bind def
+/abcd:dcba { exch 4 2 roll exch } bind def
+
+% Pull one item from the previous four and maybe tuck it.
+/abcd:abcda { 3 index } bind def
+/abcd:abcdb { 2 index } bind def
+/abcd:abcdc { 1 index } bind def
+/abcd:abcdd { dup } bind def
+/abcd:abcad { 3 index exch } bind def
+/abcd:abcbd { 2 index exch } bind def
+/abcd:abccd { 1 index exch } bind def
+
+% Pull two items from the previous four.
+/abcd:abcdaa { 3 index dup } bind def
+/abcd:abcdab { 3 index 3 index } bind def
+/abcd:abcdac { 3 index 2 index } bind def
+/abcd:abcdad { 3 index 1 index } bind def
+/abcd:abcdba { 2 index 4 index } bind def
+/abcd:abcdbb { 2 index dup } bind def
+/abcd:abcdbc { 2 index 2 index } bind def
+/abcd:abcdbd { 2 index 1 index } bind def
+/abcd:abcdca { 1 index 4 index } bind def
+/abcd:abcdcb { 1 index 3 index } bind def
+/abcd:abcdcc { 1 index dup } bind def
+/abcd:abcdcd { 2 copy } bind def
+/abcd:abcdda { dup 4 index } bind def
+/abcd:abcddb { dup 3 index} bind def
+/abcd:abcddc { 2 copy exch } bind def
+/abcd:abcddd { dup dup } bind def
+
+% Pull three items from the previous four.  Only includes variants that copy
+% `a` since others can be done with an abc: variant.
+/abcd:abcdaaa { 3 index dup dup } bind def
+/abcd:abcdaab { 3 index dup 4 index } bind def
+/abcd:abcdaac { 3 index dup 3 index } bind def
+/abcd:abcdaad { 3 index dup 2 index } bind def
+/abcd:abcdaba { 3 index 3 index 1 index } bind def
+/abcd:abcdabc { 4 copy pop } bind def
+/abcd:abcdabd { 4 copy exch pop } bind def
+/abcd:abcdaca { 3 index 2 index 1 index } bind def
+/abcd:abcdacb { 3 index 2 index 4 index } bind def
+/abcd:abcdacc { 3 index 2 index dup } bind def
+/abcd:abcdacd { 3 index 2 index 2 index } bind def
+/abcd:abcdada { 3 index 1 index 1 index } bind def
+/abcd:abcdadb { 3 index 1 index 4 index } bind def
+/abcd:abcdadc { 3 index 1 index 3 index } bind def
+/abcd:abcdadd { 3 index 1 index dup } bind def
+/abcd:abcdbaa { 2 index 4 index dup } bind def
+/abcd:abcdbab { 2 index 4 index 1 index } bind def
+/abcd:abcdbac { 2 index 4 index 3 index } bind def
+/abcd:abcdbad { 2 index 4 index 2 index } bind def
+/abcd:abcdbba { 2 index dup 5 index } bind def
+/abcd:abcdbca { 2 index 2 index 5 index } bind def
+/abcd:abcdbda { 2 index 1 index 5 index } bind def
+/abcd:abcdcaa { 1 index 4 index dup } bind def
+/abcd:abcdcab { 1 index 4 index 4 index } bind def
+/abcd:abcdcac { 1 index 4 index 1 index } bind def
+/abcd:abcdcad { 1 index 4 index 2 index } bind def
+/abcd:abcdcba { 1 index 3 index 5 index } bind def
+/abcd:abcdcca { 1 index dup 5 index } bind def
+/abcd:abcdcda { 1 index 1 index 5 index } bind def
+/abcd:abcddaa { dup 4 index dup } bind def
+/abcd:abcddab { dup 4 index 4 index } bind def
+/abcd:abcddac { dup 4 index 3 index } bind def
+/abcd:abcddad { dup 4 index 1 index } bind def
+/abcd:abcddba { dup 3 index 5 index } bind def
+/abcd:abcddca { dup 2 index 5 index } bind def
+/abcd:abcddda { dup dup 5 index } bind def
+
+% Longer stack effects as needed
+/abcd:dadbdc { dup 5 1 roll dup 4 1 roll exch } bind def
+/abcde:abcaed { exch 4 index 3 1 roll } bind def
+/abcde:abcdeae { 4 index 1 index } bind def
+/abcde:abcdeaece { 4 index 1 index 4 index 1 index } bind def
+/abcde:abcdeba { 3 index 5 index } bind def
+/abcde:abcdeca { 2 index 5 index } bind def
+/abcde:bcdae { 5 -1 roll exch } bind def

@@ -93,7 +93,6 @@ end } bind def %/test.casestruct
           $test.current /status /ok put
           $test.run.extracount 1 add { pop } repeat
         } { %else
-          pstack
           $test.current /status /error put
           count $test.run.stackcount sub dup
           2 dict begin

@@ -1,0 +1,114 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/ascii.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (startswith? string) {
+    () () startswith? true assert.eq
+    (foo) () startswith? true assert.eq
+    () (foo) startswith? false assert.eq
+    (foo) (foo) startswith? true assert.eq
+    (foo) (oof) startswith? false assert.eq
+    (Hello) (H) startswith? true assert.eq
+    (Hello) (h) startswith? false assert.eq
+    (H) (Hello) startswith? false assert.eq
+    (two words) (two ) startswith? true assert.eq
+    (two words) (wo) startswith? false assert.eq
+    (two) (nope) startswith? false assert.eq
+  } test.case
+
+  (startswith? array) {
+    [] [] startswith? true assert.eq
+    [ /foo ] [] startswith? true assert.eq
+    [] [ /foo ] startswith? false assert.eq
+    [ 5 6 7 ] [ 5 6 7 ] startswith? true assert.eq
+    [ 5 6 7 ] [ 7 6 5 ] startswith? false assert.eq
+    [ /a /b /c ] [ /a ] startswith? true assert.eq
+    [ (Lorem) (ipsum) (dolor) (sit) (amet) ]
+      [ (Lorem) (ipsum) ] startswith? true assert.eq
+    [ (Lorem) (ipsum) (dolor) (sit) (amet) ]
+      [ (Lorem) (ipsum) (amet) ] startswith? false assert.eq
+    [ (Lorem) (ipsum) (dolor) (sit) (amet) ] [ (lorem) ] startswith? false assert.eq
+    [ ascii.w ascii.o ascii.r ascii.d ] (wo) startswith? true assert.eq
+    [ ascii.w ascii.o ascii.r ascii.d ] (ow) startswith? false assert.eq
+    [[ /sub /array ] [ /other /stuff ]]
+      [[ /sub /array ]] startswith? true assert.eq
+    [[ /sub /array ] [ /other /stuff ]]
+      [[ /other /stuff ]] startswith? false assert.eq
+  } test.case
+
+  (endswith? string) {
+    () () endswith? true assert.eq
+    (foo) () endswith? true assert.eq
+    () (foo) endswith? false assert.eq
+    (foo) (foo) endswith? true assert.eq
+    (foo) (oof) endswith? false assert.eq
+    (question?) (?) endswith? true assert.eq
+    (?) (question?) endswith? false assert.eq
+    (two words) ( words) endswith? true assert.eq
+    (two words) (ds) endswith? true assert.eq
+    (two words) (sd) endswith? false assert.eq
+    (BIG) (small) endswith? false assert.eq
+  } test.case
+
+  (endswith? array) {
+    [] [] endswith? true assert.eq
+    [ /foo ] [] endswith? true assert.eq
+    [] [ /foo ] endswith? false assert.eq
+    [ 5 6 7 ] [ 5 6 7 ] endswith? true assert.eq
+    [ 5 6 7 ] [ 7 6 5 ] endswith? false assert.eq
+    [ /a /b /c ] [ /c ] endswith? true assert.eq
+    [ (Lorem) (ipsum) (dolor) (sit) (amet) ]
+      [ (sit) (amet) ] endswith? true assert.eq
+    [ (Lorem) (ipsum) (dolor) (sit) (amet) ]
+      [ (Lorem) (ipsum) (amet) ] endswith? false assert.eq
+    [ (Lorem) (ipsum) (dolor) (sit) (amet) ] [ (AMET) ] endswith? false assert.eq
+    [ ascii.w ascii.o ascii.r ascii.d ] (rd) endswith? true assert.eq
+    [ ascii.w ascii.o ascii.r ascii.d ] (dr) endswith? false assert.eq
+    [[ /sub /array ] [ /other /stuff ]]
+      [[ /other /stuff ]] endswith? true assert.eq
+    [[ /sub /array ] [ /other /stuff ]]
+      [[ /sub /array ]] endswith? false assert.eq
+  } test.case
+
+  (startswithat? string) {
+    () () 0 startswithat? true assert.eq
+    () () 1 startswithat? false assert.eq
+    () () -1 startswithat? false assert.eq
+    (bar) (b) 0 startswithat? true assert.eq
+    (bar) (a) 1 startswithat? true assert.eq
+    (bar) (ar) 1 startswithat? true assert.eq
+    (bar) (ar) 2 startswithat? false assert.eq
+    (bar) (ar) 3 startswithat? false assert.eq
+    (bar) (art) 1 startswithat? false assert.eq
+    (bar) (ba) -1 startswithat? false assert.eq
+    (bar) (ar) -2 startswithat? false assert.eq
+    (lorem ipsum) (em ip) 3 startswithat? true assert.eq
+    (lorem ipsum) (em ipsum) 3 startswithat? true assert.eq
+    (lorem ipsum) (em ipsums) 3 startswithat? false assert.eq
+  } test.case
+
+  (startswithat? array) {
+    [] [] 0 startswithat? true assert.eq
+    [] [] 1 startswithat? false assert.eq
+    [] [] -1 startswithat? false assert.eq
+    [ 1 1 2 3 5 8 13 ] [ 3 5 8 ] 3 startswithat? true assert.eq
+    [ 3 5 8 ] [ 1 1 2 3 5 8 13 ] 3 startswithat? false assert.eq
+    [ [ /nested /array ] [ /a /b /c ] << /foo 1 /bar 2 >> /bare /words ]
+      [ [ /a /b /c ] << /foo 1 /bar 2 >> ] 1 startswithat? true assert.eq
+    (Hello world!) [ ascii.r ascii.l ascii.d ] 8 startswithat? true assert.eq
+    (Hello world!) [ ascii.r ascii.l ascii.d ] 7 startswithat? false assert.eq
+    [ /foo /bar /baz ] [ /bar ] -2 startswithat? false assert.eq
+  } test.case
+
+  test.run
+end

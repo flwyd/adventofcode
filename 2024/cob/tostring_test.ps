@@ -82,6 +82,10 @@ test.suite begin
       << /array [ 9 8 7 ] /nested << /foo 42 /bar true >> >> assert.deepeq
   } test.case
 
+  (file tostring) {
+    (%stdout) (w) file tostring (--file--) assert.eq
+  } test.case
+
   (recursive structure tostring) {
     1 1 10 { [ exch } for 10 { ] } repeat tostring
       ([1 [2 [3 [4 [5 [6 [7 [--integertype:recursionlimit-- --arraytype:recursionlimit--]]]]]]]]) assert.eq

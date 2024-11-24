@@ -11,6 +11,7 @@
 (cob/ascii.ps) cob.require
 (cob/core.ps) cob.require
 (cob/iter.ps) cob.require
+(cob/stackeffect.ps) cob.require
 (cob/stringbuf.ps) cob.require
 
 % ": ascii.H ascii.e ascii.l ascii.l ascii.o :" is a verbose way to construct
@@ -21,7 +22,8 @@
 /": { mark } bind def
 /:" { %:"
   counttomark dup string exch 1 sub -1 0 { %for
-    1 index exch 4 -1 roll dup null eq { pop 0 } if put
+    % stack: item_0 ... item_i string i
+    abc:bbcaa null eq { pop 0 } if put
   } for
   exch pop % remove mark
 } bind def %:"
@@ -43,7 +45,7 @@
   /arraytype {
     dup rcheck { %ifelse
       stringbuf dup 0 ascii.lbracket sbput
-      exch { tostring 1 index exch sbappend dup ( ) sbappend } forall
+      exch { tostring ab:aab sbappend dup ( ) sbappend } forall
       dup dup sblength dup 1 ne { 1 sub } if ascii.rbracket sbput
       sbstring
     } {
@@ -56,11 +58,11 @@
     dup rcheck { %ifelse
       stringbuf dup (<<) sbappend
       exch {
-        2 index 2 index type /nametype eq { dup (/) sbappend } if
+        abc:abcab type /nametype eq { dup (/) sbappend } if
         % stack: stringbuf key val stringbuf
-        dup 4 -1 roll tostring sbappend ( ) sbappend
+        abc:bcca tostring sbappend ( ) sbappend
         % stack: stringbuf value
-        tostring 1 index dup 3 -1 roll sbappend ( ) sbappend
+        tostring ab:aaab sbappend ( ) sbappend
       } forall
       dup dup sblength dup 2 ne { 1 sub } if ascii.rangle sbput dup (>) sbappend
       sbstring
@@ -68,11 +70,11 @@
   } bind def
 
   /else {
-    stringbuf dup (-) sbappend
+    stringbuf dup (--) sbappend
     % /filetype -> (file)
     exch type dup length string cvs dup length 4 sub 0 exch getinterval
     1 index exch sbappend
-    sbstring
+    dup (--) sbappend sbstring
   } bind def
   currentdict
 end def %tostring.IMPL
@@ -93,7 +95,8 @@ end def %tostring.IMPL
 % toupper returns a copy of string with all ASCII letters changed to upper case.
 /toupper { % string toupper STRING
   dup length string 0 1 2 index length 1 sub { %for
-    dup 3 index exch get ascii.toupper 2 index 3 1 roll put
+    % stack: source buffer i
+    abc:abcac get ascii.toupper abc:aabc put
   } for
   exch pop
 } bind def %/toupper
@@ -101,7 +104,8 @@ end def %tostring.IMPL
 % tolower returns a copy of string with all ASCII letters changed to lower case.
 /tolower { % STRING tolower string
   dup length string 0 1 2 index length 1 sub { %for
-    dup 3 index exch get ascii.tolower 2 index 3 1 roll put
+    % stack: source buffer i
+    abc:abcac get ascii.tolower abc:aabc put
   } for
   exch pop
 } bind def %/tolower
@@ -112,21 +116,20 @@ end def %tostring.IMPL
 /join { % array separator join string
         % dict kvsep entrysep join string
   2 copy /arraytype /stringtype 2 types?
-  3 copy pop /packedarraytype /stringtype 2 types? or { %ifelse
+  abc:abcab /packedarraytype /stringtype 2 types? or { %ifelse
     stringbuf true 4 -1 roll {
       % stack: separator stringbuf atstart value
-      1 index { exch not exch } { 2 index 4 index sbappend } ifelse
-      tostring 2 index exch sbappend
+      1 index { exch not exch } { abcd:abcdba sbappend } ifelse
+      tostring abc:abac sbappend
     } forall
     pop exch pop sbview
   } { % else
     3 copy /dicttype /stringtype /stringtype 3 types? { %ifelse
       stringbuf true 5 -1 roll { %forall
         % stack: kvsep entrysep stringbuf atstart key value
-        2 index { 3 -1 roll not 3 1 roll } { 3 index 5 index sbappend } ifelse
-        3 index 3 1 roll exch tostring 2 index exch sbappend
-        5 index 2 index exch sbappend
-        tostring sbappend
+        2 index { 3 -1 roll not 3 1 roll } { abcde:abcdeba sbappend } ifelse
+        exch 5 index exch 4 index abcd:dadbdc
+        tostring sbappend sbappend tostring sbappend
       } forall
       pop 3 1 roll pop pop sbview
     } { %else
@@ -173,7 +176,7 @@ end def %tostring.IMPL
 % trimspace returns a view of string shortened to remove any leading or trailing
 % whitespace characters.
 /trimspace { % string trimspace string
-  0 { dup 2 index length eq { exit } if 2 copy get ascii.space? { 1 add } { exit } ifelse } loop
+  0 { ab:abba length eq { exit } if 2 copy get ascii.space? { 1 add } { exit } ifelse } loop
   1 index length 1 index sub % stack: string start sublength
   { %loop
     dup 0 eq { exit } if

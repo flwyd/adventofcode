@@ -1,0 +1,243 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  /charname { ": exch :" cvn } bind def
+
+  (a: stack effects) {
+    /start /a a:a [ /start /a ] assert.stack
+    /start /a a:aa [ /start /a /a ] assert.stack
+    /start /a a:aaa [ /start /a /a /a ] assert.stack
+  } test.case
+
+  (ab:2 stack effects) {
+    /start /a /b ab:b [ /start /b ] assert.stack
+    /start /a /b ab:ab [ /start /a /b ] assert.stack
+    /start /a /b ab:ba [ /start /b /a ] assert.stack
+    /start /a /b ab:bb [ /start /b /b ] assert.stack
+  } test.case
+
+  (ab:3 stack effects) {
+    6 dict begin
+      0 1 1 { ascii.a add /i exch def %for
+        0 1 1 { ascii.a add /j exch def %for
+          0 1 1 { ascii.a add /k exch def %for
+            /target ": i j k :" def
+            % all stack effect functions include the last character,
+            % otherwise just call pop and then another stack function
+            target ascii.b contains? not { exit } if
+            /op (ab:) target cat cvn cvx def
+            /start /a /b op
+              [ /start i charname j charname k charname ] assert.stack
+          } for
+        } for
+      } for
+    end
+  } test.case
+
+  (ab:4 stack effects) {
+    6 dict begin
+      0 1 1 { ascii.a add /i exch def %for
+        0 1 1 { ascii.a add /j exch def %for
+          0 1 1 { ascii.a add /k exch def %for
+            0 1 1 { ascii.a add /l exch def %for
+              /target ": i j k l :" def
+              % all stack effect functions include the last character,
+              % otherwise just call pop and then another stack function
+              target ascii.b contains? not { exit } if
+              /op (ab:) target cat cvn cvx def
+              /start /a /b op
+                [ /start i charname j charname k charname l charname ] assert.stack
+            } for
+          } for
+        } for
+      } for
+    end
+  } test.case
+
+  (abc:2 stack effects) {
+    /start /a /b /c abc:c [ /start /c ] assert.stack
+    /start /a /b /c abc:ac [ /start /a /c ] assert.stack
+    /start /a /b /c abc:bc [ /start /b /c ] assert.stack
+    /start /a /b /c abc:ca [ /start /c /a ] assert.stack
+    /start /a /b /c abc:cb [ /start /c /b ] assert.stack
+    /start /a /b /c abc:cc [ /start /c /c ] assert.stack
+  } test.case
+
+  (abc:3 stack effects) {
+    6 dict begin
+      0 1 2 { ascii.a add /i exch def %for
+        0 1 2 { ascii.a add /j exch def %for
+          0 1 2 { ascii.a add /k exch def %for
+            /target ": i j k :" def
+            % all stack effect functions include the last character,
+            % otherwise just call pop and then another stack function
+            target ascii.c contains? not { exit } if
+            /op (abc:) target cat cvn cvx def
+            /start /a /b /c op
+              [ /start i charname j charname k charname ] assert.stack
+          } for
+        } for
+      } for
+    end
+  } test.case
+
+  (abc:4 stack effects) {
+    6 dict begin
+      0 1 2 { ascii.a add /i exch def %for
+        0 1 2 { ascii.a add /j exch def %for
+          0 1 2 { ascii.a add /k exch def %for
+            0 1 2 { ascii.a add /l exch def %for
+              /target ": i j k l :" def
+              % all stack effect functions include the last character,
+              % otherwise just call pop and then another stack function
+              target ascii.c contains? not { exit } if
+              /op (abc:) target cat cvn cvx def
+              /start /a /b /c op
+                [ /start i charname j charname k charname l charname ] assert.stack
+            } for
+          } for
+        } for
+      } for
+    end
+  } test.case
+
+  (abc:5 stack effects) {
+    6 dict begin
+      0 1 2 { ascii.a add /i exch def %for
+        0 1 2 { ascii.a add /j exch def %for
+          0 1 2 { ascii.a add /k exch def %for
+            0 1 2 { ascii.a add /l exch def %for
+              0 1 2 { ascii.a add /m exch def %for
+                /target ": i j k l m :" def
+                % all stack effect functions include the last character,
+                % otherwise just call pop and then another stack function
+                target ascii.c contains? not { exit } if
+                /op (abc:) target cat cvn cvx def
+                /start /a /b /c op
+                  [ /start i charname j charname k charname l charname m charname ] assert.stack
+              } for
+            } for
+          } for
+        } for
+      } for
+    end
+  } test.case
+
+  (abcd:rearrange stack effects) {
+    /start /a /b /c /d abcd:abcd [ /start /a /b /c /d ] assert.stack
+    /start /a /b /c /d abcd:abdc [ /start /a /b /d /c ] assert.stack
+    /start /a /b /c /d abcd:acbd [ /start /a /c /b /d ] assert.stack
+    /start /a /b /c /d abcd:acdb [ /start /a /c /d /b ] assert.stack
+    /start /a /b /c /d abcd:adbc [ /start /a /d /b /c ] assert.stack
+    /start /a /b /c /d abcd:adcb [ /start /a /d /c /b ] assert.stack
+    /start /a /b /c /d abcd:bacd [ /start /b /a /c /d ] assert.stack
+    /start /a /b /c /d abcd:badc [ /start /b /a /d /c ] assert.stack
+    /start /a /b /c /d abcd:bcad [ /start /b /c /a /d ] assert.stack
+    /start /a /b /c /d abcd:bcda [ /start /b /c /d /a ] assert.stack
+    /start /a /b /c /d abcd:bdac [ /start /b /d /a /c ] assert.stack
+    /start /a /b /c /d abcd:bdca [ /start /b /d /c /a ] assert.stack
+    /start /a /b /c /d abcd:cabd [ /start /c /a /b /d ] assert.stack
+    /start /a /b /c /d abcd:cadb [ /start /c /a /d /b ] assert.stack
+    /start /a /b /c /d abcd:cbad [ /start /c /b /a /d ] assert.stack
+    /start /a /b /c /d abcd:cbda [ /start /c /b /d /a ] assert.stack
+    /start /a /b /c /d abcd:cdab [ /start /c /d /a /b ] assert.stack
+    /start /a /b /c /d abcd:cdba [ /start /c /d /b /a ] assert.stack
+    /start /a /b /c /d abcd:dabc [ /start /d /a /b /c ] assert.stack
+    /start /a /b /c /d abcd:dacb [ /start /d /a /c /b ] assert.stack
+    /start /a /b /c /d abcd:dbac [ /start /d /b /a /c ] assert.stack
+    /start /a /b /c /d abcd:dbca [ /start /d /b /c /a ] assert.stack
+    /start /a /b /c /d abcd:dcab [ /start /d /c /a /b ] assert.stack
+    /start /a /b /c /d abcd:dcba [ /start /d /c /b /a ] assert.stack
+  } test.case
+
+  (abcd:pull one stack effects) {
+    /start /a /b /c /d abcd:abcda [ /start /a /b /c /d /a ] assert.stack
+    /start /a /b /c /d abcd:abcdb [ /start /a /b /c /d /b ] assert.stack
+    /start /a /b /c /d abcd:abcdc [ /start /a /b /c /d /c ] assert.stack
+    /start /a /b /c /d abcd:abcdd [ /start /a /b /c /d /d ] assert.stack
+    /start /a /b /c /d abcd:abcad [ /start /a /b /c /a /d ] assert.stack
+    /start /a /b /c /d abcd:abcbd [ /start /a /b /c /b /d ] assert.stack
+    /start /a /b /c /d abcd:abccd [ /start /a /b /c /c /d ] assert.stack
+  } test.case
+
+  (abcd:pull two stack effects) {
+    /start /a /b /c /d abcd:abcdaa [ /start /a /b /c /d /a /a ] assert.stack
+    /start /a /b /c /d abcd:abcdab [ /start /a /b /c /d /a /b ] assert.stack
+    /start /a /b /c /d abcd:abcdac [ /start /a /b /c /d /a /c ] assert.stack
+    /start /a /b /c /d abcd:abcdad [ /start /a /b /c /d /a /d ] assert.stack
+    /start /a /b /c /d abcd:abcdba [ /start /a /b /c /d /b /a ] assert.stack
+    /start /a /b /c /d abcd:abcdbb [ /start /a /b /c /d /b /b ] assert.stack
+    /start /a /b /c /d abcd:abcdbc [ /start /a /b /c /d /b /c ] assert.stack
+    /start /a /b /c /d abcd:abcdbd [ /start /a /b /c /d /b /d ] assert.stack
+    /start /a /b /c /d abcd:abcdca [ /start /a /b /c /d /c /a ] assert.stack
+    /start /a /b /c /d abcd:abcdcb [ /start /a /b /c /d /c /b ] assert.stack
+    /start /a /b /c /d abcd:abcdcc [ /start /a /b /c /d /c /c ] assert.stack
+    /start /a /b /c /d abcd:abcdcd [ /start /a /b /c /d /c /d ] assert.stack
+    /start /a /b /c /d abcd:abcdda [ /start /a /b /c /d /d /a ] assert.stack
+    /start /a /b /c /d abcd:abcddb [ /start /a /b /c /d /d /b ] assert.stack
+    /start /a /b /c /d abcd:abcddc [ /start /a /b /c /d /d /c ] assert.stack
+    /start /a /b /c /d abcd:abcddd [ /start /a /b /c /d /d /d ] assert.stack
+  } test.case
+
+  (abcd:pull three stack effects) {
+    /start /a /b /c /d abcd:abcdaaa [ /start /a /b /c /d /a /a /a ] assert.stack
+    /start /a /b /c /d abcd:abcdaab [ /start /a /b /c /d /a /a /b ] assert.stack
+    /start /a /b /c /d abcd:abcdaac [ /start /a /b /c /d /a /a /c ] assert.stack
+    /start /a /b /c /d abcd:abcdaad [ /start /a /b /c /d /a /a /d ] assert.stack
+    /start /a /b /c /d abcd:abcdaba [ /start /a /b /c /d /a /b /a ] assert.stack
+    /start /a /b /c /d abcd:abcdabc [ /start /a /b /c /d /a /b /c ] assert.stack
+    /start /a /b /c /d abcd:abcdabd [ /start /a /b /c /d /a /b /d ] assert.stack
+    /start /a /b /c /d abcd:abcdaca [ /start /a /b /c /d /a /c /a ] assert.stack
+    /start /a /b /c /d abcd:abcdacb [ /start /a /b /c /d /a /c /b ] assert.stack
+    /start /a /b /c /d abcd:abcdacc [ /start /a /b /c /d /a /c /c ] assert.stack
+    /start /a /b /c /d abcd:abcdacd [ /start /a /b /c /d /a /c /d ] assert.stack
+    /start /a /b /c /d abcd:abcdada [ /start /a /b /c /d /a /d /a ] assert.stack
+    /start /a /b /c /d abcd:abcdadb [ /start /a /b /c /d /a /d /b ] assert.stack
+    /start /a /b /c /d abcd:abcdadc [ /start /a /b /c /d /a /d /c ] assert.stack
+    /start /a /b /c /d abcd:abcdadd [ /start /a /b /c /d /a /d /d ] assert.stack
+    /start /a /b /c /d abcd:abcdbaa [ /start /a /b /c /d /b /a /a ] assert.stack
+    /start /a /b /c /d abcd:abcdbab [ /start /a /b /c /d /b /a /b ] assert.stack
+    /start /a /b /c /d abcd:abcdbac [ /start /a /b /c /d /b /a /c ] assert.stack
+    /start /a /b /c /d abcd:abcdbad [ /start /a /b /c /d /b /a /d ] assert.stack
+    /start /a /b /c /d abcd:abcdbba [ /start /a /b /c /d /b /b /a ] assert.stack
+    /start /a /b /c /d abcd:abcdbca [ /start /a /b /c /d /b /c /a ] assert.stack
+    /start /a /b /c /d abcd:abcdbda [ /start /a /b /c /d /b /d /a ] assert.stack
+    /start /a /b /c /d abcd:abcdcaa [ /start /a /b /c /d /c /a /a ] assert.stack
+    /start /a /b /c /d abcd:abcdcab [ /start /a /b /c /d /c /a /b ] assert.stack
+    /start /a /b /c /d abcd:abcdcac [ /start /a /b /c /d /c /a /c ] assert.stack
+    /start /a /b /c /d abcd:abcdcad [ /start /a /b /c /d /c /a /d ] assert.stack
+    /start /a /b /c /d abcd:abcdcba [ /start /a /b /c /d /c /b /a ] assert.stack
+    /start /a /b /c /d abcd:abcdcca [ /start /a /b /c /d /c /c /a ] assert.stack
+    /start /a /b /c /d abcd:abcdcda [ /start /a /b /c /d /c /d /a ] assert.stack
+    /start /a /b /c /d abcd:abcddaa [ /start /a /b /c /d /d /a /a ] assert.stack
+    /start /a /b /c /d abcd:abcddab [ /start /a /b /c /d /d /a /b ] assert.stack
+    /start /a /b /c /d abcd:abcddac [ /start /a /b /c /d /d /a /c ] assert.stack
+    /start /a /b /c /d abcd:abcddad [ /start /a /b /c /d /d /a /d ] assert.stack
+    /start /a /b /c /d abcd:abcddba [ /start /a /b /c /d /d /b /a ] assert.stack
+    /start /a /b /c /d abcd:abcddca [ /start /a /b /c /d /d /c /a ] assert.stack
+    /start /a /b /c /d abcd:abcddda [ /start /a /b /c /d /d /d /a ] assert.stack
+  } test.case
+
+  (ad hoc stackeffects) {
+    /start /a /b /c /d /e abcde:abcaed [ /start /a /b /c /a /e /d ] assert.stack
+    /start /a /b /c /d /e abcde:abcdeae [ /start /a /b /c /d /e /a /e ] assert.stack
+    /start /a /b /c /d /e abcde:abcdeaece [ /start /a /b /c /d /e /a /e /c /e ] assert.stack
+    /start /a /b /c /d /e abcde:abcdeca [ /start /a /b /c /d /e /c /a ] assert.stack
+    /start /a /b /c /d /e abcde:bcdae [ /start /b /c /d /a /e ] assert.stack
+  } test.case
+
+  test.run
+end
