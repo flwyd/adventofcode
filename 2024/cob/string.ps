@@ -113,6 +113,7 @@ end def %tostring.IMPL
 % join with an array returns a string with a separator between each pair of
 % elements.  join with a dict returns a string with each key and value
 % separated by kvsep and each pair separated by entrysep.
+% TODO This shares the name of a DPS operator, consider a new name.
 /join { % array separator join string
         % dict kvsep entrysep join string
   2 copy /arraytype /stringtype 2 types?
@@ -184,6 +185,13 @@ end def %tostring.IMPL
   } loop
   getinterval
 } bind def %/trimspace
+
+% tokenize returns an array containing all tokens parsed from a string or file.
+% The returned array is not executable.  If given a file, the caller is
+% responsible for closing it.
+/tokenize { % string|file tokenize [tokens]
+  [ exch { token, { exch } { pop exit } ifelse } loop ]
+} bind def %/tokenize
 
 % zipstrings takes an array of strings or byte arrays, runs zip, and converts
 % each resulting array to a string.

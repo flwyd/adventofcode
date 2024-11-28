@@ -67,6 +67,17 @@ test.suite begin
     (\r\nblank\r\nlines\r\n\r\n) trimspace (blank\r\nlines) assert.eq
   } test.case
 
+  (tokenize) {
+    () tokenize [] assert.deepeq
+    ( /foo   42.137  bar\n(my string)  { dup exch pop }  ) tokenize
+      [ /foo 42.137 /bar cvx (my string) { dup exch pop } ] assert.deepeq
+    ([7 8 9]) tokenize [ ([) cvn 7 8 9 (]) cvn ] assert.deepeq
+    (<</foo/a/bar/b>>) tokenize
+      [ (<<) cvn cvx /foo /a /bar /b (>>) cvn ] assert.deepeq
+    (/before /comment % /inside /comment\n/after /comment %done) tokenize
+      [ /before /comment /after /comment ] assert.deepeq
+  } test.case
+
   (zipstrings) {
     [] zipstrings [] assert.deepeq
     [(foo)] zipstrings [(f) (o) (o)] assert.deepeq

@@ -7,6 +7,53 @@
 
 % Basic utilities, many used by other libraries.
 
+% Comma operators are like the regular operator but they leave the "subject" on
+% the stack in a convenient position.
+
+% get, works like get but leaves the string, array, or dict at the top of the
+% stack after the returned value.  The index/key is consumed.  Example:
+% myarray 0 get, 3 get, 7 get, % stack has 3 items and an array
+% myarray dup length 1 sub -1 0 { get, } for % aload in reverse
+/get, { 1 index exch get exch } bind def % iter key get, value iter
+
+% getinterval, works like getinterval but leaves the source array at the top of
+% the stack.  Example:
+% myarray 0 2 2 index length 2 sub { 2 getinterval, } for
+/getinterval, { 2 index 3 1 roll getinterval exch } bind def
+
+% put, works like put but leaves the string, array, or dict at the top of the
+% stack, consuming the key and value. Example:
+% 4 dict /name (Calvin) put, /age 8 put, /friend (Hobbes) put,
+/put, { 2 index 3 1 roll put } bind def % iter key value put, iter
+
+% putinterval, works like putinterval but leaves the source array at the top of
+% the stack.  Example:
+% myarray 0 [/a /b /c] putinterval, dup length 4 sub [/x /y /z] putinterval,
+/putinterval, { 2 index 3 1 roll putinterval } bind def
+
+% known, is like known but leaves the dict and name on the stack under the bool
+% value.  Example: mydict /key known, { 2 copy get 1 add put } { 1 put } ifelse
+/known, { 2 copy known } bind def
+
+% where, is like where but leaves the name on the stack under the bool value,
+% above the dict if any.  Example: /foo where, { get } { default def } ifelse
+/where, { dup where { exch true } { false } ifelse } bind def
+
+% token, is similar to token, but always leaves the file or remaining string on
+% the stack below the parsed token plus true or below false.  This is similar to
+% the behavior of the "found" case of string token.    To read all tokens in a
+% file or string, see `tokenize` in string.ps.
+/token, { % file token, file any true | file token, file false
+          % string token, post any true | string token, () false
+  dup type /filetype eq { %ifelse
+    dup token
+  } { %else
+    token { true } { () false } ifelse
+  } ifelse
+} bind def
+
+% TODO read, write, and friends
+
 % indexfrommark adds a copy of the object n positions before the closest mark to
 % the top of the stack.  0 indexfrommark adds another mark.  Negative values
 % access items after the mark, so -1 indexfrommark copies the first element of
@@ -223,11 +270,7 @@ end
 % argument, decrements the value in that dict.
 /decby { % amount name decby -
          % amount name dict decby -
-  dup type /dicttype eq { %ifelse
-    3 -1 roll -1 mul 3 1 roll
-  } { %else
-    exch -1 mul exch
-  } ifelse
+  dup type /dicttype eq { 3 -1 roll neg 3 1 roll } { exch neg exch } ifelse
 } bind def %/decby
 
 % inc increments the named value in a dict by one.  With just a name, looks up
