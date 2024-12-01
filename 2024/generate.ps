@@ -62,6 +62,7 @@
 (cob/core.ps) cob.require
 (cob/iter.ps) cob.require
 (cob/log.ps) cob.require
+(cob/math.ps) cob.require
 (cob/stackeffect.ps) cob.require
 (cob/string.ps) cob.require
 (cob/stringbuf.ps) cob.require
@@ -71,12 +72,14 @@
 DayDAYNUM begin
 
 /part1 { 8 dict begin % [lines] part1 result
-  % { (line: ) print = } forall
+  /input exch def
+  % input { (line: ) print = } forall
   /TODO
 end } bind def %/part1
 
 /part2 { 8 dict begin % [lines] part2 result
-  % { (line: ) print = } forall
+  /input exch def
+  % input { (line: ) print = } forall
   /TODO
 end } bind def %/part2
 
