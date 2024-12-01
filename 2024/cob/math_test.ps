@@ -1,0 +1,47 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/math.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (gcd) {
+    17 7 gcd 1 assert.eq % two primes
+    16 9 gcd 1 assert.eq % relative primes
+    26 2 gcd 2 assert.eq % prime factor
+    64 64 gcd 64 assert.eq % a number is a divisor of itself
+    121 11 gcd 11 assert.eq % square
+    42 18 gcd 6 assert.eq % non-prime factor
+    0 0 gcd 0 assert.eq % don't divide by zero
+    36 0 gcd 36 assert.eq % definitional corner case
+    0 36 gcd 36 assert.eq % ditto
+    1071 462 gcd 21 assert.eq % example from Wikipedia
+    462 1071 gcd 21 assert.eq % order doesn't matter
+    -1071 462 gcd 21 assert.eq % result always positive
+    -462 -1071 gcd 21 assert.eq % ditto
+    123456789 987654321 gcd 9 assert.eq % big 32-bit numbers
+    867530919811116 736500019400428 gcd 4 assert.eq % 64-bit numbers
+  } test.case
+
+  (lcm) {
+    0 0 lcm 0 assert.eq % don't divide by zero
+    9 0 lcm 0 assert.eq % definitional corner case
+    0 9 lcm 0 assert.eq % ditto
+    24 24 lcm 24 assert.eq % a number is its own multiple
+    17 5 lcm 85 assert.eq % two primes
+    42 7 lcm 42 assert.eq % prime factor
+    12 20 lcm 60 assert.eq % shared factor
+    -20 12 lcm 60 assert.eq % always positive, order doesn't matter
+    -12 -20 lcm 60 assert.eq % ditto
+    123456789 987654321 lcm 13548070123626141 assert.eq % big number
+    867530919811116 736500019400428 lcm 159734134817839520392332389412 assert.eq % 64-bit numbers
+  } test.case
+
+  test.run
+end

@@ -1,0 +1,19 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% gcd computes the greatest common denominator of two integers.  If either
+% argument is zero, returns the other argument.  The result is non-negative.
+/gcd { % int int gcd int
+  { dup 0 eq { exit } if dup 3 1 roll mod } loop pop abs
+} bind def
+
+% lcm computes the least common multiple of two integers.  If either argument is
+% zero, returns 0.  The result is non-negative.
+/lcm { % int int lcm int
+  % special case 0 0 lcm to avoid divide by 0 in gcd
+  2 copy eq { pop } { 2 copy gcd idiv mul abs } ifelse
+} bind def %/lcm
