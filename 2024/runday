@@ -14,7 +14,7 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 BASEDIR="${0:h}"
-ROOT="${BASEDIR:h}"
+ROOT="${BASEDIR:a:h}"
 DAY="$1"
 DAYDIR="$BASEDIR/$DAY"
 if [[ ! -d "$DAYDIR" ]]; then
