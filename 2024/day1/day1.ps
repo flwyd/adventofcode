@@ -1,0 +1,50 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 1 https://adventofcode.com/2024/day/1
+%
+% Input is two positive integers per line, separated by 3 spaces, representing
+% two lists of locations.  In part 1, sort both lists, then match the ordered
+% pairs, subtracting to get the distance between them.  In part 2, multiply
+% each number in the first list by the number of times it occurs in the second
+% list, then add the results.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day1 8 dict def
+Day1 begin
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def /a input length array def /b input length array def
+  % put first column in a second column in b
+  /i 0 def /delim (   ) def
+  input { delim split cvi b i 3 -1 roll put cvi a i 3 -1 roll put /i inc } forall
+  a {compare} isort b {compare} isort
+  0 0 1 input length 1 sub { dup a exch get b 3 -1 roll get sub abs add } for
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def /counts input length dict def /delim (   ) def
+  % count occurrences in second list
+  input { delim split cvi dup counts exch 0 getor 1 add counts 3 1 roll put pop } forall
+  % multiply first list by counts and add them
+  0 input { token pop exch pop cvi counts 1 index 0 getor mul add } forall
+end } bind def %/part2
+
+end %Day1
+
+/ARGUMENTS where { pop /Day1 aoc.runday } if
