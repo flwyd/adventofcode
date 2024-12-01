@@ -1,0 +1,35 @@
+#!/bin/sh
+# Copyright 2024 Google LLC
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Advent of Code 2024 day 1 https://adventofcode.com/2024/day/1
+#
+# A really silly way of using POSIX commands and abusing the filesystem.
+
+for fname in "$@" ; do
+  p1dir=`mktemp -d ${TMPDIR-/tmp}/part1.XXXXXX`
+  tr -s ' ' '\t' < $fname | cut -f 1 | sort -n > $p1dir/foo
+  tr -s ' ' '\t' < $fname | cut -f 2 | sort -n > $p1dir/bar
+  /bin/echo -n 'part1: '
+  paste $p1dir/foo $p1dir/bar | \
+    sed -E 's/([0-9]+)\t([0-9]+)/+ ( \1 - \2 \& \1 > \2 ) + ( \2 - \1 \& \2 > \1 )/' | \
+    xargs expr 0 | \
+    sed 's/^/+ /' | xargs expr 0  # Darwin expr prints multiple lines sometimes
+
+  p2dir=`mktemp -d ${TMPDIR-/tmp}/part2.XXXXXX`
+  while read line ; do
+    touch $p2dir/$line
+    echo '' >> $p2dir/$line
+  done < $p1dir/bar
+  touch $p2dir/answer
+  while read line ; do
+    touch $p2dir/$line
+    /bin/echo "+ $line * " \
+      `wc -l $p2dir/$line | sed 's/^ *//' | cut -d' ' -f 1` >> $p2dir/answer
+  done < $p1dir/foo
+  /bin/echo -n 'part2: '
+  xargs expr 0 < $p2dir/answer
+done
