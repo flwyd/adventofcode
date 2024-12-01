@@ -30,8 +30,8 @@ Day1 begin
 
 /part1 { 8 dict begin % [lines] part1 result
   /input exch def /a input length array def /b input length array def
-  % put first column in a second column in b
   /i 0 def /delim (   ) def
+  % put first column in a second column in b
   input { delim split cvi b i 3 -1 roll put cvi a i 3 -1 roll put /i inc } forall
   a {compare} isort b {compare} isort
   0 0 1 input length 1 sub { dup a exch get b 3 -1 roll get sub abs add } for
