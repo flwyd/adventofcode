@@ -80,7 +80,8 @@ end
     inputlines
     [ (Running) dayname curpart (on) curfilename
       1 indexfrommark length (lines) ] log.info
-    count /expectedcount exch def
+    % stack: /partN input, will be just answer so subtract 1
+    count 1 sub /expectedcount exch def
     timings curpart timing.start put
   end
   % stack: /partN [ input lines ]
@@ -94,6 +95,7 @@ end
     count expectedcount ne {
       count [ (WARNING: unexpected stack count) 3 -1 roll
         (expected) expectedcount ] log.info
+        pstack
     } if
     expected curpart get curpart aoc.result
     /curresult exch def
