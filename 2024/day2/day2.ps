@@ -1,0 +1,69 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 2 https://adventofcode.com/2024/day/2
+%
+% Input is lines of positive integers separated by a space.  Lines are safe if
+% the whole line is either ascending or descending and also each pair of numbers
+% is at least 1 and no more than 3 different.  Part 1 answer is a count of safe
+% lines.  Part 2 answer is a count of safe lines if you can drop at most one
+% value from the line.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day2 8 dict def
+Day2 begin
+
+% x y (asc|desc)safe? bool
+/ascsafe? { dup -1 le exch -3 ge and } bind def
+/descsafe? { dup 1 ge exch 3 le and } bind def
+
+/safe? { 4 dict begin % skip array {check?} safe? bool
+  /check? exch def /arr exch def /skip exch def
+  true null arr { %forup
+    dup skip eq { pop } { %else
+      arr exch get 1 index null eq { exch pop } { %else
+        ab:bab sub check? not { exch pop false exch exit } if
+      } ifelse
+    } ifelse
+  } forup
+  pop
+end } bind def %/safe?
+
+/issafe? { % skip array issafe? bool
+  2 copy /ascsafe? cvx safe? { pop pop true } { /descsafe? cvx safe? } ifelse
+} bind def %/issafe?
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def /safe 0 def
+  input { tokenize -1 exch issafe? { /safe inc } if } forall
+  safe
+end } bind def %/part1
+
+
+/part2 { 8 dict begin % [lines] part1 result
+  /input exch def /safe 0 def
+  input {
+    % Like part 1, but try dropping each element once
+    tokenize dup { 1 index issafe? { /safe inc exit } if } forup pop
+  } forall
+  safe
+end } bind def %/part2
+
+end %Day2
+
+/ARGUMENTS where { pop /Day2 aoc.runday } if
