@@ -14,7 +14,7 @@ should_print == 1 { printf "    %s\n", $0 }
 
 /^Day[0-9]+/ {
   printf "[LANGUAGE: PostScript] "
-  printf "([GitHub])(https://github.com/flwyd/adventofcode/blob/main/2024/%s)", FILENAME
+  printf "([GitHub](https://github.com/flwyd/adventofcode/blob/main/2024/%s))", FILENAME
   printf " with [my own standard library](https://github.com/flwyd/adventofcode/tree/main/2024/cob)\n"
   printf "\n[[WITTY COMMENTS HERE]]\n\n"
   should_print = 1
