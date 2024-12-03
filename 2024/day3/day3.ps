@@ -1,0 +1,73 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 3 https://adventofcode.com/2024/day/3
+%
+% Input is corrupted computer code with instructions like `mul(12,345)`, `do()`,
+% `don't()` and lots of other junk.  In part 1, find all valid mul instructions,
+% multiply the arguments, and return the sum.  In part 2, do() turns on
+% multiplication and don't() turns off multiplication.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day3 8 dict def
+Day3 begin
+
+/maybemul.IMPL << % stack for functions: arg1 arg2 within a forall loop
+  % digits build the current base-10 integer at the top of the stack
+  ascii.0 1 ascii.9 { %for
+    dup ascii.0 sub [ 10 /mul cvx 1 -1 rollfrommark /add cvx ] cvx
+  } for
+  ascii., { exch } % switch from building first arg to building second arg
+  ascii.rparen { mul exit } % closing paren means input was valid
+  /default { pop pop 0 exit } % junk character, result is 0
+>> def %maybemul.IMPL
+
+/maybemul { % (int1,int2\) maybemul int1*int2 | invalidstring maybemul 0
+  0 0 abc:bca { maybemul.IMPL exch /default getorget exec } forall
+} bind def %/maybemul
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch (\n) join def /sum 0 def
+  input { %loop
+    (mul\() search not { pop exit } if
+    % stack: rest (mul\() beforemul
+    pop pop dup maybemul /sum incby
+  } loop
+  sum
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch (\n) join def /sum 0 def /do? true def
+  input { %loop
+    (\() search not { pop exit } if
+    % stack: rest paren beforeparen
+    exch pop
+    dup (mul) endswith? { %ifelse
+      pop do? { dup maybemul /sum incby } if
+    } { %else
+      dup (do) endswith? { /do? true def pop } { %else
+        (don't) endswith? { /do? false def } if
+      } ifelse
+    } ifelse
+  } loop
+  sum
+end } bind def %/part2
+
+end %Day3
+
+/ARGUMENTS where { pop /Day3 aoc.runday } if
