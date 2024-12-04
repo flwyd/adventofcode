@@ -1,0 +1,157 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 4 https://adventofcode.com/2024/day/4
+%
+% Input is a square grid of the letters X M A and S.  In part 1, count the
+% number of times XMAS can be spelled moving horizontally, vertically, or
+% diagonally BUT STAY IN THE SAME DIRECTION THE WHOLE TIME.  This is not Boggle.
+% In part 2, find the number of times two MAS appear in an X shape, with A at
+% the enter and M and S on opposing corners.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day4 8 dict def
+Day4 begin
+
+% Grid has 2-byte keys indicating the (row,column) of a position.  Actual input
+% is 140x140 so this fits in a byte, but high rows and columns will be outside
+% the ASCII range.  Offset so (0,0) is (!!) and avoid control characters so that
+% printing the stack doesn't ring the terminal bell or produce other weird
+% output like a name with a tab in it.
+/OFFSET ascii.! def
+
+/tokey { % int int tokey string
+  % (yekot) == pstack ": 3 -1 roll OFFSET add 3 -1 roll OFFSET add (tokey) == pstack :"
+  2 string 0 4 -1 roll OFFSET add put, 1 3 -1 roll OFFSET add put,
+} bind def %/tokey
+
+/fromkey { % string fromkey int int
+  2 string cvs 0 get, 1 get OFFSET sub exch OFFSET sub exch 
+} bind def %/fromkey
+
+% Defining keys with `def` in a `begin` block and also doing printf debugging
+% blows up as soon as /== gets redefined :-(
+% /togrid { % - togrid dict ; assumes /input is an array of lines
+%   dup length 2 mul dict begin
+%     input { %forup lines
+%       input 1 index get (line: ) print dup = pstack flush { %forup chars
+%         % (char: ) == pstack flush
+%         2 copy tokey input 3 index get 3 -1 roll get def
+%       } forup pop %(finished ) print = % pop
+%       % currentdict =
+%     } forup
+%     currentdict
+%   end
+% } bind def %/togrid
+
+/makegrid { % input togrid - defines /grid in currentdict
+  dup length 2 mul dict /grid exch def
+  input { %forup lines
+    input 1 index get { %forup chars
+      % (char: ) == pstack flush
+      2 copy tokey input 3 index get 3 -1 roll get grid 3 1 roll put
+    } forup pop %(finished ) print = % pop
+    % currentdict =
+  } forup
+  pop
+} bind def %/togrid
+
+/findchain { % deltar deltac key (MAS) findchain bool
+  dup empty? { true abcde:e } { %else
+    grid 2 index ascii.nul getor 1 index 0 get ne { false abcde:e } { %else
+      1 1 index length 1 sub getinterval exch
+      % stack: deltar deltac (AS) key
+      fromkey 3 index add exch 4 index add exch tokey exch findchain
+    } ifelse
+  } ifelse
+} bind def %/findchain
+
+% This is Boggle, which isn't what the problem wanted.
+% /oldfindchain { % (XMAS)|(MAS)|(AS)|(S)|() key findchain int
+%   % (findchain) == pstack
+%   1 index empty? { (empty) == pop pop 1 } { %else
+%     grid 1 index ascii.nul getor 2 index 0 get ne { (not right char) == pop pop 0 } { %else
+%       exch 1 1 index length 1 sub getinterval 0 3 -1 roll neighbors { %forall
+%         (neighbor) = pstack 2 index exch findchain (foundchain) = pstack add
+%       } forall
+%       ab:b
+%     } ifelse
+%   } ifelse
+% } bind def %/findchain
+
+% /neighbors { % key neighbors [key1 ... key8] ; assumes /grid is the grid
+%   2 dict begin
+%     [ -1 1 1 { %for
+%       /i exch def -1 1 1 { %for
+%         /j exch def i 0 ne j 0 ne or {
+%           1 indexfrommark tostring 0 get, 1 get j add exch i add exch ": 3 1 roll :"
+%         } if
+%       } for
+%     } for ] exch pop
+%   end
+%   % [ 1 index 0 get 1 sub 1 1 index 2 add { %for
+%   %   1 indexfrommark 1 get 1 sub 1 1 index 2 add { %for
+%   %     ": 2 index 3 -1 roll index :" grid exch getordefault ascii.nul
+%   %   } for pop
+%   % } for ] exch pop
+% } bind def %/neighbors
+
+/XMAS (XMAS) def
+
+/DIRECTIONS [ [ -1 -1 ] [ -1 0 ] [ -1 1 ]
+              [  0 -1 ]          [  0 1 ] 
+              [  1 -1 ] [  1 0 ] [  1 1 ] ] def
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def /found 0 def
+  input makegrid
+  grid { ascii.X eq { %ifelse
+    DIRECTIONS { %forall
+      aload pop 2 index XMAS findchain { /found inc } if
+    } forall
+    pop
+  } { %else
+    pop
+  } ifelse } forall
+  found
+end } bind def %/part1
+
+/AS (AS) def
+/AM (AM) def
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def /found 0 def
+  input makegrid
+  grid {
+    ascii.A eq { %ifelse
+      /k exch def
+      -1 -1 k AM findchain 1 1 k AS findchain and
+      -1 -1 k AS findchain 1 1 k AM findchain and or { %if
+        -1 1 k AM findchain 1 -1 k AS findchain and
+        -1 1 k AS findchain 1 -1 k AM findchain and or { /found inc } if
+      } if
+      } { %else
+        pop
+    } ifelse
+  } forall
+  found
+end } bind def %/part2
+
+end %Day4
+
+/ARGUMENTS where { pop /Day4 aoc.runday } if

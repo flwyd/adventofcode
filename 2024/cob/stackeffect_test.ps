@@ -232,6 +232,7 @@ test.suite begin
   } test.case
 
   (ad hoc stackeffects) {
+    /start /a /b /c /d /e abcde:e [ /start /e ] assert.stack
     /start /a /b /c /d /e abcde:abcaed [ /start /a /b /c /a /e /d ] assert.stack
     /start /a /b /c /d /e abcde:abcdeae [ /start /a /b /c /d /e /a /e ] assert.stack
     /start /a /b /c /d /e abcde:abcdeaece [ /start /a /b /c /d /e /a /e /c /e ] assert.stack
