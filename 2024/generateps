@@ -18,7 +18,7 @@ foreach i ($@) do
     expectfile="input/$daynum/input.actual.expected"
     if [[ ! -f $expectfile ]]; then
       echo "Writing to $expectfile"
-      echo "part1: \npart2: \n" > $expectfile
+      echo -n "part1: \npart2: \n" > $expectfile
     fi
   fi
   for f in input.actual.txt input.actual.expected ; do
