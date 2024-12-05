@@ -1,0 +1,81 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 5 https://adventofcode.com/2024/day/5
+%
+% Input is two digit ints representing page orders.  The first section is a list
+% of XX|YY indicating that page XX must come before page YY.  The second section
+% is a list of pages AA,BB,CC,DD,EE...  The answer for both part is the sum of
+% the middle page number in a subset of the second section.  In the first part
+% the page groups of interest are the one where all pages are in the correct
+% order.  In the second part the page groups of interest are those which were
+% not in order, after the order has been fixed.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day5 8 dict def
+Day5 begin
+
+% /valid array keys are the 4-digit number XXYY where XX is the first page and
+% YY is the second page.
+/tokey { % int int tokey int
+  exch 100 mul add
+} bind def %/tokey
+
+/parseinput { % array parseinput - defines /pageupdates and /valid
+  /delim (|) def /splitline { [ exch delim split ] } def /valid 10000 array def
+  [ exch {
+    dup empty? { pop ] /delim (,) def [ } { [ exch splitline { cvi } forall ] } ifelse
+  } forall ]
+  /pageupdates exch def
+  { %forall page rules
+    0 get, 1 get 2 copy tokey valid exch true put % example: 4753 is valid
+    exch tokey valid exch false put % example: 5347 is invalid
+  } forall
+} bind def %/parseinput
+
+/ordered? { % int int ordered? bool
+  tokey valid exch get
+} bind def %/ordered?
+
+% score of a page ordering is the middle element if it's valid, 0 otherwise.
+/score { % array score score
+  true exch dup 0 get, 1 1 index lastindex getinterval { % forall
+    ab:bab ordered? { abc:bc false abc:cba exit } unless
+  } forall
+  pop exch { dup length 2 idiv get } { pop 0 } ifelse
+} bind def %/score
+
+/fix { % array fix array
+  [ exch 0 get, 1 1 index lastindex getinterval {
+    2 copy tokey valid exch get { exch } unless
+  } forall ]
+} bind def %/fix
+
+/part1 { 8 dict begin % [lines] part1 result
+  parseinput 0 pageupdates { score add } forall
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  parseinput 0 pageupdates {
+    dup score 0 eq { { fix } { dup score 0 eq } while score } { pop 0 } ifelse add
+  } forall
+end } bind def %/part2
+
+end %Day5
+
+/ARGUMENTS where { pop /Day5 aoc.runday } if
