@@ -1,0 +1,36 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Some things that were attempted for day4 when I thought it was Boggle that
+% might be useful on a future day.
+
+% Returns an array of keys of the 8 positions adjacent to key, less any which
+% are not in the grid.
+/neighbors { % key neighbors [key1 ... key8] ; assumes /grid is the grid
+  2 dict begin
+    [ -1 1 1 { %for
+      /i exch def -1 1 1 { %for
+        /j exch def i 0 ne j 0 ne or {
+          1 indexfrommark fromkey j add exch i add exch tokey
+          grid 1 index known not { pop } if
+        } if
+      } for
+    } for ] exch pop
+  end
+} bind def %/neighbors
+
+% This is Boggle, which isn't what day4 wanted.
+/findchain { % (XMAS)|(MAS)|(AS)|(S)|() key findchain int
+  1 index empty? { pop pop 1 } { %else
+    grid 1 index ascii.nul getor 2 index 0 get ne { pop pop 0 } { %else
+      exch 1 1 index length 1 sub getinterval 0 3 -1 roll neighbors { %forall
+        2 index exch findchain add
+      } forall
+      ab:b
+    } ifelse
+  } ifelse
+} bind def %/findchain
