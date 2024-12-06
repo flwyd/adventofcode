@@ -1,0 +1,97 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 6 https://adventofcode.com/2024/day/6
+%
+% Input is a grid with # meaning obstacle, . meaning open, and ^ meaning start
+% position, headed up.  The guard moves in their current direction until
+% bumping into an obstacle, then turn right.  In part 1, count the number of
+% positions including the start until the guard would walk off the board.
+% In part 2, determine the number of single additional obstacles which would
+% cause the guard to walk in a loop instead of exiting the board.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day6 8 dict def
+Day6 begin
+
+/tokey { % row col tokey int
+  exch 1000 mul add
+} bind def %/tokey
+
+% TODO this is about 3x slower than the 2D array was.  Consider using divmod
+% to go back and forth between keys and 2D indices.  Could even do a 1D array
+% if using the grid size as multiplier, but then the "in grid" logic would be
+% harder.
+/makegrid { % input makegrid dict
+  << exch dup { %forup
+    ab:abab get dup { %forup
+      ab:abab get abcd:abdac tokey exch
+      dup ascii.^ eq { /startkey 2 index 7 2 roll } if
+      5 2 roll
+    } forup pop pop
+  } forup pop >>
+} bind def %/makegrid
+
+/inbounds? { % key inbounds? bool
+  grid exch known
+} bind def %/inbounds?
+
+/nextpos { % key nextpos key
+  heading load add
+} bind def %/nextpos
+
+/blocked? { % key blocked? bool
+  dup fakeblock eq { pop true } { grid exch get ascii.# eq } ifelse
+} bind def %/blocked?
+
+/UP -1 0 tokey def /DOWN 1 0 tokey def /LEFT 0 -1 tokey def /RIGHT 0 1 tokey def
+/RIGHTWARDS 4 dict /UP /RIGHT put, /RIGHT /DOWN put,
+  /DOWN /LEFT put, /LEFT /UP put, def
+
+/explore { 8 dict begin % key explore visited exited
+  /visited grid length dict def /heading /UP def
+  { %loop
+    visited 1 index <<>> getor heading known { pop false exit } if
+    visited 1 index { visited exch 4 dict abc:cabc put } getorelse heading true put
+    dup nextpos inbounds? { %ifelse
+      dup nextpos blocked? { /heading RIGHTWARDS heading get def } { nextpos } ifelse
+    } { %else
+      pop true exit
+    } ifelse
+  } loop
+  visited exch
+end } bind def %/explore
+
+/part1 { 8 dict begin % [lines] part1 result
+  makegrid /grid exch def /fakeblock -1 -1 tokey def
+  grid /startkey get explore { length } { (part1 didn't find the exit) } ifelse
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  makegrid /grid exch def /fakeblock -1 -1 tokey def /couldloop 0 def
+  grid /startkey get explore pop keys { %forall
+    dup grid /startkey get ne { /fakeblock exch def %if
+      grid /startkey get explore { /couldloop inc } unless pop
+    } { pop } ifelse
+  } forall
+  couldloop
+end } bind def %/part2
+
+end %Day6
+
+/ARGUMENTS where { pop /Day6 aoc.runday } if
