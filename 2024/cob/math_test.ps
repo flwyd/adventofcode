@@ -11,6 +11,17 @@
 
 test.suite begin
 
+  (divmod) {
+    123 100 divmod [ 1 23 ] assert.stack
+    1234 100 divmod [ 12 34 ] assert.stack
+    15 16 divmod [ 0 15 ] assert.stack
+    0 10 divmod [ 0 0 ] assert.stack
+    -234 100 divmod [ -2 -34 ] assert.stack
+    -8 16 divmod [ 0 -8 ] assert.stack
+    456 -100 divmod [ -4 56 ] assert.stack
+    -1234 -100 divmod [ 12 -34 ] assert.stack
+  } test.case
+
   (gcd) {
     17 7 gcd 1 assert.eq % two primes
     16 9 gcd 1 assert.eq % relative primes

@@ -45,19 +45,13 @@ Day4 begin
 
 /makegrid { % input togrid - defines /grid in currentdict
   dup length 2 mul dict /grid exch def
-  input { %forup lines
-    input 1 index get { %forup chars
-      2 copy tokey input 3 index get 3 -1 roll get grid 3 1 roll put
-    } forup pop
-  } forup
-  pop
+  { { abc:acab tokey grid abc:cba put } forallindex pop } forallindex
 } bind def %/togrid
 
 /findchain { % deltar deltac key (MAS) findchain bool
   dup empty? { true abcde:e } { %else
-    grid 2 index ascii.nul getor 1 index 0 get ne { false abcde:e } { %else
-      1 1 index length 1 sub getinterval exch
-      % stack: deltar deltac (AS) key
+    grid 2 index ascii.nul getor 1 index first ne { false abcde:e } { %else
+      1 tailfrom exch % stack: deltar deltac (AS) key
       fromkey 3 index add exch 4 index add exch tokey exch findchain
     } ifelse
   } ifelse
@@ -69,22 +63,17 @@ Day4 begin
               [  1 -1 ] [  1 0 ] [  1 1 ] ] def
 
 /part1 { 8 dict begin % [lines] part1 result
-  /input exch def /found 0 def
-  input makegrid
-  grid { ascii.X eq { %ifelse
-    DIRECTIONS { %forall
-      aload pop 2 index XMAS findchain { /found inc } if
-    } forall
-    pop
-  } { %else
-    pop
-  } ifelse } forall
+  makegrid /found 0 def
+  grid {
+    ascii.X eq { %if
+      DIRECTIONS { aload pop 2 index XMAS findchain { /found inc } if } forall
+    } if pop
+  } forall
   found
 end } bind def %/part1
 
 /part2 { 8 dict begin % [lines] part2 result
-  /input exch def /found 0 def
-  input makegrid
+  makegrid /found 0 def
   grid {
     ascii.A eq { %ifelse
       /k exch def
@@ -93,8 +82,8 @@ end } bind def %/part1
         -1 1 k AM findchain 1 -1 k AS findchain and
         -1 1 k AS findchain 1 -1 k AM findchain and or { /found inc } if
       } if
-      } { %else
-        pop
+    } { %else
+      pop
     } ifelse
   } forall
   found

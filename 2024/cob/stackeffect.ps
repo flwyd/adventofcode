@@ -486,6 +486,7 @@
 /abcd:abcddda { dup dup 5 index } bind def
 
 % Longer stack effects as needed
+/abcd:abdac { exch 3 index exch } bind def
 /abcd:dadbdc { dup 5 1 roll dup 4 1 roll exch } bind def
 /abcde:e { 5 1 roll pop pop pop pop } bind def
 /abcde:abcaed { exch 4 index 3 1 roll } bind def
@@ -494,5 +495,3 @@
 /abcde:abcdeba { 3 index 5 index } bind def
 /abcde:abcdeca { 2 index 5 index } bind def
 /abcde:bcdae { 5 -1 roll exch } bind def
-% TODO unit test
-/abcd:abdac { exch 3 index exch } bind def

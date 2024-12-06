@@ -49,7 +49,7 @@ for day in $DAYS ; do
       sed -e $'s/\\\\n/\\\n/g' $expected >| $tmpexpected
       expected="$tmpexpected"
     fi
-    out=$($BASEDIR/run $program $input | diff - $expected)
+    out=$($BASEDIR/run $program $input | diff -B - $expected)
     if [[ $? -eq 0 && -z "$out" ]]; then
       echo "ok $desc" | indent $indent
     else

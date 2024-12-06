@@ -84,6 +84,29 @@
   1 index length 1 index length sub startswithat?
 } bind def %/endswith?
 
+% indexof returns the index of the first occurrence of item in an array or
+% string and true if the item is found, or just false if item does not occur in
+% the iterable.
+/indexof { % iter item indexof int true
+           % iter item indexof false
+  false 2 index { %forup
+    dup 4 index exch get 3 index deepeq { abcd:d true exit } { pop } ifelse
+  } forup
+  { true } { pop pop false } ifelse
+} bind def %/indexof
+
+% withindex returns an array of two-element arrays with the index and iter's
+% value at that index.
+/withindex { % iter withindex [[0 iter0] .. [n itern]]
+  [ exch dup { [ abc:acbab get ] exch } forup pop ]
+} bind def %/withindex
+
+% forallindex is like forall on a dict but for an array or string.  proc is
+% called with two args: the 0-based index and the value in iter at that index.
+/forallindex { % iter proc forallindex ?
+  exch withindex exch { aload pop } exch cat forall
+} bind def %/forallindex
+
 % reverse modifies an array or string, putting elements in the reverse order.
 /reverse { % array reverse -
            % string reverse -
@@ -115,6 +138,31 @@ end %/reversed.IMPL
 /reversed { % [a1 ... an] reversed [an ... a1]
   reversed.IMPL begin dup type load end exec
 } bind def %/reversed
+
+% head returns an iterable with the first n elements of the input iterable.
+% The returned array or string is a live view of the original.
+/head { % [a0 .. an .. ax] n head [a0 .. an-1]
+  0 exch 2 index length min getinterval
+} bind def %/head
+
+% headto returns an iterable without the last n items of the input iterable.
+% The returned array or string is a live view of the original.
+/headto { % [a0 .. ax-n ax-n-1 .. ax] n headto [a0 .. ax-n]
+  1 index length exch sub 0 max head
+} bind def %/headto
+
+% tail returns an iterable with the last n elements of the input iterable.
+% The returned array or string is a live view of the original.
+/tail { % [a0 .. ax-n-1 .. ax] n tail [ax-n-1 .. ax]
+  1 index length 1 index sub 0 max exch 2 index length min getinterval
+} bind def %/tail
+
+% tailfrom returns an iterable without the first n items of the input iterable.
+% The returned array or string is a live view of the original.
+/tailfrom { % [a0 .. an .. ax] n tailfrom [an .. ax]
+  % 1 index length 1 sub getinterval
+  1 index length exch sub 0 max tail
+} bind def %/tailfrom
 
 % compare performs a natural comparison of x and y using the lt and gt
 % operators, returning -1 if x < y, 1 if x > y, and 0 if x = y.

@@ -29,34 +29,34 @@
 /Day6 8 dict def
 Day6 begin
 
+/SCALE 1000 def
+
 /tokey { % row col tokey int
-  exch 1000 mul add
+  exch //SCALE mul add
 } bind def %/tokey
 
-% TODO this is about 3x slower than the 2D array was.  Consider using divmod
-% to go back and forth between keys and 2D indices.  Could even do a 1D array
-% if using the grid size as multiplier, but then the "in grid" logic would be
-% harder.
-/makegrid { % input makegrid dict
-  << exch dup { %forup
-    ab:abab get dup { %forup
-      ab:abab get abcd:abdac tokey exch
-      dup ascii.^ eq { /startkey 2 index 7 2 roll } if
-      5 2 roll
-    } forup pop pop
-  } forup pop >>
-} bind def %/makegrid
+/fromkey { % key fromkey row col
+  //SCALE divmod
+} bind def %/fromkey
+
+/findstart { % - findstart key
+  input { ascii.^ indexof { tokey exit } { pop } ifelse } forallindex
+} bind def %/findstart
 
 /inbounds? { % key inbounds? bool
-  grid exch known
+  dup 0 ge exch dup input length 0 tokey lt exch //SCALE mod input length lt and and
 } bind def %/inbounds?
 
 /nextpos { % key nextpos key
   heading load add
 } bind def %/nextpos
 
+/gridval { % key gridval char
+  dup inbounds? { fromkey input 3 -1 roll get exch get } { pop ascii.nul } ifelse
+} bind def %/gridval
+
 /blocked? { % key blocked? bool
-  dup fakeblock eq { pop true } { grid exch get ascii.# eq } ifelse
+  dup fakeblock eq { pop true } { gridval ascii.# eq } ifelse
 } bind def %/blocked?
 
 /UP -1 0 tokey def /DOWN 1 0 tokey def /LEFT 0 -1 tokey def /RIGHT 0 1 tokey def
@@ -64,7 +64,7 @@ Day6 begin
   /DOWN /LEFT put, /LEFT /UP put, def
 
 /explore { 8 dict begin % key explore visited exited
-  /visited grid length dict def /heading /UP def
+  /visited input length 2 mul dict def /heading /UP def
   { %loop
     visited 1 index <<>> getor heading known { pop false exit } if
     visited 1 index { visited exch 4 dict abc:cabc put } getorelse heading true put
@@ -78,15 +78,15 @@ Day6 begin
 end } bind def %/explore
 
 /part1 { 8 dict begin % [lines] part1 result
-  makegrid /grid exch def /fakeblock -1 -1 tokey def
-  grid /startkey get explore { length } { (part1 didn't find the exit) } ifelse
+  /input exch def /startkey findstart def /fakeblock -1 -1 tokey def
+  startkey explore { length } { (part1 didn't find the exit) } ifelse
 end } bind def %/part1
 
 /part2 { 8 dict begin % [lines] part2 result
-  makegrid /grid exch def /fakeblock -1 -1 tokey def /couldloop 0 def
-  grid /startkey get explore pop keys { %forall
-    dup grid /startkey get ne { /fakeblock exch def %if
-      grid /startkey get explore { /couldloop inc } unless pop
+  /input exch def /startkey findstart def /fakeblock -1 -1 tokey def /couldloop 0 def
+  startkey explore pop keys { %forall
+    dup startkey ne { %ifelse
+      /fakeblock exch def startkey explore { /couldloop inc } unless pop
     } { pop } ifelse
   } forall
   couldloop

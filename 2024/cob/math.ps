@@ -5,6 +5,11 @@
 % license that can be found in the LICENSE file or at
 % https://opensource.org/licenses/MIT.
 
+% divmod returns the result of both `idiv` and `mod` on its two arguments.
+/divmod { % numerator denominator divmod idiv mod
+  2 copy idiv 3 1 roll mod
+} bind def %/divmod
+
 % gcd computes the greatest common denominator of two integers.  If either
 % argument is zero, returns the other argument.  The result is non-negative.
 /gcd { % int int gcd int

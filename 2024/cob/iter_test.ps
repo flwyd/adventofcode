@@ -1,0 +1,141 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/ascii.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (indexof found) {
+    (bar) ascii.b indexof [ 0 true ] assert.stack
+    (bar) ascii.a indexof [ 1 true ] assert.stack
+    (bar) ascii.r indexof [ 2 true ] assert.stack
+    (foo) ascii.o indexof [ 1 true ] assert.stack
+    [ 42 ] 42 indexof [ 0 true ] assert.stack
+    [ /a /b /c /d ] /a indexof [ 0 true ] assert.stack
+    [ /a /b /c /d ] /d indexof [ 3 true ] assert.stack
+    [ 1.23 45 /six (seven) false ] false indexof [ 4 true ] assert.stack
+    [ (lorem) (ipsum) (sic) (dolor) (amet) ] (dolor) indexof [ 3 true ] assert.stack
+  } test.case
+
+  (indexof not found) {
+    [] /x indexof [ false ] assert.stack
+    () ascii.x indexof [ false ] assert.stack
+    (foo) ascii.O indexof [ false ] assert.stack
+    [ 1 2 3 ] -1 indexof [ false ] assert.stack
+    [ 1 2 3 ] /one indexof [ false ] assert.stack
+    (lorem ipsum) (rem) indexof [ false ] assert.stack % doesn't do substring
+    (foo) /o indexof [ false ] assert.stack % wrong type
+  } test.case
+
+  (head string) {
+    () 3 head () assert.eq
+    (foo) 0 head () assert.eq
+    (foo) 1 head (f) assert.eq
+    (bar) 2 head (ba) assert.eq
+    (baz) 3 head (baz) assert.eq
+    (hello) 20 head (hello) assert.eq
+  } test.case
+
+  (head array) {
+    [] 3 head [] assert.deepeq
+    [ /a /b /c ] 0 head [] assert.deepeq
+    [ /a /b /c ] 1 head [ /a ] assert.deepeq
+    [ /a /b /c ] 2 head [ /a /b ] assert.deepeq
+    [ /a /b /c ] 3 head [ /a /b /c ] assert.deepeq
+    [ /a /b /c ] 4 head [ /a /b /c ] assert.deepeq
+  } test.case
+
+  (headto string) {
+    () 3 headto () assert.eq
+    (foo) 0 headto (foo) assert.eq
+    (foo) 1 headto (fo) assert.eq
+    (bar) 2 headto (b) assert.eq
+    (baz) 3 headto () assert.eq
+    (hello) 20 headto () assert.eq
+  } test.case
+
+  (headto array) {
+    [] 3 headto [] assert.deepeq
+    [ /a /b /c ] 0 headto [ /a /b /c ] assert.deepeq
+    [ /a /b /c ] 1 headto [ /a /b ] assert.deepeq
+    [ /a /b /c ] 2 headto [ /a ] assert.deepeq
+    [ /a /b /c ] 3 headto [] assert.deepeq
+    [ /a /b /c ] 4 headto [] assert.deepeq
+  } test.case
+
+  (tail string) {
+    () 3 tail () assert.eq
+    (hello) 0 tail () assert.eq
+    (hello) 1 tail (o) assert.eq
+    (hello) 2 tail (lo) assert.eq
+    (hello) 3 tail (llo) assert.eq
+    (hello) 4 tail (ello) assert.eq
+    (hello) 5 tail (hello) assert.eq
+    (hello) 6 tail (hello) assert.eq
+  } test.case
+
+  (tail array) {
+    [] 3 tail [] assert.deepeq
+    [ /a /b /c /d /e ] 0 tail [] assert.deepeq
+    [ /a /b /c /d /e ] 1 tail [ /e ] assert.deepeq
+    [ /a /b /c /d /e ] 2 tail [ /d /e ] assert.deepeq
+    [ /a /b /c /d /e ] 3 tail [ /c /d /e ] assert.deepeq
+    [ /a /b /c /d /e ] 4 tail [ /b /c /d /e ] assert.deepeq
+    [ /a /b /c /d /e ] 5 tail [ /a /b /c /d /e ] assert.deepeq
+    [ /a /b /c /d /e ] 9 tail [ /a /b /c /d /e ] assert.deepeq
+  } test.case
+
+  (tailfrom string) {
+    () 3 tailfrom () assert.eq
+    (hello) 0 tailfrom (hello) assert.eq
+    (hello) 1 tailfrom (ello) assert.eq
+    (hello) 2 tailfrom (llo) assert.eq
+    (hello) 3 tailfrom (lo) assert.eq
+    (hello) 4 tailfrom (o) assert.eq
+    (hello) 5 tailfrom () assert.eq
+    (hello) 6 tailfrom () assert.eq
+  } test.case
+
+  (tailfrom array) {
+    [] 3 tailfrom [] assert.deepeq
+    [ /a /b /c /d /e ] 0 tailfrom [ /a /b /c /d /e ] assert.deepeq
+    [ /a /b /c /d /e ] 1 tailfrom [ /b /c /d /e ] assert.deepeq
+    [ /a /b /c /d /e ] 2 tailfrom [ /c /d /e ] assert.deepeq
+    [ /a /b /c /d /e ] 3 tailfrom [ /d /e ] assert.deepeq
+    [ /a /b /c /d /e ] 4 tailfrom [ /e ] assert.deepeq
+    [ /a /b /c /d /e ] 5 tailfrom [] assert.deepeq
+    [ /a /b /c /d /e ] 9 tailfrom [] assert.deepeq
+  } test.case
+
+  (withindex) {
+    [] withindex [] assert.deepeq
+    () withindex [] assert.deepeq
+    [ /a ] withindex [ [ 0 /a ] ] assert.deepeq
+    (a) withindex [ [ 0 ascii.a ] ] assert.deepeq
+    [ /a /b ] withindex [ [ 0 /a ] [ 1 /b ] ] assert.deepeq
+    (it) withindex [ [ 0 ascii.i ] [ 1 ascii.t ] ] assert.deepeq
+    [ /a /b /c ] withindex [ [ 0 /a ] [ 1 /b ] [ 2 /c ] ] assert.deepeq
+    (bar) withindex [ [ 0 ascii.b ] [ 1 ascii.a ] [ 2 ascii.r ] ] assert.deepeq
+  } test.case
+
+  (forallindex) {
+    [] { /bad } forallindex [] assert.stack
+    () { /bad } forallindex [] assert.stack
+    [ /foo /bar /baz ] { tostring exch tostring cat } forallindex
+      [ (foo0) (bar1) (baz2) ] assert.stack
+    (foo) { add } forallindex [ ascii.f ascii.p ascii.q ] assert.stack
+    4 dict begin
+      /word [ /a /the /no ] { 2 index cat exch def } forallindex
+      pop currentdict
+    end << /aword 0 /theword 1 /noword 2 >> assert.deepeq
+  } test.case
+
+  test.run
+end

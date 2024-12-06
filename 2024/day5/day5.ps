@@ -54,14 +54,14 @@ Day5 begin
 
 % score of a page ordering is the middle element if it's valid, 0 otherwise.
 /score { % array score score
-  true exch dup 0 get, 1 1 index lastindex getinterval { % forall
+  true exch dup 0 get, 1 tailfrom { % forall
     ab:bab ordered? { abc:bc false abc:cba exit } unless
   } forall
   pop exch { dup length 2 idiv get } { pop 0 } ifelse
 } bind def %/score
 
 /fix { % array fix array
-  [ exch 0 get, 1 1 index lastindex getinterval {
+  [ exch 0 get, 1 tailfrom {
     2 copy tokey valid exch get { exch } unless
   } forall ]
 } bind def %/fix
