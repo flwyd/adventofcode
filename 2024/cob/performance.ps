@@ -41,7 +41,7 @@ end } bind def %/timing.struct
       } { %else
         dup 60000 idiv tostring fmttime exch sbappend fmttime (:) sbappend
         dup 10000 lt { fmttime (0) sbappend } if
-        1000 div fmttime exch sbappend
+        1000 div tostring fmttime exch sbappend
       } ifelse
     } ifelse
     /fmttime fmttime sbview def
