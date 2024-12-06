@@ -39,7 +39,7 @@ end } bind def %/timing.struct
       dup 60000 lt { %ifelse
         1000 div tostring fmttime exch sbappend fmttime (s) sbappend
       } { %else
-        dup 60000 idiv tostring fmttime exch sbappend fmttime (:) sbappend
+        60000 idiv dup tostring fmttime exch sbappend fmttime (:) sbappend
         dup 10000 lt { fmttime (0) sbappend } if
         1000 div tostring fmttime exch sbappend
       } ifelse
