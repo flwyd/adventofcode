@@ -1,0 +1,93 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 7 https://adventofcode.com/2024/day/7
+%
+% Input is lines of the form "total: int int...".  Result is the sum of the
+% total field for all valid lines.  In part 1, a line is valid if a combination
+% of addition and multiplication operations, applied left-to-right with no
+% precedence, causes the ints after the column to equal the total.  In part 2
+% a new operator is added which turns two ints into their base 10 concatenation.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day7 8 dict def
+Day7 begin
+
+%%% Part 1 helpers %%%
+
+/procfor { % length int procfor proc
+  alist 3 1 roll exch { %repeat
+    dup 0 eq { true } { 2 divmod 0 eq } ifelse
+    { /add } { /mul } ifelse cvx 2 index exch alpush
+  } repeat
+  pop alarray cvx
+} bind def %/procfor
+
+% Tries each combination of n-1 add/mul operations on ops until they equal val.
+/valid? { % [val [ops]] valid? bool
+  /subject exch def
+  /proclength subject 1 get length 1 sub def
+  false 0 1 subject last length 2 exch exp cvi 1 sub {
+    proclength exch procfor
+    subject 1 get aload length 1 add -1 roll exec
+    subject 0 get eq { pop true exit } if
+  } for
+} bind def %/valid?
+
+/parseinput { % [lines] parseinput [[total] [i1 i2 ..] ..]
+  [ exch { [ exch (: ) split exch cvi exch tokenize reversed ] } forall ]
+} bind def %/parseinput
+
+/part1 { 8 dict begin % [lines] part1 result
+  0 exch parseinput { dup valid? { first add } { pop } ifelse } forall
+end } bind def %/part1
+
+%%% Part 2 helpers %%%
+
+% Base 10 concatenation, with the most significant int at the top of the stack.
+/thirdop { % int int thirdop int
+  exch dup log floor 1 add 10 exch exp cvi 3 -1 roll mul add
+} bind def %/thirdop
+
+/procs2 [ /thirdop /add /mul ] def
+/procfor2 { % length int procfor2 proc
+    alist 3 1 roll exch { %repeat
+      dup 0 eq { 0 } { 3 divmod } ifelse procs2 exch get cvx 2 index exch alpush
+    } repeat
+    pop alarray reversed cvx
+} bind def %/procfor2
+
+/valid2? { % [val [ops]] valid? bool
+  /subject exch def
+  /proclength subject 1 get length 1 sub def
+  subject valid? { true } { %else
+    false 0 1 subject last length 3 exch exp cvi 1 sub {
+      proclength exch procfor2
+      subject 1 get aload length 1 add -1 roll exec
+      subject 0 get eq { pop true exit } if
+    } for
+  } ifelse
+} bind def %/valid?
+
+/part2 { 8 dict begin % [lines] part2 result
+  0 exch parseinput { dup valid2? { first add } { pop } ifelse } forall
+end } bind def %/part2
+
+end %Day7
+
+/ARGUMENTS where { pop /Day7 aoc.runday } if
