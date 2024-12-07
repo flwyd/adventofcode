@@ -65,27 +65,42 @@ end } bind def %/part1
 } bind def %/thirdop
 
 /procs2 [ /thirdop /add /mul ] def
+/ALIST2 alist def
 /procfor2 { % length int procfor2 proc
-    alist 3 1 roll exch { %repeat
-      dup 0 eq { 0 } { 3 divmod } ifelse procs2 exch get cvx 2 index exch alpush
-    } repeat
-    pop alarray reversed cvx
+  ALIST2 3 1 roll exch { %repeat
+    dup 0 eq { 0 } { 3 divmod } ifelse procs2 exch get cvx 2 index exch alpush
+  } repeat
+  pop alarray reversed cvx
+  ALIST2 alclear
 } bind def %/procfor2
+
+/buildprocs2 { % proclength buildprocs2 -
+  /BYLENGTH2 exch array def
+  timing.start
+  1 1 BYLENGTH2 lastindex {
+    BYLENGTH2 1 index 3 1 index exp cvi array put
+    0 1 3 3 index exp cvi 1 sub {
+      2 copy procfor2 bind BYLENGTH2 3 index get 3 1 roll put
+    } for pop
+  } for
+  dup timing.finish
+  [ BYLENGTH2 length (length procs created in) 1 -1 rollfrommark /fmttime get ] log.info
+} bind def
 
 /valid2? { % [val [ops]] valid? bool
   /subject exch def
   /proclength subject 1 get length 1 sub def
-  subject valid? { true } { %else
-    false 0 1 subject last length 3 exch exp cvi 1 sub {
-      proclength exch procfor2
-      subject 1 get aload length 1 add -1 roll exec
-      subject 0 get eq { pop true exit } if
-    } for
-  } ifelse
+  false 0 1 3 proclength exp cvi 1 sub {
+    BYLENGTH2 proclength get exch get
+    subject 1 get aload length 1 add -1 roll exec
+    subject 0 get eq { pop true exit } if
+  } for
 } bind def %/valid?
 
 /part2 { 8 dict begin % [lines] part2 result
-  0 exch parseinput { dup valid2? { first add } { pop } ifelse } forall
+  parseinput /input exch def
+  0 input { last length max } forall buildprocs2
+  0 input { dup valid2? { first add } { pop } ifelse } forall
 end } bind def %/part2
 
 end %Day7
