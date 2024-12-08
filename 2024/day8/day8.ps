@@ -1,0 +1,101 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 8 https://adventofcode.com/2024/day/8
+%
+% Input is a grid where broadcasting radio antennae of a particular frequency
+% are indicated by a distinct letter; a dot means no transmitter is at that
+% location.  In part 1, antinodes are at any location which is is in a line with
+% two transmitting antennae of the same frequency and the same distance from an
+% antenna as the antennae are from each other.  In part two, all points along
+% the line formed by the two antennas, with a step frequency of their distance,
+% is an antinode.  In both problems the answer is the number of antinodes on the
+% grid, including antinodes which are at the same position as an antenna.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day8 8 dict def
+Day8 begin
+
+% Grid positions are represented as a 4-digit number with row as the high-order
+% digits and columns as the low-order digits.  Conveniently, this means that
+% subtraction gets the Manhattan distance between the two points (as an int),
+% and subtracting that distance from a point is moving that distance away in one
+% direction.  Since antinodes are symmetric, the pairwise antinode-finding
+% procedures can just go in one direction, since the inverse call will get the
+% other direction.
+
+/tokey { % int int tokey int
+  exch 100 mul add
+} bind def %/tokey
+
+/fromkey { % int fromkey int int
+  100 divmod
+} bind def %/fromkey
+
+/inmaxi? { % int inmaxi? bool
+  dup 0 ge exch maxi le and
+} bind def %/inmaxi?
+
+/inbounds? { % key inbounds? bool
+  fromkey inmaxi? exch inmaxi? and
+} bind def %/inbounds?
+
+/justone { % key key justone [key]|[]
+  1 index sub sub dup inbounds? { [ exch ] } { pop [] } ifelse  
+} bind def %/justone
+
+/wholeline { % key key wholeline [keys]
+  [
+    3 1 roll 1 index sub { %loop
+      % stack invariant: valid-position difference
+      2 copy sub dup inbounds? { pop exit } unless exch
+    } loop pop
+  ]
+} bind def %/wholeline
+
+/solve { 8 dict begin % input proc solve int
+  /findnodes exch def dup lastindex /maxi exch def
+  /antinodes 2048 dict def /freqs 128 dict def
+  { %forallindex
+    { %forallindex
+      dup ascii.. eq { pop pop } { %else
+        freqs exch { freqs exch alist abc:cabc put } getorelse abc:acab tokey alpush
+      } ifelse
+    } forallindex pop
+  } forallindex
+  freqs values { %forall
+    alview dup { %forall
+      1 index { 2 copy eq { pop } { %else
+        ab:aab findnodes { antinodes exch true put } forall
+      } ifelse } forall pop
+    } forall pop
+  } forall
+  antinodes length
+end } bind def %/solve
+
+/part1 { % [lines] part1 result
+  /justone cvx solve
+} bind def %/part1
+
+/part2 { % [lines] part2 result
+  /wholeline cvx solve
+} bind def %/part2
+
+end %Day8
+
+/ARGUMENTS where { pop /Day8 aoc.runday } if
