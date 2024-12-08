@@ -28,80 +28,62 @@
 /Day7 8 dict def
 Day7 begin
 
-%%% Part 1 helpers %%%
-
-/procfor { % length int procfor proc
-  alist 3 1 roll exch { %repeat
-    dup 0 eq { true } { 2 divmod 0 eq } ifelse
-    { /add } { /mul } ifelse cvx 2 index exch alpush
-  } repeat
-  pop alarray cvx
-} bind def %/procfor
-
-% Tries each combination of n-1 add/mul operations on ops until they equal val.
-/valid? { % [val [ops]] valid? bool
-  /subject exch def
-  /proclength subject 1 get length 1 sub def
-  false 0 1 subject last length 2 exch exp cvi 1 sub {
-    proclength exch procfor
-    subject 1 get aload length 1 add -1 roll exec
-    subject 0 get eq { pop true exit } if
-  } for
-} bind def %/valid?
-
 /parseinput { % [lines] parseinput [[total] [i1 i2 ..] ..]
   [ exch { [ exch (: ) split exch cvi exch tokenize reversed ] } forall ]
 } bind def %/parseinput
-
-/part1 { 8 dict begin % [lines] part1 result
-  0 exch parseinput { dup valid? { first add } { pop } ifelse } forall
-end } bind def %/part1
-
-%%% Part 2 helpers %%%
 
 % Base 10 concatenation, with the most significant int at the top of the stack.
 /thirdop { % int int thirdop int
   exch dup log floor 1 add 10 exch exp cvi 3 -1 roll mul add
 } bind def %/thirdop
 
-/procs2 [ /thirdop /add /mul ] def
-/ALIST2 alist def
-/procfor2 { % length int procfor2 proc
-  ALIST2 3 1 roll exch { %repeat
-    dup 0 eq { 0 } { 3 divmod } ifelse procs2 exch get cvx 2 index exch alpush
+/procs [ /add /mul /thirdop ] def
+/PROCBUF alist def
+/procfor { % length int procfor proc
+  PROCBUF dup alclear 3 1 roll exch { %repeat
+    dup 0 eq { 0 } { NUMOPS divmod } ifelse
+    procs exch get cvx 2 index exch alpush
   } repeat
   pop alarray reversed cvx
-  ALIST2 alclear
-} bind def %/procfor2
+} bind def %/procfor
 
-/buildprocs2 { % proclength buildprocs2 -
-  /BYLENGTH2 exch array def
+/buildprocs { % proclength buildprocs -
+  /BYLENGTH exch array def
   timing.start
-  1 1 BYLENGTH2 lastindex {
-    BYLENGTH2 1 index 3 1 index exp cvi array put
-    0 1 3 3 index exp cvi 1 sub {
-      2 copy procfor2 bind BYLENGTH2 3 index get 3 1 roll put
+  1 1 BYLENGTH lastindex {
+    BYLENGTH 1 index NUMOPS 1 index exp cvi array put
+    0 1 NUMOPS 3 index exp cvi 1 sub {
+      2 copy procfor bind BYLENGTH 3 index get 3 1 roll put
     } for pop
   } for
   dup timing.finish
-  [ BYLENGTH2 length (length procs created in) 1 -1 rollfrommark /fmttime get ] log.info
-} bind def
+  [ BYLENGTH length (length procs created in) 1 -1 rollfrommark /fmttime get ] log.info
+} bind def %/buildprocs
 
-/valid2? { % [val [ops]] valid? bool
+/valid? { % [val [ops]] valid? bool
   /subject exch def
   /proclength subject 1 get length 1 sub def
-  false 0 1 3 proclength exp cvi 1 sub {
-    BYLENGTH2 proclength get exch get
+  false 0 1 NUMOPS proclength exp cvi 1 sub {
+    BYLENGTH proclength get exch get
     subject 1 get aload length 1 add -1 roll exec
     subject 0 get eq { pop true exit } if
   } for
 } bind def %/valid?
 
-/part2 { 8 dict begin % [lines] part2 result
+/solve { 8 dict begin % input numops solve result
+  /NUMOPS exch def
   parseinput /input exch def
-  0 input { last length max } forall buildprocs2
-  0 input { dup valid2? { first add } { pop } ifelse } forall
-end } bind def %/part2
+  0 input { last length max } forall buildprocs
+  0 input { dup valid? { first add } { pop } ifelse } forall
+end } bind def %/solve
+
+/part1 { % [lines] part1 result
+  2 solve
+} bind def %/part1
+
+/part2 { % [lines] part2 result
+  3 solve
+} bind def %/part2
 
 end %Day7
 
