@@ -29,6 +29,25 @@ test.suite begin
     /b get 0.5 assert.eq
   } test.case
 
+  (incby current dict) {
+    2 dict begin
+      /a 0 def
+      2 /a incby a 2 assert.eq
+      5 /a incby a 7 assert.eq
+      /a 42 def
+      3 /a incby a 45 assert.eq
+      -6 /a incby a 39 assert.eq
+      /b -2.5 def
+      1.25 /b incby b -1.25 assert.eq
+      1.25 /b incby b 0 assert.eq
+      1.25 /b incby b 1.25 assert.eq
+      2 /a incby a 41 assert.eq
+      currentdict
+    end
+    dup /a get 41 assert.eq
+    /b get 1.25 assert.eq
+  } test.case
+
   (dec current dict) {
     2 dict begin
       /a 0 def
@@ -47,6 +66,25 @@ test.suite begin
     /b get -1.5 assert.eq
   } test.case
 
+  (decby current dict) {
+    2 dict begin
+      /a 0 def
+      2 /a decby a -2 assert.eq
+      3 /a decby a -5 assert.eq
+      /a 42 def
+      -3 /a decby a 45 assert.eq
+      6 /a decby a 39 assert.eq
+      /b 1.5 def
+      1.75 /b decby b -0.25 assert.eq
+      1.75 /b decby b -2.0 assert.eq
+      1.75 /b decby b -3.75 assert.eq
+      2 /a decby a 37 assert.eq
+      currentdict
+    end
+    dup /a get 37 assert.eq
+    /b get -3.75 assert.eq
+  } test.case
+
   (inc dict) {
     2 dict
     dup /a 0 put
@@ -62,6 +100,21 @@ test.suite begin
     pop
   } test.case
 
+  (incby dict) {
+    2 dict
+    dup /a 0 put
+    dup 7 /a 3 -1 roll incby dup /a get 7 assert.eq
+    dup -2 /a 3 -1 roll incby dup /a get 5 assert.eq
+    dup /a 42 put
+    dup 4 /a 3 -1 roll incby dup /a get 46 assert.eq
+    dup /b -2.5 put
+    dup 0.5 /b 3 -1 roll incby dup /b get -2.0 assert.eq
+    dup 0.5 /b 3 -1 roll incby dup /b get -1.5 assert.eq
+    dup 0.5 /b 3 -1 roll incby dup /b get -1.0 assert.eq
+    dup 2 /a 3 -1 roll incby dup /a get 48 assert.eq
+    pop
+  } test.case
+
   (dec dict) {
     2 dict
     dup /a 0 put
@@ -74,6 +127,21 @@ test.suite begin
     dup /b exch dec dup /b get -0.5 assert.eq
     dup /b exch dec dup /b get -1.5 assert.eq
     dup /a exch dec dup /a get 40 assert.eq
+    pop
+  } test.case
+
+  (decby dict) {
+    2 dict
+    dup /a 0 put
+    dup 2 /a 3 -1 roll decby dup /a get -2 assert.eq
+    dup -5 /a 3 -1 roll decby dup /a get 3 assert.eq
+    dup /a 42 put
+    dup 4 /a 3 -1 roll decby dup /a get 38 assert.eq
+    dup /b 1.5 put
+    dup 1.75 /b 3 -1 roll decby dup /b get -0.25 assert.eq
+    dup 1.75 /b 3 -1 roll decby dup /b get -2.0 assert.eq
+    dup 1.75 /b 3 -1 roll decby dup /b get -3.75 assert.eq
+    dup -2 /a 3 -1 roll decby dup /a get 40 assert.eq
     pop
   } test.case
 

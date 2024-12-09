@@ -1,0 +1,47 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+(cob/bootstrap.ps) runlibfile
+(cob/core.ps) cob.require
+(cob/testing.ps) cob.require
+
+test.suite begin
+
+  (until always runs once) {
+    { /foo } { true } until [ /foo ] assert.stack
+  } test.case
+
+  (until single step) {
+    1 dict begin
+      /val 42 def
+      { val /val val 2 add def } { val 43 gt } until
+      [ 42 ] assert.stack
+      val 44 assert.eq
+  } test.case
+
+  (until multiple steps) {
+    128 { 2 idiv } { dup 0 eq } until [ 0 ] assert.stack
+  } test.case
+
+  (while always runs once) {
+    { /foo } { false } while [ /foo ] assert.stack
+  } test.case
+
+  (while single step) {
+    1 dict begin
+      /val 42 def
+      { val /val val 2 add def } { val 44 lt } while
+      [ 42 ] assert.stack
+      val 44 assert.eq
+  } test.case
+
+  (while multiple steps) {
+    128 { 2 idiv } { dup 0 gt } while [ 0 ] assert.stack
+  } test.case
+
+  test.run
+end

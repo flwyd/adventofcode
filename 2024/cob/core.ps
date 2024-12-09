@@ -96,17 +96,9 @@
 % until executes proc1 in a loop as long as proc2 returns true.  Note the loop
 % always executes at least once.  Skip a block of text in a program:
 % { currentfile token } { /END_OF_BLOCK eq } until
-/until { 2 dict begin % proc1 proc2:bool until -
-  [ /proc /exec cvx /cond /exec cvx { exit } /if cvx ]
-  pstack
-  dup 2 4 -1 roll put
-  dup 0 4 -1 roll put
-  cvx bind
-  loop
-  % /_cond exch def
-  % /_proc exch def
-  % { _proc exec _cond exec { exit } if } bind loop
-end } bind def
+/until { % proc1 proc2:bool until -
+  [ 3 -1 roll /exec cvx 4 -1 roll /exec cvx { exit } /if cvx ] cvx bind loop
+} bind def
 
 % while executes proc1 in a loop until proc2 returns false. Note the loop always
 % executes at least once.  Read file lines into an array:
@@ -116,11 +108,10 @@ end } bind def
 % The conditional block is empty because readline leaves a boolean on the stack,
 % the pop is needed to remove the trailing blank line (assuming no dangling
 % line without a newline.)
-/while { 2 dict begin % proc1 proc2:bool while -
-  /_cond exch def
-  /_proc exch def
-  { _proc exec _cond exec not { exit } if } bind loop
-end } bind def
+/while { % proc1 proc2:bool while -
+  [ 3 -1 roll /exec cvx 4 -1 roll /exec cvx /not cvx { exit } /if cvx ]
+  cvx bind loop
+} bind def
 
 % contains? returns true if any element in array eq the given value or if any
 % character in a string eq the given char.
@@ -288,7 +279,7 @@ end
 % argument, decrements the value in that dict.
 /decby { % amount name decby -
          % amount name dict decby -
-  dup type /dicttype eq { 3 -1 roll neg 3 1 roll } { exch neg exch } ifelse
+  dup type /dicttype eq { 3 -1 roll neg 3 1 roll } { exch neg exch } ifelse incby
 } bind def %/decby
 
 % inc increments the named value in a dict by one.  With just a name, looks up
