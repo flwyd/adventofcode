@@ -1,0 +1,115 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 10 https://adventofcode.com/2024/day/10
+%
+% Input is a grid of digits indicating a topo map.  A hiker can go from 0 to 9
+% by moving in the 4 cardinal directions and only if the digit increases by one.
+% Part 1's answer is the sum of the number of 9s reachable from each 0.
+% Part 2's answer is the number of distinct paths from a 0 to a 9 where every
+% fork increases the number of distinct paths.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day10 8 dict def
+Day10 begin
+
+/tokey { % row col tokey key
+  exch 100 mul add
+} bind def %/tokey
+
+/fromkey { % key fromkey row col
+  100 divmod
+} bind def %/fromkey
+
+/inbounds? { % key inbounds? bool
+  fromkey dup 0 ge exch input length lt and
+  exch dup 0 ge exch input length lt and and
+} bind def %/inbounds?
+
+/height { % key height char
+  fromkey input 3 -1 roll get exch get
+} bind def %/height
+
+/DIRECTIONS [ -1 0 tokey 0 -1 tokey 1 0 tokey 0 1 tokey ] def
+
+/upsteps { % key upsteps [keys]
+  [ DIRECTIONS { %forall
+    1 indexfrommark add dup inbounds? { %ifelse
+      dup height 1 sub 1 indexfrommark height ne { pop } if
+    } { pop } ifelse
+  } forall ] exch pop
+} bind def %/upsteps
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def /total 0 def /numheads 0 def
+  input { %forup
+    dup input exch get { %forup
+      ab:aab tokey dup height ascii.0 eq { %ifelse
+        /visited 1024 dict def /queue alist def
+        queue exch alpush { %while
+          queue alpop upsteps { %forall
+            visited 1 index known not { %ifelse
+              visited 1 index true put queue exch alpush
+            } { pop } ifelse
+          } forall
+        } { queue allength 0 gt } while
+        visited { pop height ascii.9 eq { /total inc } if } forall
+      } { pop } ifelse
+    } forup pop
+  } forup
+  total
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def /total 0 def /trailsfrom input length dup mul dict def
+  9 -1 0 { %for
+    /digit exch ascii.0 add def
+    input { %forup
+      dup input exch get { %forup
+        ab:aab tokey /cur exch def
+        cur height digit eq { %if
+          digit ascii.9 eq { trailsfrom cur 1 put } { %else
+            trailsfrom cur 0 put cur upsteps { %forall
+              trailsfrom exch get cur trailsfrom incby
+            } forall
+            cur height ascii.0 eq { trailsfrom cur get /total incby } if
+          } ifelse
+        } if
+      } forup pop
+    } forup
+  } for
+  total
+end } bind def %/part2
+
+/counttrails { % start counttrails int
+  dup height ascii.9 eq { pop 1 } { 0 exch upsteps { counttrails add } forall } ifelse
+} bind def %/counttrails
+
+/part2recursive { 8 dict begin % [lines] part2recursive result
+  /input exch def /total 0 def /trailsfrom input length dup mul dict def
+  input { %forup
+    dup input exch get { %forup
+      ab:aab tokey dup height ascii.0 eq { counttrails /total incby } { pop } ifelse
+    } forup pop
+  } forup
+  total
+end } bind def %/part2recursive
+
+end %Day10
+
+/ARGUMENTS where { pop /Day10 aoc.runday } if
