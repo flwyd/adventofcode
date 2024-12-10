@@ -1,0 +1,108 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 9 https://adventofcode.com/2024/day/9
+%
+% Input is a single long line of digits.  Odd digits represent the number of
+% disk blocks used for file number i/2 (i starts at 0), even digits represent
+% the number of free blocks at that position on the disk.  In part 1, start with
+% the last file block on the disk and move it into the first available free
+% block until there are no free blocks before any file blocks (this leaves lots
+% of fragmented files).  In part 2, files should only move as a whole, into the
+% first free block which has enough contiguous space to fit the file.  Remaining
+% space in a free section can be used for subsequent files.  Each file is only
+% attempted once; free space that's subsequently made available doesn't get
+% filled with files to the right.  In both cases, the answer is the disk
+% checksum calculated by multiplying the 0-based block index by the file number
+% of the block at that position, or 0 for free blocks.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day9 8 dict def
+Day9 begin
+
+/checksum { % [a0 a1 a2 ..] checksum int
+  1 dict begin
+    /i 0 def /total 0 def
+    { { i mul /total incby /i inc } forall pop } forallindex
+    total
+  end
+} bind def %/checksum
+
+/part1 { 8 dict begin % [lines] part1 result
+  0 get /input exch def
+  /disk input length array def % [ array0 freelist1 array2 freelist3 .. ]
+  input { %forallindex
+    exch /fileno exch def [
+      exch ascii.0 sub { fileno 2 mod 0 eq { fileno 2 idiv } { 0 } ifelse } repeat
+    ] disk fileno 3 -1 roll put
+  } forallindex
+  /curfree 1 def /curfreesub 0 def /curmove disk lastindex def
+  { %while
+    disk curmove get lastindex -1 0 { %for
+      disk curmove get 1 index get
+      { %loop
+        disk curfree get length curfreesub gt { false exit } if
+        2 /curfree incby /curfreesub 0 def curfree curmove ge { pop pop true exit } if
+      } loop { exit } if
+      disk curfree get curfreesub 3 -1 roll put /curfreesub inc
+      disk curmove get exch 0 put
+    } for
+    2 /curmove decby
+  } { curmove curfree gt } while
+  disk checksum
+end } bind def %/part1
+
+/freelist { % size freelist dict
+  << [ 3 -1 roll { 0 } repeat ] /blocks exch /nextfree 0 >>
+} bind def %/freelist
+
+/canfit? { % freelist int canfit? bool
+  exch begin nextfree add blocks length le end
+} bind def %/canfit?
+
+/flappend { % freelist array flappend -
+  exch begin { blocks nextfree 3 -1 roll put /nextfree inc } forall end
+} bind def %/flappend
+
+/part2 { 8 dict begin % [lines] part2 result
+  0 get /input exch def
+  /disk input length array def % [ array0 freelist1 array2 freelist3 .. ]
+  input { %forallindex
+    exch /fileno exch def
+    ascii.0 sub fileno 2 mod 0 eq { %ifelse
+       [ exch { fileno 2 idiv } repeat ]
+     } { freelist } ifelse
+    disk fileno 3 -1 roll put
+  } forallindex
+  disk lastindex -2 0 { %for
+    /curmove exch def
+    1 2 disk lastindex { %for
+      dup curmove ge { pop exit } if
+      disk exch get
+      dup disk curmove get length canfit? { %ifelse
+        disk curmove get flappend
+        disk curmove get dup { ab:aab 0 put } forup pop exit
+      } { pop } ifelse
+    } for
+  } for
+  [ disk { dup type /dicttype eq { /blocks get } if } forall ] checksum
+end } bind def %/part2
+
+end %Day9
+
+/ARGUMENTS where { pop /Day9 aoc.runday } if
