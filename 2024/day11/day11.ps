@@ -1,0 +1,76 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 11 https://adventofcode.com/2024/day/11
+%
+% Input is a single line with a series of space-separated numbers.  Each step
+% changes each number according to the first of three rules that applies:
+% (a) If it's 0, replace it with 1
+% (b) If it's got an even number of base 10 digits, split it into two numbers
+%     with the first number having the first half of the digits and the second
+%     number having the second half of the digits
+% (c) Otherwise multiply it by 2024
+% In part 1, do this 25 times.  In part 2, do it 75 times.  In both parts the
+% answer is the number of total values in the list.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day11 8 dict def
+Day11 begin
+
+/splitdigits { % numstr splitdigits int int
+  0 1 index length 2 idiv getinterval,
+  dup length 2 idiv dup getinterval
+  cvi exch cvi exch
+} bind def %/splitdigits
+
+/dorules { % int dorules int...
+  dup 0 eq { pop 1 } { %else
+    dup tostring dup length 2 mod 0 eq { %ifelse
+      exch pop splitdigits
+    } { %else
+      pop 2024 mul
+    } ifelse
+  } ifelse
+} bind def %/dorules
+
+/evolve { % stone steps evolve int
+  progression 2 index { progression 76 array abc:cbac put } getorelse 
+  % stack: stone steps cache
+  ab:abba get null eq { %if
+    1 index 0 eq { 1 } { %else
+      0 [ 4 index dorules ] { 3 index 1 sub evolve add } forall
+    } ifelse
+    abc:abbac put
+  } if
+  abc:cb get
+} bind def %/evolve
+
+/part1 { 8 dict begin % [lines] part1 result
+  first tokenize
+  % Simpler solution takes about 2 seconds, reusing part 2 takes 40 milliseconds
+  % 25 { [ exch { dorules } forall ] } repeat length
+  /progression 1024 dict def 0 exch { 25 evolve add } forall
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  first tokenize /progression 1024 dict def 0 exch { 75 evolve add } forall
+end } bind def %/part2
+
+end %Day11
+
+/ARGUMENTS where { pop /Day11 aoc.runday } if
