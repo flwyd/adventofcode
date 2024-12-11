@@ -33,23 +33,18 @@
 Day11 begin
 
 /splitdigits { % numstr splitdigits int int
-  0 1 index length 2 idiv getinterval,
-  dup length 2 idiv dup getinterval
-  cvi exch cvi exch
+  dup log 1 add floor 2 div 10 exch exp cvi divmod
 } bind def %/splitdigits
 
 /dorules { % int dorules int...
   dup 0 eq { pop 1 } { %else
-    dup tostring dup length 2 mod 0 eq { %ifelse
-      exch pop splitdigits
-    } { %else
-      pop 2024 mul
-    } ifelse
+    dup log floor cvi 2 mod 1 eq
+    { splitdigits } { 2024 mul } ifelse
   } ifelse
 } bind def %/dorules
 
 /evolve { % stone steps evolve int
-  progression 2 index { progression 76 array abc:cbac put } getorelse 
+  progression 2 index { progression 76 array abc:cbac put } getorelse
   % stack: stone steps cache
   ab:abba get null eq { %if
     1 index 0 eq { 1 } { %else
@@ -62,7 +57,7 @@ Day11 begin
 
 /part1 { 8 dict begin % [lines] part1 result
   first tokenize
-  % Simpler solution takes about 2 seconds, reusing part 2 takes 40 milliseconds
+  % Simpler solution takes about 200ms, reusing part 2 takes 20-40ms
   % 25 { [ exch { dorules } forall ] } repeat length
   /progression 1024 dict def 0 exch { 25 evolve add } forall
 end } bind def %/part1
