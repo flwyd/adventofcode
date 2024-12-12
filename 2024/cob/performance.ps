@@ -9,6 +9,7 @@
 
 (cob/bootstrap.ps) runlibfile
 (cob/arraylist.ps) cob.require
+(cob/math.ps) cob.require
 (cob/stringbuf.ps) cob.require
 
 % timing.struct creates an object to capture performance details.
@@ -31,20 +32,9 @@ end } bind def %/timing.struct
   realtime exch begin
     /endtime exch def
     vmstatus pop exch pop /endmem exch def
-    /fmttime stringbuf def
     endtime starttime sub
-    dup 1000 lt { %ifelse
-      fmttime exch tostring sbappend fmttime (ms) sbappend
-    } { %else
-      dup 60000 lt { %ifelse
-        1000 div tostring fmttime exch sbappend fmttime (s) sbappend
-      } { %else
-        60000 idiv dup tostring fmttime exch sbappend fmttime (:) sbappend
-        dup 10000 lt { fmttime (0) sbappend } if
-        1000 div tostring fmttime exch sbappend
-      } ifelse
-    } ifelse
-    /fmttime fmttime sbview def
+    % /fmttime fmttime sbview def
+    timing.formattime /fmttime exch def
     endmem startmem sub
     dup 16#100000 ge { %ifelse
       16#100000 div tostring ( MiB) cat
@@ -58,3 +48,21 @@ end } bind def %/timing.struct
     /fmtmem exch def
   end
 } bind def %/timing.finish
+
+% TODO moves this
+/timing.formattime { 2 dict begin % millis timing.formattime string
+  /millis exch def
+  /buf stringbuf def
+  millis 1000 lt { %ifelse
+    buf millis tostring sbappend buf (ms) sbappend
+  } { %else
+    millis 60000 lt { %ifelse
+      millis 1000 div tostring buf exch sbappend buf (s) sbappend
+    } { %else
+      millis 60000 divmod exch tostring buf exch sbappend buf (:) sbappend
+      dup 10000 lt { buf (0) sbappend } if
+      1000 div tostring buf exch sbappend
+    } ifelse
+  } ifelse
+  buf sbview
+end } bind def %/timing.formattime
