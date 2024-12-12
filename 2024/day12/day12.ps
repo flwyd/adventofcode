@@ -1,0 +1,208 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 12 https://adventofcode.com/2024/day/12
+% 
+% Input is a grid of letters.  Each connected (horizontal/vertical) region of
+% must be fenced in on all sides.  The same letter may appear in multiple
+% disconnected regions.  Part 1 answer is the sum of (area * perimeter).
+% Part 2 answer is the sum of (area * num sides).
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day12 8 dict def
+Day12 begin
+
+/tokey { % row col tokey key
+  exch 1000 mul add
+} bind def %/tokey
+
+/fromkey { % key fromkey row col
+  1000 divmod
+} bind def %/fromkey
+
+/inbounds? { % key inbounds? bool
+  fromkey dup input 0 get length lt exch 0 ge and
+  exch dup input length lt exch 0 ge and exch and
+} bind def %/inbounds?
+
+/charat { % key charat char
+  fromkey input 3 -1 roll get exch get
+} bind def %/charat
+
+/regionidat { % key regionidat char
+  dup inbounds? { fromkey regionids 3 -1 roll get exch get } { pop -2 } ifelse
+} bind def %/regionidat
+
+/LEFT 0 -1 tokey def /UP -1 0 tokey def /RIGHT 0 1 tokey def /DOWN 1 0 tokey def
+/DIRECTIONS [ LEFT UP RIGHT DOWN ] def
+/neighbors { % key neighbors [keys]
+  [ DIRECTIONS { 1 indexfrommark add dup inbounds? { pop } unless } forall ] exch pop
+} bind def %/neighbors
+
+/floodfill { % - floodfill -
+  curpos charat /curchar exch def /q alist def q curpos alpush
+  {
+    q alpop
+    dup regionidat -1 eq 1 index charat curchar eq and { %ifelse
+      dup fromkey regionids 3 -1 roll get exch curid put
+      neighbors { dup charat curchar eq { q exch alpush } { pop } ifelse } forall
+    } { pop } ifelse
+  } { q allength 0 gt } while
+} bind def %/floodfill
+
+% Inefficient perimeter calculation traverses the whole grid and checks
+% neighbors on each side.
+/perimeter { % regionid perimeter int
+  /id exch def /perim 0 def
+  regionids { %forup
+    /i exch def regionids i get { %forup
+      /j exch def i j tokey regionidat id eq { %if
+        DIRECTIONS { i j tokey add regionidat id ne { /perim inc } if } forall 
+      } if
+    } forup
+  } forup
+  perim
+  % (perim done) = pstack
+   % /startpos exch def /startdir 0 def /curpos startpos def /curdir startdir def
+   % /id startpos regionidat def /perim 0 def
+   % { %while
+   %   curpos curdir add regionidat id eq { %ifelse
+   %     /perim inc curdir 1 add DIRECTIONS length mod /curdir exch def
+   %   } { %else
+   %   } else
+   % } { startpos curpos ne startdir curdir ne and } while
+} bind def %/perimeter
+
+/turnright { % dirindex turnright dirindex
+  1 add DIRECTIONS length mod
+} bind def %/turnright
+
+/turnleft { % dirindex turnleft dirindex
+  1 sub DIRECTIONS length add DIRECTIONS length mod
+} bind def %/turnleft
+
+/curforward { % - curforward -
+  curdir curpos add /curpos exch def
+} bind def %/curforward
+
+/regionindir { % key dirindex regionindir regionid
+  DIRECTIONS exch get add regionidat
+} bind def %/regionindir
+
+/numsides { % regionid numsides int
+  /id exch def /sides 0 def /curdir RIGHT def
+  % traverse each row from left to right, looking for side transitions above and below
+  regionids { %forup
+    /curpos exch 0 tokey def
+    /prevabove true def /prevbelow true def
+    { %loop
+      { %loop
+        curpos regionidat id eq curpos inbounds? not or { exit } if
+        /prevabove true def /prevbelow true def curforward
+      } loop
+      curpos inbounds? { exit } unless
+      curpos UP add regionidat id eq { /prevabove true def }
+        { prevabove { /sides inc } if /prevabove false def } ifelse
+      curpos DOWN add regionidat id eq { /prevbelow true def }
+        { prevbelow { /sides inc } if /prevbelow false def } ifelse
+      curforward
+    } loop
+  } forup
+  % traverse each row from top to bottom, looking for side transitions to left and right
+  /curdir DOWN def
+  regionids 0 get { %forup
+    /curpos 0 3 -1 roll tokey def
+    /prevleft true def /prevright true def
+    { %loop
+      { %loop
+        curpos regionidat id eq curpos inbounds? not or { exit } if
+        /prevleft true def /prevright true def curforward
+      } loop
+      curpos inbounds? { exit } unless
+      curpos LEFT add regionidat id eq { /prevleft true def }
+        { prevleft { /sides inc } if /prevleft false def } ifelse
+      curpos RIGHT add regionidat id eq { /prevright true def }
+        { prevright { /sides inc } if /prevright false def } ifelse
+      curforward
+    } loop
+  } forup
+  sides
+} bind def %/numsides
+
+% Count sides by walking along the outer perimeter clockwise with your left
+% shoulder always next to a fence.  Doesn't work for polygons with holes.
+% Holes could be handled by walking counter-clockwise, but the holes would need
+% to be found first, and that can't be guaranteed from the initial walk.
+/numsidesleftshoulder { % regionid numsides int
+  /id exch def regionstarts id alget /startpos exch def /curpos startpos def
+  /startdir 2 def /curdir startdir def % region starts at top left, so start going right  
+  /sides 0 def
+  seen id true put
+  { %while
+    /sides inc
+    curpos curdir turnleft regionindir seen exch true put
+    { %loop
+      curpos curdir turnleft regionindir id eq { %if
+        /curdir curdir turnleft def
+        curpos DIRECTIONS curdir get add /curpos exch def
+        exit 
+      } if
+      curpos curdir regionindir id ne { /curdir curdir turnright def exit } if
+      curpos DIRECTIONS curdir get add /curpos exch def
+    } loop
+  } { curpos startpos eq curdir startdir eq and } until
+  sides
+} bind def %/numsides
+
+/area { % regionid area int
+  /id exch def
+  0 regionids { { id eq { 1 add } if } forall } forall
+} bind def %/area
+
+/setupinput { % [lines] setupinput -
+  /input exch def /regionstarts alist def
+  timing.start
+  [ input { [ exch length { -1 } repeat ] } forall ] /regionids exch def
+  input { %forup
+    % (i is) = pstack
+    /i exch def input i get { %forup
+      /j exch def i j tokey regionidat -1 eq { %if
+        /curid regionstarts allength def /curpos i j tokey def
+        regionstarts curpos alpush
+        floodfill
+      } if
+    } forup
+  } forup
+  [ exch dup timing.finish /fmttime get (time to floodfill) ] log.info
+} bind def %/setupinput
+
+/part1 { 8 dict begin % [lines] part1 result
+  setupinput 0 0 1 regionstarts allength 1 sub { %for
+    dup perimeter exch area mul add
+  } for
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  setupinput 0 0 1 regionstarts allength 1 sub { %for
+    dup numsides exch area mul add
+  } for
+end } bind def %/part2
+
+end %Day12
+
+/ARGUMENTS where { pop /Day12 aoc.runday } if
