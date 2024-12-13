@@ -56,7 +56,7 @@
 /alput { % alist index value alput -
   2 index /alput alisttypecheck
   { 2 index //_alistbuf get length 2 index gt { exit } if 2 index _alistgrow } loop
-  2 index allength 2 index lt { 2 index //_alistlen 3 index 1 add put } if
+  2 index allength 2 index le { 2 index //_alistlen 3 index 1 add put } if
   3 -1 roll //_alistbuf get 3 1 roll put
 } bind def %/alput
 

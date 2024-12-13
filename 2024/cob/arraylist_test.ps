@@ -30,12 +30,17 @@ test.suite begin
     dup allength 43 assert.eq
     dup 42 alget /meaning assert.eq
     dup 41 alget null assert.eq
+    dup 43 /onemore alput
+    dup allength 44 assert.eq
+    dup 43 alget /onemore assert.eq
     dup 7 alget null assert.eq
     dup 7 /lucky alput
     dup 7 alget /lucky assert.eq
     dup 0 alget null assert.eq
     dup 0 /hero alput
     dup 0 alget /hero assert.eq
+    dup allength 44 assert.eq
+    dup alpop /onemore assert.eq
     dup allength 43 assert.eq
     dup alpop /meaning assert.eq
     dup allength 42 assert.eq

@@ -1,0 +1,149 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 13 https://adventofcode.com/2024/day/13
+%
+% Input is blocks separated by newline.  Each block looks like
+% Button A: X+94, Y+34
+% Button B: X+22, Y+67
+% Prize: X=8400, Y=5400
+% where pushing button A moves 94 steps in the X direction and 34 steps in Y,
+% pushing button B moves 22 steps in X and 67 in Y, and your goal is on the
+% Prize line.  Pushing the A button costs 3 tokens and pushing B costs 1.
+% For only prizes which are attainable, the answer to part 1 is the sum of the
+% costs of getting there.  In part two, 10000000000000 is added to both prize
+% coordinates to remove any hope of brute force.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day13 8 dict def
+Day13 begin
+
+% TODO remove priority queue approach
+/tokey { % x y tokey key
+  exch 100000 mul add
+} bind def %/tokey
+
+/fromkey { % key fromkey x y
+  100000 divmod
+} bind def %/fromkey
+
+/overshot? { % key prizekey overshot? bool
+  fromkey 3 -1 roll fromkey 3 -1 roll gt 3 1 roll exch gt or
+} bind def %/overshot?
+
+/parsebutton { % (Button A|B: X+num, Y+num) parsebutton x y
+  (X+) search { %ifelse
+    pop pop (, Y+) search { %ifelse
+      cvi 3 1 roll pop cvi
+    } { /parsebutton cvx rangeerror signalerror } ifelse
+  } { /parsebutton cvx /rangeerror signalerror } ifelse
+} bind def %/parsebutton
+
+/parseprize { % (Prize: X=num, Y=num) parseprize x y
+  (X=) search { %ifelse
+    pop pop (, Y=) search { %ifelse
+      cvi 3 1 roll pop cvi
+    } { /parseprize cvx rangeerror signalerror } ifelse
+  } { /parseprize cvx /rangeerror signalerror } ifelse
+} bind def %/parseprize
+
+/priceq { % price priceq arraylist
+  % (priceq) = pstack 
+  dup pq allength ge { %ifelse
+    alist pq abc:acab alput
+  } { %else
+    dup pq exch alget null eq { alist pq abc:acab alput } if
+  } ifelse
+  % (getting ) print pq allength = pq alview == (stack) = pstack
+  pq exch alget
+  % (got) = pstack
+} bind def %/priceq
+
+/maybepush { % price key maybepush -
+  dup prize_key overshot? { pop pop } { %else
+    seen 1 index false getor { pop pop } { %else
+      seen 1 index true put
+      exch priceq exch alpush
+    } ifelse
+  } ifelse
+} bind def %/maybepush
+
+% System of equations:
+% a_x*a + b_x*b = p_x
+% a_y*a + b_y*b = p_y
+% Most b_x,b_y values are relatively prime or close to it, so just scale the
+% x equation by b_y and the y equation by b_x rather than bothering with lcm.
+/solve { % - solve a b true | - solve false
+  % eliminate b to solve for a, then substitute a to get b
+  prize_x b_y mul prize_y b_x mul sub % scaled prize difference
+  a_x b_y mul a_y b_x mul sub % scaled a difference
+  divmod 0 ne { pop false } { %else
+    % a (prize diff divided by a diff) is on the stack
+    prize_x 1 index a_x mul sub b_x divmod 0 eq { true } { %else
+      [ (a) 2 indexfrommark (evenly divides but b) 2 indexfrommark b_x div (does not on prize) prize_x prize_y ] log.info
+      pop pop false
+    } ifelse
+  } ifelse
+} bind def %/solve
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def /total 0 def
+  0 4 input length 3 sub { %for
+    input exch 3 getinterval
+    dup 0 get parsebutton /a_y exch def /a_x exch def %a_x a_y tokey /a_key exch def
+    dup 1 get parsebutton /b_y exch def /b_x exch def %b_x b_y tokey /b_key exch def
+    2 get parseprize /prize_y exch def /prize_x exch def %prize_x prize_y tokey /prize_key exch def
+    solve { /total incby 3 mul /total incby } if
+    % [(x gcd of) a_x b_x prize_x (:) a_x b_x gcd a_x prize_x gcd (:) b_x prize_x gcd ] log.info
+    % [(y gcd of) a_y b_y prize_y (:) a_y b_y gcd a_y prize_y gcd (:) b_y prize_y gcd ] log.info
+    % [] log.info
+    % /pq alist def /minprice 0 def 0 priceq 0 0 tokey alpush /seen 128 dict def
+    % { %loop
+    %   % [ (min) minprice (pq) pq ] log.info
+    %   minprice 400 gt { exit } if
+    %   false { %loop
+    %     pq allength minprice le { true exit } if
+    %     minprice priceq allength 0 eq { /minprice inc } { exit } ifelse
+    %   } loop { exit } if
+    %   % [ (min) minprice (pqlen) pq allength minprice priceq ] log.info
+    %   minprice priceq alpop /cur exch def
+    %   cur prize_key eq { minprice /total incby [(found at price) minprice] log.info exit } if
+    %   minprice 1 add cur b_key add maybepush
+    %   minprice 3 add cur a_key add maybepush
+    % } loop
+    % [ (A:) a_x a_y (B:) b_x b_y (Prize:) prize_x prize_y ] log.info
+  } for
+  total
+end } bind def %/part1
+
+/BIG 10000000000000 def
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def /total 0 def
+  0 4 input length 3 sub { %for
+    input exch 3 getinterval
+    dup 0 get parsebutton /a_y exch def /a_x exch def
+    dup 1 get parsebutton /b_y exch def /b_x exch def
+    2 get parseprize BIG add /prize_y exch def BIG add /prize_x exch def
+    solve { /total incby 3 mul /total incby } if
+  } for
+  total
+end } bind def %/part2
+
+end %Day13
+
+/ARGUMENTS where { pop /Day13 aoc.runday } if
