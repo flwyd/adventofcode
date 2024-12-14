@@ -1,0 +1,143 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 14 https://adventofcode.com/2024/day/14
+%
+% Input is a list of robots in the form (p=x,y v=dx,dy) where p is the initial
+% 0-based x,y position on a grid with 0,0 at the top left and v is the velocity
+% of the robot; velocity components can be negative.  Robots wrap around when
+% leaving the grid.  In part 1, determine the position of each robot after 100
+% moves, then divide the grid up into quadrants, ignore robots in the middle
+% row or column, and multiply the number of robots per quadrant.  In part 2,
+% run one step at a time and print the grid until your primate visual system
+% sees something that looks like a Christmas tree; the answer is the step count.
+% In the example the grid is 11 wide and 7 high, the actual input works with a
+% grid that's 101 wide and 103 high.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day14 8 dict def
+Day14 begin
+
+/robot { % pos_x pos_y vel_x vel_y robot dict
+  4 dict begin
+    /vel_y exch def /vel_x exch def /pos_y exch def /pos_x exch def
+    currentdict
+  end
+} bind def %/robot
+
+/parserobot { % string parserobot robot
+  ": exch { dup ascii.digit? 1 index ascii.- eq or not { pop ascii.sp } if } forall :"
+  tokenize aload pop robot
+} bind def %/parserobot
+
+/moverobot { % robot steps moverobot robot
+  exch begin
+    dup vel_x mul pos_x add width mod dup 0 lt { width exch add } if
+    exch vel_y mul pos_y add height mod dup 0 lt { height exch add } if
+    vel_x vel_y
+  end
+  robot
+} bind def %/moverobot
+
+/lessmore { % x|y width|height lessmore name
+  1 index 1 index 2 idiv lt
+  { pop pop /less } { 2 idiv gt { /more } { /zero } ifelse } ifelse
+} bind def %/lessmore
+
+/incquadrant { % robot incquadrant -
+  dup /pos_x get width lessmore exch /pos_y get height lessmore cat quadrants inc
+} bind def %/incquadrant
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def
+  /quadrants 8 dict begin
+    /lessless 0 def /lessmore 0 def /moreless 0 def /moremore 0 def
+    /lesszero 0 def /zeroless 0 def /morezero 0 def /zeromore 0 def
+    currentdict
+  end def
+  input length 20 lt
+    { /width 11 def /height 7 def } { /width 101 def /height 103 def } ifelse
+  input { parserobot 100 moverobot incquadrant } forall
+  quadrants /lessless get, /lessmore get, /moreless get, /moremore get mul mul mul
+end } bind def %/part1
+
+/haslongline? { % string haslongline? bool
+  (###############################) search { pop pop pop true } { pop false } ifelse
+} bind def %/haslongline?
+
+/hastree? { % - hastree? bool
+  % The Christmas tree Easter egg has a 31-wide box of robots surrounding a tree
+  % shape of stacked triangles and a rectangle at the base.  Just look for box.
+  /toprow width string def /botrow width string def
+  robots { %forall
+    /pos_x get, /pos_y get dup 32 eq
+    { pop toprow true } { 64 eq { botrow true } { false } ifelse } ifelse
+    { exch ascii.# put } { pop } ifelse
+  } forall
+  toprow haslongline? botrow haslongline? and
+} bind def %/hastree?
+
+/centerart { % robots makegrid string
+  [ height { ": width { ascii.. } repeat ascii.nl :" } repeat ] /grid exch def
+  { /pos_x get, /pos_y get grid exch get exch ascii.* put } forall
+  [ grid 32 33 getinterval { 34 31 getinterval } forall ] (\n) join
+} bind def %/makegrid
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def
+  input length 20 lt { (not found) } { %else
+    /width 101 def /height 103 def /maxiters width height mul def
+    [ input { parserobot } forall ] /robots exch def
+    0 { %loop
+      1 add
+      [ robots { 1 moverobot } forall ] /robots exch def
+      hastree? { log.Enabled { robots centerart = } if exit } if
+      maxiters 1 index eq { (got to 101*103 without a tree :-/) = exit } if
+    } loop
+  } ifelse
+end } bind def %/part2
+
+/RANDINITED false def
+/part2:writegrids { 8 dict begin % [lines] part2 result
+  /input exch def
+  RANDINITED not { realtime srand } if
+  (/tmp/grids/grids-) rand tostring (.txt) 3 cat /gridfilename exch def
+  [ (writing grids to) gridfilename ] log.info
+  gridfilename (w) file /gridfile exch def
+  input length 20 lt { /width 11 def /height 7 def } { /width 101 def /height 103 def } ifelse
+  [ input { parserobot } forall ] /robots exch def
+  robots 0 printgrid
+  1 1 10000 {
+    [ robots { 1 moverobot } forall ] /robots exch def
+    robots exch printgrid
+  } for
+ gridfile flushfile gridfile closefile
+ (look at ) gridfilename cat
+end } bind def %/part2
+
+/printgrid { % array step printgrid -
+ gridfile (## STEP ) writestring gridfile exch tostring writestring gridfile ( ##\n\n) writestring
+ [ height { ": width { ascii.. } repeat :" } repeat ] /grid exch def
+ { /pos_x get, /pos_y get grid exch get ab:baba get 1 add put } forall
+ grid { gridfile exch writestring gridfile (\n) writestring } forall
+ gridfile (\n) writestring
+} bind def %/printgrid
+
+end %Day14
+
+/ARGUMENTS where { pop /Day14 aoc.runday } if
