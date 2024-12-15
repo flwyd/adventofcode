@@ -136,6 +136,26 @@ test.suite begin
     end
   } test.case
 
+  (abcd:3 stack effects) {
+    6 dict begin
+      0 1 3 { ascii.a add /i exch def %for
+        0 1 3 { ascii.a add /j exch def %for
+          0 1 3 { ascii.a add /k exch def %for
+            i ascii.d eq j ascii.d eq k ascii.d eq or or { %if
+              /target ": i j k :" def
+              % all stack effect functions include the last character,
+              % otherwise just call pop and then another stack function
+              target ascii.c contains? not { exit } if
+              /op (abcd:) target cat cvn cvx def
+              /start /a /b /c /d op
+                [ /start i charname j charname k charname ] assert.stack
+            } if
+          } for
+        } for
+      } for
+    end
+  } test.case
+
   (abcd:rearrange stack effects) {
     /start /a /b /c /d abcd:abcd [ /start /a /b /c /d ] assert.stack
     /start /a /b /c /d abcd:abdc [ /start /a /b /d /c ] assert.stack
