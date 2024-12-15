@@ -1,0 +1,177 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 15 https://adventofcode.com/2024/day/15
+%
+% Input is a square grid with # indicating walls (and surrounding the grid),
+% O indicating boxes, . indicating floor, and @ indicating a robot moving about.
+% Then there's a blank line, then a series of lines with movement instructions:
+% ^v<> for up, down, left, right.  The robot moves all boxes in a line if there
+% is open space behind them.  In part 2, each item in the input grid becomes
+% two positions wide, doubling # and ., adding a . to @, and turning O into [].
+% The wide [] boxes move if both halves of the box can move, which of course
+% cascades.  In both parts the answer is the some of Goods Positioning System
+% coordinates which are 100 * row + column of the box (the [ in wide boxes).
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day15 8 dict def
+Day15 begin
+
+/tokey { % row col tokey key
+  exch 100 mul add
+} bind def %/tokey
+
+/fromkey { % key fromkey row col
+  100 divmod
+} bind def %/fromkey
+
+/UP -1 0 tokey def /DOWN 1 0 tokey def /LEFT 0 -1 tokey def /RIGHT 0 1 tokey def
+/DIR << ascii.^ UP ascii.v DOWN ascii.langle LEFT ascii.rangle RIGHT >> def
+
+% Find the first key in direciton dir that's an open floor.
+/openkey { % dir openkey key
+  curpos { %loop
+    grid 1 index get ascii.. eq { exch pop exit } if 
+    grid 1 index get ascii.# eq { pop pop -1 exit } if
+    1 index add
+  } loop
+} bind def %/openkey
+
+% Move the @ and any boxes it's pushing one step in direction dir.
+/move { % dir move -
+  /dir exch def
+  dir openkey dup 0 lt { pop } { %else
+    dir -1 mul curpos { %for
+      dup curpos eq { %ifelse
+        pop grid curpos ascii.. put /curpos curpos dir add def
+      } { %else
+        dup dir sub grid exch get grid abc:cab put
+      } ifelse
+    } for
+  } ifelse
+} bind def %/move
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def input 0 get length 2 mul dict /grid exch def
+  input { %forup
+    /i exch def
+    input i get length 0 eq { exit } if
+    input i get { %forup
+      /j exch def input i get j get ascii.@ eq { /curpos i j tokey def } if
+      input i get j get grid i j tokey 3 -1 roll put
+    } forup
+  } forup % /i is input index of the blank line separating grid from movements
+  i 1 input lastindex { input exch get { DIR exch get move } forall } for
+  % Conveniently, GPS coordinate is just tokey
+  0 grid { ascii.O eq { add } { pop } ifelse } forall
+end } bind def %/part1
+
+% Determine if open space allows the item in position pos to move in direction
+% dir.  Horizontal movements need a . before the first #, vertical movements
+% of [] boxes need to recursively check each side.
+/canmovewide? { % dir pos canmovewide? bool
+  grid 1 index get ascii.# eq { pop pop false } { %else
+    grid 1 index get ascii.. eq { pop pop true } { %else
+      grid 1 index get ascii.@ eq { 1 index add canmovewide? } { %else
+        1 index 100 mod 0 ne { 1 index add canmovewide? } { %else
+          % going up or down, need to see if neighbor can move
+          grid 1 index get ascii.lbracket eq { %ifelse
+            2 copy add RIGHT add 2 index exch canmovewide?
+            3 1 roll 1 index add canmovewide? and
+          } { %else
+            2 copy add LEFT add 2 index exch canmovewide?
+            3 1 roll 1 index add canmovewide? and
+          } ifelse
+        } ifelse
+      } ifelse
+    } ifelse
+  } ifelse
+} bind def %/canmovewide?
+
+% Recursively moves the left or right bracket at position pos in direction dir
+% and the other half of the box, then replaces pos with character incoming.
+/movebracket { % incoming dir pos movebracket -
+  grid 1 index get ascii.. eq { grid abcd:dca put } { %else
+    grid 1 index get ascii.lbracket eq { %ifelse
+      ascii.lbracket abc:abcab ab:aab add movebracket
+      ascii.rbracket abc:abcab ab:aab add RIGHT add movebracket
+      dup RIGHT add grid exch ascii.. put
+      grid abcd:dca put
+    } { %else
+      ascii.rbracket abc:abcab ab:aab add movebracket
+      ascii.lbracket abc:abcab ab:aab add LEFT add movebracket
+      dup LEFT add grid exch ascii.. put
+      grid abcd:dca put
+    } ifelse
+  } ifelse
+} bind def %/movebracket
+
+/movewide { % dir movewide -
+  dup curpos canmovewide? { %ifelse
+    dup 100 mod 0 ne { move } { %else
+      % going up or down
+      dup curpos add grid exch get ascii.lbracket eq { %ifelse
+        ascii.@ 1 index dup curpos add movebracket
+        ascii.. 1 index dup curpos add RIGHT add movebracket
+      } { %else
+        dup curpos add grid exch get ascii.rbracket eq { %ifelse
+          ascii.@ 1 index dup curpos add movebracket
+          ascii.. 1 index dup curpos add LEFT add movebracket
+        } {
+          dup curpos add grid exch ascii.@ put
+        } ifelse
+      } ifelse
+      grid curpos ascii.. put curpos add /curpos exch def
+    } ifelse
+  } { pop } ifelse
+} bind def %/movewide
+
+/REPLACE << ascii.# ascii.# ascii.. ascii.. ascii.@ ascii.@ ascii.O ascii.lbracket >> def 
+/AFTER << ascii.# ascii.# ascii.. ascii.. ascii.@ ascii.. ascii.lbracket ascii.rbracket >> def
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def input 0 get length 4 mul dict /grid exch def
+  input { %forup
+    /i exch def
+    input i get length 0 eq { exit } if
+    input i get { %forup
+      /j exch def
+      input i get j get ascii.@ eq { /curpos i j 2 mul tokey def } if
+      input i get j get REPLACE exch get dup
+      grid i j 2 mul tokey 3 -1 roll put
+      AFTER exch get grid i j 2 mul 1 add tokey 3 -1 roll put
+    } forup
+  } forup % printgrid
+  i 1 input lastindex { input exch get { DIR exch get movewide } forall } for
+  0 grid { ascii.lbracket eq { add } { pop } ifelse } forall % printgrid
+end } bind def %/part2
+
+/printgrid { % - printgrid -
+  /line input 0 get length 2 mul string def
+  0 1 input 0 get lastindex { %for
+    /I exch def
+    0 1 input 0 get length 2 mul 1 sub { %for
+      /J exch def
+      line J grid I J tokey get put
+    } for
+    line =
+  } for
+} bind def %/printgrid
+
+end %Day15
+
+/ARGUMENTS where { pop /Day15 aoc.runday } if
