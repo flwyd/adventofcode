@@ -1,0 +1,120 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 17 https://adventofcode.com/2024/day/17
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day17 8 dict def
+Day17 begin
+
+/COMBO [ 0 1 2 3 { A } { B } { C } { (SEVEN!!) = -100000000 } ] def
+
+/combo { % op combo int
+  COMBO exch get exec
+} bind def %/combo
+
+/incip { % - incip -
+  2 /IP incby
+} bind def %/incip
+
+/divide { % op register divide -
+  combo 2 exch exp cvi A exch idiv
+} bind def %/divide
+
+/adv { % op adv -
+  % combo 2 exch exp cvi A exch idiv incip
+  divide /A exch def incip
+} bind def %/adv
+
+/bdv { % op bdv -
+  % combo 1 bitshift B exch idiv incip
+  divide /B exch def incip
+} bind def %/bdv
+
+/cdv { % op cdv -
+  % combo 1 bitshift C exch idiv incip
+  divide /C exch def incip
+} bind def %/cdv
+
+/bxl { % op bxl -
+  B xor /B exch def incip
+} bind def %/bxl
+
+/bst { % op bst -
+  combo 8 mod /B exch def incip
+} bind def %/bst
+
+/jnz { % op jnz -
+  A 0 eq { pop incip } { /IP exch def } ifelse
+} bind def %/jnz
+
+/bxc { % op bxc -
+  pop B C xor /B exch def incip
+} bind def %/bxc
+
+/out { % op out -
+  combo 8 mod OUT exch alpush incip
+} bind def %/out
+
+/OPCODES [ { adv } { bxl } { bst } { jnz } { bxc } { out } { bdv } { cdv } ] def
+
+/parseinput { % input parseinput -
+  /input exch def /IP 0 def /OUT alist def
+  input 0 get tokenize last /A exch def
+  input 1 get tokenize last /B exch def
+  input 2 get tokenize last /C exch def
+  input 4 get (: ) split exch pop [ exch (,) split ] [ exch { cvi } forall ] /PROGRAM exch def
+} bind def %/parseinput
+
+/runprogram { % - runprogram string
+   /IP 0 def OUT alclear
+  { %loop
+    % (IP ) print IP = pstack
+    IP PROGRAM lastindex gt { exit } if
+    % [ A B C PROG IP 2 getinterval IP OUT alview ] ==
+    PROGRAM IP 1 add get PROGRAM IP get OPCODES exch get exec
+    % (/IP ) print IP = pstack
+  } loop
+  % [ A B C PROGRAM IP OUT ] ==
+  OUT alview
+} bind def %/runprogram
+
+/part1 { 8 dict begin % [lines] part1 result
+  parseinput
+  [ 0 2 PROGRAM lastindex { PROGRAM 1 index get OPCODES exch get exch 1 add PROGRAM exch get } for ] /PROG exch def
+  PROG ==
+  runprogram (,) join
+end } bind def %/part1
+
+% incorrect: 4,5,7,5,5,6,0,6,3
+
+/part2 { 8 dict begin % [lines] part2 result
+  parseinput
+  /try 0 def
+  { %loop
+    try 1000000 mod 0 eq { try == flush } if
+    /A try def /B 0 def /C 0 def
+    runprogram PROGRAM deepeq { exit } if
+    /try inc
+  } loop
+  try
+end } bind def %/part2
+
+end %Day17
+
+/ARGUMENTS where { pop /Day17 aoc.runday } if
