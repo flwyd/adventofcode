@@ -6,6 +6,18 @@
 % https://opensource.org/licenses/MIT.
 
 % Advent of Code 2024 day 17 https://adventofcode.com/2024/day/17
+%
+% Input is five lines: "Register A: number", the same for B and C, a blank line,
+% and "Program: 1,2,3,4...".  The program represents a series of opcodes and
+% operators that would be too long to explain here.  The "out" instruction
+% adds a register value to be output.  Part 1's answer is a comma-separated
+% list of the output values.  Part 2's task is to figure out the lowest number
+% that Register A could start with for the output to be a Quine (i.e. output and
+% program are the same.)  It turns out that inputs are constructed so that the
+% starting values for B and C don't matter, the last operator is always jnz,0
+% which goes to the start of the program if A is non-zero and runs off the end
+% and halts otherwise.  The fact A must be 0 at the end of the program allows
+% the problem to be tractable.
 
 (cob/bootstrap.ps) runlibfile
 (cob/arraylist.ps) cob.require
@@ -22,7 +34,7 @@
 /Day17 8 dict def
 Day17 begin
 
-/COMBO [ 0 1 2 3 { A } { B } { C } { (SEVEN!!) = -100000000 } ] def
+/COMBO [ 0 1 2 3 { A } { B } { C } { (UH OH, it's a seven) = -100000000 } ] def
 
 /combo { % op combo int
   COMBO exch get exec
@@ -37,17 +49,14 @@ Day17 begin
 } bind def %/divide
 
 /adv { % op adv -
-  % combo 2 exch exp cvi A exch idiv incip
   divide /A exch def incip
 } bind def %/adv
 
 /bdv { % op bdv -
-  % combo 1 bitshift B exch idiv incip
   divide /B exch def incip
 } bind def %/bdv
 
 /cdv { % op cdv -
-  % combo 1 bitshift C exch idiv incip
   divide /C exch def incip
 } bind def %/cdv
 
@@ -84,35 +93,35 @@ Day17 begin
 /runprogram { % - runprogram string
    /IP 0 def OUT alclear
   { %loop
-    % (IP ) print IP = pstack
     IP PROGRAM lastindex gt { exit } if
-    % [ A B C PROG IP 2 getinterval IP OUT alview ] ==
     PROGRAM IP 1 add get PROGRAM IP get OPCODES exch get exec
-    % (/IP ) print IP = pstack
   } loop
-  % [ A B C PROGRAM IP OUT ] ==
   OUT alview
 } bind def %/runprogram
 
 /part1 { 8 dict begin % [lines] part1 result
-  parseinput
-  [ 0 2 PROGRAM lastindex { PROGRAM 1 index get OPCODES exch get exch 1 add PROGRAM exch get } for ] /PROG exch def
-  PROG ==
-  runprogram (,) join
+  parseinput runprogram (,) join dup empty? { pop /nothing } if
 end } bind def %/part1
 
-% incorrect: 4,5,7,5,5,6,0,6,3
-
 /part2 { 8 dict begin % [lines] part2 result
-  parseinput
-  /try 0 def
-  { %loop
-    try 1000000 mod 0 eq { try == flush } if
-    /A try def /B 0 def /C 0 def
-    runprogram PROGRAM deepeq { exit } if
-    /try inc
-  } loop
-  try
+  parseinput /prevmaybe [0] def
+  PROGRAM { %fordown
+    /i exch def /maybe alist def
+    prevmaybe {
+      /m exch def 0 1 7 { %for
+        m 8 mul add /curA exch def
+        /A curA def runprogram
+        PROGRAM i tailfrom deepeq { maybe curA alpush } if
+      } for
+    } forall
+    /prevmaybe maybe alview def
+  } fordown
+  prevmaybe empty? { /answer 0 def } { %else
+    prevmaybe first prevmaybe { min } forall /answer exch def
+  } ifelse
+  % /A answer def runprogram (,) join =
+  % input 4 get =
+  answer
 end } bind def %/part2
 
 end %Day17
