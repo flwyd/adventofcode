@@ -1,0 +1,120 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 16 https://adventofcode.com/2024/day/16
+%
+% Input is a grid surrounded by a wall.  # marks walls, . marks open spaces,
+% S and E mark start and end.  Part 1 answer is the length of a shortest path
+% from S to E.  Part 2 is the number of squares that are part of any shortest
+% path.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day16 8 dict def
+Day16 begin
+
+/tokey { % row col tokey key
+  exch 1000 mul add
+} bind def %/tokey
+
+/fromkey { % key fromkey row col
+  1000 divmod
+} bind def %/fromkey
+
+/option { 4 dict begin % pos dir cost option dict
+  /cost exch def
+  /dir exch def
+  /pos exch def
+  currentdict
+end } bind def %/option
+
+/charat { % key charat char
+  fromkey input 3 -1 roll get exch get
+} bind def %/charat
+
+/atgoal? { % key atgoal? bool
+  charat ascii.E eq
+} bind def %/atgoal?
+
+/open? { % key open? bool
+  charat dup ascii.. eq exch ascii.E eq or
+} bind def %/open?
+
+/DIRS [ 0 1 tokey 1 0 tokey 0 -1 tokey -1 0 tokey ] def
+
+/turnleft { % dir turnleft dir
+  DIRS exch indexof { (unknown direction!) = pstack } unless 1 sub
+  dup 0 lt { DIRS length exch add } if DIRS exch get
+} bind def %/turnleft
+
+/turnright { % dir turnright dir
+  DIRS exch indexof { (unknown direction!) = pstack } unless 1 add
+  DIRS length mod DIRS exch get
+} bind def %/turnright
+
+/visited? { % option visited? bool
+  /pos get, /dir get exch 100000 mul add visited exch known { true } { false } ifelse
+} bind def %/visited?
+
+/visit { % option visit -
+  /pos get, /dir get exch 100000 mul add visited exch true put
+} bind def %/visit
+
+/possiblemoves { % option possiblemoves o1 ... on n
+  mark
+  1 indexfrommark /pos get, /dir get add open? { % if
+    1 indexfrommark /pos get, /dir get, /cost get 1 add abc:bcab add 3 1 roll option
+    dup visited? { pop } if
+  } if
+  1 indexfrommark /pos get, /dir get, /cost get 1000 add exch turnleft exch option
+  dup visited? { pop } if
+  1 indexfrommark /pos get, /dir get, /cost get 1000 add exch turnright exch option
+  dup visited? { pop } if
+  counttomark 1 -2 rollfrommark pop pop
+} bind def %/possiblemoves
+
+/pqpush { % option pqpush -
+  pq 1 index /cost get { alist pq abc:bcab put } getorelse exch alpush
+} bind def %/pqpush
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def
+  % start is one diagonally from bottom left in examples and actual input
+  /pq 1024 dict def /cheapest 0 def /visited input length dict def
+  input lastindex 1 sub 1 tokey DIRS first 0 option pqpush
+  { %loop
+    { %loop
+      pq cheapest known { pq cheapest get allength 0 gt { exit } if } if
+      pq cheapest undef /cheapest inc
+    } loop
+    pq cheapest get alpop
+    dup visited? { pop } { %ifelse
+      dup visit
+      dup /pos get atgoal? { /cost get exit } if
+      possiblemoves { pqpush } repeat
+    } ifelse
+  } loop
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def
+  /TODO
+end } bind def %/part2
+
+end %Day16
+
+/ARGUMENTS where { pop /Day16 aoc.runday } if
