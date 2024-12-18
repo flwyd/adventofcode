@@ -42,12 +42,12 @@ Day18 begin
 } bind def %/inbounds?
 
 /blocked? { % key blocked? bool
-  dup inbounds? { fromkey GRID 3 -1 roll get exch get } { pop true } ifelse
+  dup inbounds? { GRID exch known } { pop true } ifelse
 } bind def %/blocked?
 
 /makegrid { % input makegrid -
-  [ MAX 1 add { [ MAX 1 add { false } repeat ] } repeat ] /GRID exch def
-  { (,) split cvi exch cvi exch GRID exch get exch true put } forall
+  /GRID 1 index length dict def
+  { (,) split cvi exch cvi exch tokey GRID exch true put } forall
 } bind def %/makegrid
 
 /DIRS [ 0 1 tokey 1 0 tokey 0 -1 tokey -1 0 tokey ] def
