@@ -1,0 +1,112 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 18 https://adventofcode.com/2024/day/18
+%
+% Input is a sequence of X,Y coordinates which in sequence block coordinates in
+% a 0-indexed grid.  In the example the grid goes from 0,0 to 6,6, in the actual
+% problem it goes from 0,0 to 70,70.  In part 1, only the first 1024 (12 in the
+% example) rows insert a block, then find the shortest path from top left to
+% bottom right corner.  In part 2, find the first coordinate which blocks the
+% final path from corner to corner.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day18 8 dict def
+Day18 begin
+
+/tokey { % x y tokey key
+  exch 100 mul add
+} bind def %/tokey
+
+/fromkey { % key fromkey x y
+  100 divmod
+} bind def %/fromkey
+
+/inbounds? { % key inbounds? bool
+  dup fromkey 0 ge exch 0 ge and exch fromkey MAX le exch MAX le and and
+} bind def %/inbounds?
+
+/blocked? { % key blocked? bool
+  dup inbounds? { fromkey GRID 3 -1 roll get exch get } { pop true } ifelse
+} bind def %/blocked?
+
+/makegrid { % input makegrid -
+  [ MAX 1 add { [ MAX 1 add { false } repeat ] } repeat ] /GRID exch def
+  { (,) split cvi exch cvi exch GRID exch get exch true put } forall
+} bind def %/makegrid
+
+/DIRS [ 0 1 tokey 1 0 tokey 0 -1 tokey -1 0 tokey ] def
+
+/neighbors { % key neighbors [keys]
+  [ DIRS { 1 indexfrommark add dup blocked? { pop } if } forall ] exch pop
+} bind def %/neighbors
+
+/pqpush { % key cost pqpush -
+  pq exch { alist pq abc:bcab put } getorelse exch alpush
+} bind def %/pqpush
+
+/shortestlen { % - shortestlen int|-1
+  /pq MAX 8 mul dict def /seen MAX MAX mul dict def /cheapest 0 def /highest 0 def
+  0 0 tokey 0 pqpush
+  { %loop
+    { %loop
+      pq cheapest known { pq cheapest get allength 0 gt { exit } if } if
+      pq cheapest undef /cheapest inc
+      cheapest highest gt { exit } if
+    } loop
+    cheapest highest gt { exit } if
+    pq cheapest get alpop
+    dup dest eq { pop exit } if
+    dup seen exch known { pop } { %else
+      seen 1 index true put
+      neighbors { dup seen exch known { pop } { %else
+        cheapest 1 add dup highest max /highest exch def pqpush
+      } ifelse } forall
+    } ifelse
+  } loop
+  cheapest highest gt { -1 } { cheapest } ifelse
+} bind def %/shortestlen
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def 
+  0 input { length max } forall 3 eq /example? exch def
+  example? { 6 } { 70 } ifelse /MAX exch def /dest MAX MAX tokey def
+  input 0 example? { 12 } { 1024 } ifelse getinterval makegrid
+  shortestlen
+end } bind def %/part1
+
+/cloggedindex? { % int cloggedindex? bool
+  input 0 3 -1 roll getinterval makegrid shortestlen -1 eq
+} bind def %/cloggedindex?
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def
+  0 input { length max } forall 3 eq /example? exch def
+  example? { 6 } { 70 } ifelse /MAX exch def /dest MAX MAX tokey def
+  /low 0 def /high input lastindex def % binary search
+  { %loop
+    high low sub 1 le { low cloggedindex? { low exit } { high exit } ifelse } if
+    high low sub 2 idiv low add /cur exch def
+    cur cloggedindex? { /high cur def } { /low cur def } ifelse
+  } loop
+  input exch 1 sub get
+end } bind def
+
+end %Day18
+
+/ARGUMENTS where { pop /Day18 aoc.runday } if
