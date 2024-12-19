@@ -1,0 +1,73 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 19 https://adventofcode.com/2024/day/19
+%
+% First input line is separated by comma-space that lists a bunch of color
+% sequences made up of w, u, b, r, g characters.  After a blank line, the
+% remaining lines are longer color sequences.  In part 1, determine how many
+% of the longer sequences can be completely constructed from the components in
+% the first line.  Components can be reused, order matters.  In part 2,
+% determine how many combinations of components could form a sequence, e.g. a
+% component list of b, r, br, wr can make "brwrr" in two ways: b,r,wr,r and
+% br,wr,r.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day19 8 dict def
+Day19 begin
+
+/possible? { % string possible? bool
+  dup atoms exch known not { %if
+    false exch 1 1 2 index lastindex { %for
+      2 copy head abc:acaba length exch sub tail % stack: head tail
+      exch possible? { %ifelse
+        possible? { atoms 1 index true put exch pop true exch exit } if
+      } { pop } ifelse
+    } for
+    exch { atoms 1 index false put } unless
+  } if
+  atoms exch get
+} bind def %/possible?
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def
+  << [ input first (, ) split ] { true } forall >> /atoms exch def
+  0 input 2 tailfrom { possible? { 1 add } if } forall
+end } bind def %/part1
+
+/numways { % string numways int
+  dup ways exch known { ways exch get } { %else
+    0 1 1 3 index length { %for
+      % stack: string count i
+      abc:abac 2 copy head atoms exch known { %ifelse
+        1 index length exch sub tail numways add
+      } { pop pop } ifelse
+    } for
+    dup ways 4 2 roll put
+  } ifelse
+} bind def %/numways
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def /ways << () 1 >> def
+  << [ input first (, ) split ] { true } forall >> /atoms exch def
+  0 input 2 tailfrom { dup numways exch pop add } forall
+end } bind def %/part2
+
+end %Day19
+
+/ARGUMENTS where { pop /Day19 aoc.runday } if
