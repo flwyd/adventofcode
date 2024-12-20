@@ -1,0 +1,124 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 20 https://adventofcode.com/2024/day/20
+%
+% Input is a grid with # as walls, . as open floor, and S and E as start/end.
+% The open spaces form a single-path labyrinth.  In part 1 you can cheat once
+% by disabling walls for two steps.  In part 2 you can cheat once by disabling
+% walls for 20 steps.  In both parts, count the number of distinct
+% (cheat start, cheat end) pairs that save at least 100 steps in the S to E
+% path.  Part 1 example has a list of cheats with different saving lengths,
+% none of which exceed 100 steps.  Disabling walls for N steps means that at the
+% end of your Nth step you can't be on a wall position, not that you can step
+% through N walls and then the N+1st step must be a move to a non-wall since the
+% walls will reappear.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day20 8 dict def
+Day20 begin
+
+/tokey { % row col tokey key
+  exch 1000 mul add
+} bind def %/tokey
+
+/fromkey { % key fromkey row col
+  1000 divmod
+} bind def %/fromkey
+
+/charat { % key charat char
+  fromkey input 3 -1 roll get exch get
+} bind def %/charat
+
+/onboard? { % key onboard? bool
+  fromkey 2 { dup 0 ge exch input length lt and exch } repeat and
+} bind def %/onboard?
+
+/blocked? { % key blocked? bool
+  dup onboard? not exch walls exch known or
+} bind def %/blocked?
+
+/DIRS [ 0 1 tokey 1 0 tokey 0 -1 tokey -1 0 tokey ] def
+
+/neighbors { % key neighbors [keys]
+  mark
+  DIRS { 1 indexfrommark add dup onboard? { pop } unless } forall
+  counttomark 1 -2 rollfrommark pop pop
+} bind def %/neighbors
+
+/pqpush { % key cost pqpush -
+  pq exch { alist pq abc:bcab put } getorelse exch alpush
+} bind def %/pqpush
+
+/buildstate { % - buildstate -
+  /walls input length dup mul dict def /fromend input length dup mul dict def 
+  input { input 1 index get { %forup
+    ab:aab tokey /k exch def
+    k charat ascii.# eq { walls k true put } if
+    k charat ascii.E eq { /endpos k def } if
+  } forup pop } forup
+  /pq 1024 dict def /cheapest 0 def endpos 0 pqpush
+  { %loop
+    { %loop
+      pq cheapest known { pq cheapest get allength 0 gt { exit } if } if
+      pq cheapest undef /cheapest inc
+      pq empty? { exit } if
+    } loop
+    pq empty? { exit } if
+    pq cheapest get alpop
+    dup fromend exch known { pop } { %ifelse
+      dup fromend exch cheapest put
+      neighbors { dup blocked? { pop } { %else
+        dup fromend exch known { pop } { cheapest 1 add pqpush } ifelse
+      } ifelse } repeat
+    } ifelse
+  } loop
+} bind def %/buildstate
+
+/distance { % key key distance int
+  fromkey 3 -1 roll fromkey abcd:acbd sub abs 3 1 roll sub abs add
+} bind def %/distance
+
+/cheatableneighbors { % key cheatableneighbors int
+  /pos exch def 0
+  maxhattan neg 1 maxhattan { %for
+    /i exch def
+    i abs maxhattan sub 1 maxhattan i abs sub { %for
+      /j exch def i j tokey pos add /k exch def
+      fromend k known { %if
+        fromend pos get fromend k get sub pos k distance sub threshold ge { 1 add } if
+      } if
+   } for
+  } for
+} bind def %/cheatableneighbors
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def /maxhattan 2 def /answer 0 def buildstate
+  input length 100 lt { 2 } { 100 } ifelse /threshold exch def
+  fromend keys { cheatableneighbors /answer incby } forall answer
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def /maxhattan 20 def /answer 0 def buildstate
+  input length 100 lt { 50 } { 100 } ifelse /threshold exch def
+  fromend keys { cheatableneighbors /answer incby } forall answer
+end } bind def %/part2
+
+end %Day20
+
+/ARGUMENTS where { pop /Day20 aoc.runday } if
