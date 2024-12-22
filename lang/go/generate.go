@@ -10,20 +10,24 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
-const shebang = "///usr/bin/true; exec /usr/bin/env go run \"$0\" \"`dirname $0`/runner.go\" \"$@\""
-const dayCode = `// Copyright 2023 Google LLC
+const shebang = "//usr/bin/true; exec /usr/bin/env go run \"$0\" \"`dirname $0`/runner.go\" \"$@\""
+
+// TODO use template/text
+const dayCode = `// Copyright YEAR Google LLC
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+// Advent of Code YEAR day DAYNUM https://adventofcode.com/YEAR/day/DAYNUM
 package main
 
 func part1(lines []string) string {
@@ -37,6 +41,8 @@ func part2(lines []string) string {
 func main() {
 	runMain(part1, part2)
 }
+
+const dayName = "dayDAYNUM"
 `
 
 func main() {
@@ -47,9 +53,16 @@ func main() {
 	if err := os.MkdirAll(outdir, 0755); err != nil {
 		log.Fatalf("Could not create %s: %v", outdir, err)
 	}
+	var year string
+	if p, err := filepath.Abs(path.Dir(outdir)); err != nil {
+		log.Fatalf("Could not determine year from directory %s: %v", outdir, err)
+	} else {
+		year = path.Base(p)
+	}
 	dayname := filepath.Base(outdir)
-	dayvar := fmt.Sprintf("const dayName = %q", dayname)
-	code := shebang + "\n" + dayCode + "\n" + dayvar + "\n"
+	daynum := strings.TrimPrefix(dayname, "day")
+	code := shebang + "\n" +
+		strings.ReplaceAll(strings.ReplaceAll(dayCode, "DAYNUM", daynum), "YEAR", year)
 	gofile := filepath.Join(outdir, dayname+".go")
 	if fileExists(gofile) {
 		log.Fatalf("%s already exists, exiting", gofile)
