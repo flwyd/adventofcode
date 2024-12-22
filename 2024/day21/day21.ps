@@ -1,0 +1,39 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 21 https://adventofcode.com/2024/day/21
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day21 8 dict def
+Day21 begin
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def
+  % input { (line: ) print = } forall
+  /TODO
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def
+  % input { (line: ) print = } forall
+  /TODO
+end } bind def %/part2
+
+end %Day21
+
+/ARGUMENTS where { pop /Day21 aoc.runday } if
