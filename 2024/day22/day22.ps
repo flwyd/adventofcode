@@ -1,0 +1,101 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 22 https://adventofcode.com/2024/day/22
+%
+% Input is a list of integers which are the PRNG seeds for several sellers.
+% The random number generator multiplies by 64, divides by 32, and multiplies by
+% 2024 with an "xor with previous" and mod 10^24 at each step.  In part 1, run
+% each line's PRNG sequence 2000 times and add the final values.  In part 2, the
+% price available from a seller is the final digit of the current number.  You
+% are tasking a monkey to negotiate for bananas by choosing the price which
+% occurs after a sequence of four price changes; the monkey will look for the
+% same four-delta sequence before making a purchase.  Count the number of
+% bananas you can obtain by selecting the optimal 4-part sequence.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day22 8 dict def
+Day22 begin
+
+/prune { % int prune int
+  16777216 mod
+} bind def %/prune
+
+/evolve { % int evolve int
+  dup 64 mul xor prune
+  dup 32 idiv xor prune
+  dup 2048 mul xor prune
+} bind def %/evolve
+
+/part1 { 8 dict begin % [lines] part1 result
+  0 exch { cvi 2000 { evolve } repeat add } forall
+end } bind def %/part1
+
+/sellprice { % int sellprice 0..9
+  10 mod
+} bind def %/sellprice
+
+/pricesequence { % starting pricesequence array
+  [ exch 2000 { evolve dup sellprice exch } repeat pop ]
+} bind def %/pricesequence
+
+/deltas { % start pricesequence deltas array
+  [ 3 1 roll exch sellprice exch { ab:bba sub exch } forall pop ]
+} bind def %/deltas
+
+/tokey { % [a1 a2 a3 a4] tokey key
+  0 get, exch 10 add 1000000 mul exch
+  1 get, exch 10 add 10000 mul exch
+  2 get, exch 10 add 100 mul exch
+  3 get 10 add
+  add add add
+} bind def %/tokey
+
+/fromkey { % key fromkey [a1 a2 a3 a4]
+  [ exch
+    1000000 divmod exch 10 sub exch
+    10000 divmod exch 10 sub exch
+    100 divmod exch 10 sub exch
+    10 sub ]
+} bind def %/fromkey
+
+/seqincby { % key amount seqincby -
+  seqvalues 2 index known { seqvalues 2 index 0 put } unless exch seqvalues incby
+} bind def %/seqincby
+
+/findsequences { % start findsequences -
+  /seen 1024 dict def
+  dup pricesequence ab:bab deltas
+  3 1 1999 { %for
+    % stack: priceseq deltas i
+    abc:abcbc 3 sub 4 getinterval tokey abcd:abdac get % seqincby
+    seen 2 index known { pop pop } { seen 2 index true put seqincby } ifelse
+  } for
+  pop pop
+  currentdict /seen undef
+} bind def %/findsequences
+
+/part2 { 8 dict begin % [lines] part2 result
+  /seqvalues 2048 dict def
+  { cvi findsequences } forall
+  0 seqvalues values { max } forall
+end } bind def %/part2
+
+end %Day22
+
+/ARGUMENTS where { pop /Day22 aoc.runday } if
