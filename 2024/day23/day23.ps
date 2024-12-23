@@ -1,0 +1,195 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 23 https://adventofcode.com/2024/day/23
+%
+% Input is lines like ab-cd indicating an undirected connection between two
+% computers in a network.  Part 1 answer is the number of groups of three
+% fully-connected computers where at least one computer name starts with 't'.
+% Part 2 answer is the sorted, comma-separated list of computers which form the
+% largest fully-connected subcomponent of the network.
+
+% TODO part 2 very slowly works from 2-size connected components to find the
+% answer, which is size 13.  Follow the Go implementation and start with large
+% intersections and work smaller.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day23 8 dict def
+Day23 begin
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def /computers input length dict def /triads input length dict def
+  input {
+    (-) split 2 copy exch
+    2 {
+      computers 1 index known { computers 1 index 8 dict put } unless
+      computers exch get exch true put
+    } repeat
+  } forall
+  % computers tostring =
+  % input { (line: ) print = } forall
+  computers {
+    exch /a exch def a tostring first ascii.t eq { %ifelse
+      % [ /a (starts with t) 1 indexfrommark ] log.info
+      keys {
+        /b exch def computers b get keys { %forall
+          /c exch def a c ne computers a get c known and { %if
+            [ a b c ] dup { tostring } isortby tostring triads exch true put
+          } if
+        } forall
+      } forall
+    } { pop } ifelse
+  } forall
+  triads length
+end } bind def %/part1
+
+/diff { % dict dict diff dict
+  /_a exch def /_b exch def
+  <<
+    _a { _b 1 index known { pop } { true } ifelse } forall
+    _b { _a 1 index known { pop } { true } ifelse } forall
+  >>
+  % [ 1 index (is diff of) _a _b ] log.info
+} bind def %/diff
+
+/intersect { % dict dict intersect dict
+  /_a exch def /_b exch def
+  << _a { _b 2 index known { pop pop } unless } forall >>
+} bind def %/intersect
+
+/connected? { % key key connected? bool
+  2 copy eq { pop pop true } { %else
+    computers exch get exch known
+  } ifelse
+} bind def %/connected?
+
+/fullyconnected? { % dict fullyconnected? bool
+  keys dup true 3 1 roll { %forup
+    ab:abab get abc:acab tailfrom { %forall
+      ab:aab connected? 4 -1 roll and 3 1 roll
+    } forall pop
+  } forup pop
+  % (fullyconnected?) = pstack
+  % true 1 index { %forall
+  %   pop computers 1 index get 3 index diff dup length 1 eq
+  %   (===) = pstack
+  %     { { pop eq } forall } { pop pop false } ifelse and
+  % } forall exch pop
+} bind def %/fullyconnected?
+
+/findcomponent { % key findcomponent array
+  /cur input length dict def /q alist def
+  cur 1 index true put q exch alpush
+  { % while
+    % (exploring ) print q alview ==
+    q alpop computers exch get keys { %forall
+      cur 1 index known { pop } { %else
+        cur 1 index true put q exch alpush
+      } ifelse
+    } forall
+  } { q allength 0 gt } while
+  cur keys
+} bind def %/findcomponent
+
+/hasall? { % big small hasall? bool
+  % keys { 2 index exch known } all? exch pop
+  true exch { pop 2 index exch known and } forall exch pop
+} bind def %/hasall?
+
+/buildsets { % dict buildset [dict...]
+  /cur exch def /seen cur clone def /res alist def
+  % [ (extending) cur ] log.info
+  cur { %forall
+    % [ (investigating) 2 indexfrommark ] log.info
+    pop computers exch get { %forall
+      % [ (inner) 2 indexfrommark ] log.info
+      pop seen 1 index known { pop } { %else
+        seen 1 index true put
+        computers 1 index get cur hasall? { %ifelse
+          cur clone exch true put, tokey res exch alpush
+        } { pop } ifelse
+      } ifelse
+    } forall
+  } forall
+  res alview
+} bind def %/buildset
+
+/tokey { % dict tokey string
+  [ exch { pop tostring } forall ] dup /compare cvx isort (,) join
+} bind def %/tokey
+
+/fromkey { % string fromkey dict
+  [ exch tostring (,) split ] << exch { true } forall >>
+} bind def %/fromkey
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def /computers input length dict def /visited input length dict def
+  /components alist def
+  input {
+    (-) split 2 copy exch
+    2 {
+      computers 1 index known { computers 1 index 8 dict put } unless
+      computers exch get exch true put
+    } repeat
+  } forall
+  /found false def
+  /best <<>> def
+  % TODO this is promising but gets the wrong value and then crashes
+  computers {
+    % (checking) = pstack
+    % ab:bb fullyconnected? { (hello) = pstack tokey exit } { pop } ifelse
+    dup { %forall
+      pop % stack: a a_neighbors b
+      computers 1 index get 2 index intersect exch true put, 2 index true put,
+      fullyconnected? { dup length best length gt { /best exch def [ (best is now) best ] log.info } { pop } ifelse } { pop } ifelse
+    } forall
+  } forall
+  best tokey
+  % << input {
+  %   2 dict begin (-) split true def true def currentdict end tokey true
+  % } forall >> /best exch def
+  % { %while
+  %   [ (best has) best length ] log.info
+  %   best length dict begin
+  %     best { pop fromkey buildsets { true def } forall } forall
+  %     currentdict /cur undef currentdict /seen undef currentdict /res undef
+  %     currentdict
+  %   end /best exch def
+  %   % << best { pop fromkey buildsets { true } forall } forall >> /best exch def
+  % } { best length 1 gt } while
+  % [ (best) best length best ] log.info
+  % best keys first
+  % [ best first { tostring } forall ] dup /compare cvx isort (,) join
+  % computers { [ 3 1 roll length ] log.info } forall
+  % computers keys { %forall
+  %   visited 1 index known { pop } { %else
+  %     findcomponent dup { visited exch true put } forall components exch alpush
+  %   } ifelse
+  % } forall
+  % (components:) = components alview { == } forall
+  % /best [] def
+  % components alview { %forall
+  %   dup length best length gt { /best exch def } { pop } ifelse
+  % } forall
+  % [ best { tostring } forall ] dup /compare cvx isort (,) join
+  % components alview length
+end } bind def %/part2
+
+end %Day23
+
+/ARGUMENTS where { pop /Day23 aoc.runday } if
