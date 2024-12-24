@@ -1,0 +1,98 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 24 https://adventofcode.com/2024/day/24
+%
+% Input is a set of logic gates in two forms.  x##: 1 or y##: 0 set the initial
+% bit value of input gates.  foo OP bar -> baz lines specify an AND, OR, or XOR
+% operation that produces the input value for gate baz based on foo and bar
+% values.  There are a bunch of z## gates which are the output of the circuit.
+% In part 1, determine the binary value the z gates represent with z00 as the
+% least-significant bit.  In part 2, the gates are supposed to form an addition
+% operation, but four pairs of output gates have had their inputs swapped.
+% Determine the eight affected output gates, sort them alphabetically, and join
+% with commas.
+%
+% TODO Compute part 2 programmatically.  This currently just adds the x and y
+% values and does a bitwise comparison to z and prints which bits are wrong.
+% A human should then run day24graphviz.sh and search for the wrong bits in
+% order.  Find neighboring nodes to switch, edit the input file (a # character
+% will comment out a rule), and rerun part 2 to see the next bit to change.
+% Some incorrect gates may not show up given the input, try changing the x and y
+% inputs to all 1s, or one all 1s and one a single 1, or other numeric
+% combinations until all eight affected nodes have been swapped.  Then run
+% grep '^#' fixed.txt | cut -d' ' -f 5 | sort | tr '\n' ',' | sed 's/,$/\n/'
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day24 8 dict def
+Day24 begin
+
+/AND {and} bind def /OR {or} bind def /XOR {xor} bind def
+
+/parseinitial { % line parseinitial -
+  (: ) split cvi exch cvn exch def
+} bind def %/parseinitial
+
+/parsegate { % line parsegate -
+  ( -> ) split cvn exch [ exch tokenize { cvx } forall exch ] cvx bind def
+} bind def %/parsegate
+
+/parsesystem { % input parsesystem dict
+  dup length dict begin
+    /parser /parseinitial cvx def
+    { %forall
+      dup empty? { pop /parser /parsegate cvx def } { %else
+        dup first ascii.# eq { pop } { parser } ifelse
+      } ifelse
+    } forall
+    currentdict /parser undef
+    currentdict
+  end
+} bind def %/parsesystem
+
+/namedbinary { % gates letter namedbinary int
+  /__letter exch def
+  [ 1 index keys { tostring dup first __letter ne { pop } if } forall ]
+  dup { compare neg } isort
+  exch begin 0 exch { load exec exch 1 bitshift add } forall end
+} bind def %/namedbinary
+
+/part1 { 8 dict begin % [lines] part1 result
+  parsesystem ascii.z namedbinary
+end } bind def %/part1
+
+/part2 { 8 dict begin % [lines] part2 result
+  /input exch def input parsesystem /gates exch def
+  gates ascii.z namedbinary /zval exch def
+  gates ascii.y namedbinary /yval exch def
+  gates ascii.x namedbinary /xval exch def
+  [ (x) xval (+ y) yval (= z) zval ] log.info
+  [ (actual) xval yval add dup zval eq ] log.info
+  xval yval add zval xor /diff exch def /bitnum 0 def
+  [ (diff:) diff ] log.info
+  { %loop
+    1 bitnum bitshift diff gt { exit } if
+    1 bitnum bitshift diff and 0 ne { [ (bit) bitnum (is wrong) ] log.info } if
+    /bitnum inc
+  } loop
+  /TODO
+end } bind def %/part2
+
+end %Day24
+
+/ARGUMENTS where { pop /Day24 aoc.runday } if

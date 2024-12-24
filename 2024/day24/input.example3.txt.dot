@@ -1,0 +1,14 @@
+digraph{
+z05 [ color = red ]
+subgraph { x00 y00 } -> z05 [ label = AND ]
+z02 [ color = red ]
+subgraph { x01 y01 } -> z02 [ label = AND ]
+z01 [ color = red ]
+subgraph { x02 y02 } -> z01 [ label = AND ]
+z03 [ color = red ]
+subgraph { x03 y03 } -> z03 [ label = AND ]
+z04 [ color = red ]
+subgraph { x04 y04 } -> z04 [ label = AND ]
+z00 [ color = red ]
+subgraph { x05 y05 } -> z00 [ label = AND ]
+}
