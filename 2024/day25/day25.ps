@@ -1,0 +1,64 @@
+%!PS
+% Copyright 2024 Google LLC
+%
+% Use of this source code is governed by an MIT-style
+% license that can be found in the LICENSE file or at
+% https://opensource.org/licenses/MIT.
+
+% Advent of Code 2024 day 25 https://adventofcode.com/2024/day/25
+% Input is a series of blank-line delimited blocks of 7 lines, 5 characters wide
+% where characters are either # or . representing pin tumbler locks.  If the
+% top line is all #s then it's a lock, if it's all .s then it's a key.
+% The number of #s in a column indicates the height of that part of the
+% tumbler mechanism; a key can fit in a lock if the two columns don't overlap,
+% i.e. if the height of the two together is less than or equal to five.
+% Part 2 is completing the other 49 stars.
+
+(cob/bootstrap.ps) runlibfile
+(cob/arraylist.ps) cob.require
+(cob/ascii.ps) cob.require
+(cob/core.ps) cob.require
+(cob/iter.ps) cob.require
+(cob/log.ps) cob.require
+(cob/math.ps) cob.require
+(cob/stackeffect.ps) cob.require
+(cob/string.ps) cob.require
+(cob/stringbuf.ps) cob.require
+(aoc.ps) cob.require
+
+/Day25 8 dict def
+Day25 begin
+
+/sumcols { % [5 lines] sumcols [5 ints]
+  [ 0 1 4 { %for
+    0 0 1 4 { %for
+      % stack: line mark vals... col sum row
+      1 indexfrommark exch get 2 index get ascii.# eq { 1 add } if
+    } for exch pop
+  } for ] exch pop
+} bind def %/sumcols
+
+/lockguard (#####) def
+/parseinput { % - parseinput -
+  /locks alist def /keys alist def
+  1 8 input lastindex { %for
+    input 1 index 5 getinterval sumcols
+    input abc:bca 1 sub get lockguard eq { locks } { keys } ifelse exch alpush
+  } for
+  /locks locks alview def /keys keys alview def
+} bind def %/parseinput
+
+/fits? { % lock key fits? bool
+  true 0 1 4 { abcd:abcdad get abcd:abdac get add 5 le and } for abc:c
+} bind def %/fits?
+
+/part1 { 8 dict begin % [lines] part1 result
+  /input exch def parseinput
+  0 locks { keys { ab:aab fits? { exch 1 add exch } if } forall pop } forall
+end } bind def %/part1
+
+/part2 { pop (Merry Christmas!) } bind def %/part2
+
+end %Day25
+
+/ARGUMENTS where { pop /Day25 aoc.runday } if
