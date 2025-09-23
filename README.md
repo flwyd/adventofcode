@@ -73,6 +73,9 @@ out the repository with your code, follow these steps:
 1.  In your main Advent of Code repository, add the new repository as a submodule:
     `git submodule add https://github.com/YourUserName/adventofcode-input input`.
     This will check out the new repo into a directory named `input`.
+1.  *Pro tip:* To use the same transport (HTTPS or SSH) for the submodule as the
+    main repository, [use a relative URL like
+    `../adventofcode-input.git`](https://stackoverflow.com/questions/40841882/automatically-access-git-submodules-via-ssh-or-https).
 1.  If you run `git status` it will show two new staged entries: `.gitmodules`
     and `input`.  If you run `git diff --staged` you’ll see the content of the
     new `.gitmodules` file (this keeps track of your submodules and their
