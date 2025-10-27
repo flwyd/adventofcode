@@ -7,11 +7,14 @@ generally a standalone program which takes input either on standard input
 (2020) or one or more input files on the command line (2021 and forward). 2022
 introduced a separate solution runner library rather than including a few dozen
 lines of orchestration code in the template, but they still run as standalone
-scripts with more spartan output.  The scripts take an optional `-v` or
-`--verbose` flag as the first argument to print whether the program matched the
-expected output, along with timing information.  There is also a `testday`
-script which can run one or more days, compare output with expected, and report
-results using the [Test Anything Protocol format](https://testanything.org/).
+scripts with more spartan output.  The scripts take an optional `-v` (or
+sometimes `--verbose`) flag as the first argument to print whether the program
+matched the expected output, along with timing information.  There is also a
+`testday` script which can run one or more days, compare output with expected,
+and report results using the [Test Anything Protocol format](https://testanything.org/).
+The `runday` scripts evolve a bit each year, and starting in 2025 support
+writing a day’s solution in many languages, invoking an interpreter with
+appropriate arguments.
 
 I generally use Advent of Code as an opportunity to get experience with a
 language that I don’t yet know well. You’re welcome to take inspiration from the
@@ -34,12 +37,16 @@ think could be done better.
 
 Each year’s solutions are in a directory named after the year.  Within that dir
 is one directory for each day’s solution, named `day1` through `day25`.
-Each day directory has the solution code in one or more languages, a file named
-`input.example.txt` with an example taken from the problem description and
-`input.example.expected` with two lines (prefixed `part1: ` and `part2: `) with
-the expected output when the solution code is run `input.example.txt`.  If the
-problem description has multiple examples, they’ll be in `input.example2.txt`
-and `input.example2.expected`, etc.
+Each day directory has the solution code in one or more languages, named with
+the language’s source file convention, e.g. `day1.exs` and `Day1.jl`.  Each day
+also has a file named `input.example.txt` with an example taken from the
+problem description and `input.example.expected` with two lines (prefixed
+`part1: ` and `part2: `) with the expected output when the solution code is run
+`input.example.txt`.  If the problem description has multiple examples, they’ll
+be in `input.example2.txt` and `input.example2.expected`, etc.  If a solution
+needs a little extra help, `run` will look for a `dayXlang.sh` file, e.g.
+`day1sed.sh` would pass each file individually to a `sed` script and perhaps
+transform the output by adding all the numbers produced by the script.
 
 The `input.actual.txt` and `input.actual.expected` files are symlinks into a
 non-public directory with input specific to my AoC account.  If you’d like to

@@ -1,0 +1,64 @@
+#!/usr/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Generates a skeletal Advent of Code solution in zsh and creates files, links,
+# and directories as needed.
+
+if (( $# == 0 )); then
+  echo "Usage: $0 day1"
+  exit 1
+fi
+
+day=$1
+daydir=$(dirname $0)/${day}
+daynum=$(tr -d -c 0-9 <<< $day)
+zshfile=$daydir/$day.zsh
+mkdir -p $daydir
+touch $daydir/input.example.txt
+if [ ! -s $daydir/input.example.expected ]; then
+  echo "part1: " >> $daydir/input.example.expected
+  echo "part2: " >> $daydir/input.example.expected
+fi
+for f in $daydir/input.actual.{txt,expected} ; do
+  if [[ ! -h $f ]]; then
+    ln -s ../input/$daynum/${f:t} $f
+  fi
+done
+if [[ ! -s $zshfile ]]; then
+  cat > $zshfile <<ENDCODE
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Advent of Code 2025 day $daynum
+# Read the puzzle at https://adventofcode.com/2025/day/$daynum
+
+source \${0:h:h}/runner.zsh
+((VERBOSE=0))
+if [[ \$1 == "-v" ]]; then
+  ((VERBOSE=1))
+  shift
+fi
+DAY=day$daynum
+
+function solve {
+  local inputfile=\$1
+  PART1=TODO
+  PART2=TODO
+  while read line ; do
+    # TODO
+  done < \$inputfile
+}
+
+runner_solve_files \$@
+exit \$((\$FAILURES > 0))
+ENDCODE
+  chmod a+x $zshfile
+fi

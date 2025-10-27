@@ -1,0 +1,52 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Runs an Advent of Code program, with interpreter determined by filename.
+# Usage: run [-v] day0/day0.awk day0/input.example.txt day0/input.actual.txt
+# run day0/day0.lang checks for a runner script of the form day0/day0lang.sh
+# and uses that if the language doesn't have special support.  If no runner
+# script is found, the named file must be executable.
+
+basedir=${0:h}
+if [[ $1 == -v ]]; then
+  verbose=(-v)
+  shift
+else
+  verbose=()
+fi
+
+if (( $# == 0 )); then
+  print -u 2 "Usage: $0 day1/file day1/input.example.txt ..."
+  exit 1
+fi
+
+program="$1"
+shift
+if [[ ! -f "$program" ]]; then
+  print -u 2 "$program file not found"
+  exit 1
+fi
+
+case "$program" in
+  (*.awk) cmd=(gawk --lint=no-ext -i $basedir/runner.gawk -f $program -- $verbose) ;;
+  (*.ps) cmd=(gsnd -q -dNOSAFER "-I$basedir" -- $program $verbose) ;;
+  (*.fs) cmd=(gforth -e "${#verbose} constant verbose" $program -e bye) ;;
+  (*.go) cmd=(go run $program ${program:h}/runner.go $verbose) ;;
+  (*)
+    runner=${program:r}${program:e}.sh
+    if [[ -x "$runner" ]]; then
+      cmd=("$runner" $verbose)
+    elif [[ -x "$program" ]]; then
+      cmd=("$program" $verbose)
+    else
+      print -u 2 "Don't know how to run $program"
+      exit 1
+    fi
+    ;;
+esac
+
+exec $cmd "$@"

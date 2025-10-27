@@ -21,7 +21,7 @@ import (
 const shebang = "//usr/bin/true; exec /usr/bin/env go run \"$0\" \"`dirname $0`/runner.go\" \"$@\""
 
 // TODO use template/text
-const dayCode = `// Copyright YEAR Google LLC
+const dayCode = `// Copyright YEAR Trevor Stone
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file or at
@@ -45,6 +45,8 @@ func main() {
 const dayName = "dayDAYNUM"
 `
 
+const expectedContent = "part1: \npart2: \n"
+
 func main() {
 	if len(os.Args) != 2 {
 		log.Fatalf("Usage: %s path/to/dayX", os.Args[0])
@@ -67,9 +69,7 @@ func main() {
 	if fileExists(gofile) {
 		log.Fatalf("%s already exists, exiting", gofile)
 	}
-	if err := os.WriteFile(gofile, []byte(code), 0755); err != nil {
-		log.Fatalf("Error writing to %s: %v", gofile, err)
-	}
+	writeFile(gofile, code)
 	// create a symlink to runner.go, which is adjacent to generate.go
 	runnerlink := filepath.Join(outdir, "runner.go")
 	if !fileExists(runnerlink) {
@@ -90,8 +90,30 @@ func main() {
 			log.Fatalf("Error creating symlink to %s as %s: %v", rel, runnerlink, err)
 		}
 	}
-	// doesn't create input.example.txt, input.example.expected, etc. because the
-	// year's main generator has typically already made them
+	// create input files if needed
+	writeIfMissing(filepath.Join(outdir, "input.example.expected"), expectedContent)
+	writeIfMissing(filepath.Join(outdir, "input.example.txt"), "")
+	for actual, content := range map[string]string{"input.actual.txt": "", "input.actual.expected": expectedContent} {
+		outfile := filepath.Join(outdir, actual)
+		if fileExists(outfile) {
+			continue
+		}
+		inputdir := filepath.Join(filepath.Dir(outdir), "input", strings.TrimPrefix(outdir, "day"))
+		if !fileExists(inputdir) {
+			if err := os.Mkdir(inputdir, 0755); err != nil {
+				log.Fatalf("Error creating %s: %v", inputdir, err)
+			}
+		}
+		fname := filepath.Join(inputdir, actual)
+		writeIfMissing(fname, content)
+		rel, err := filepath.Rel(outdir, fname)
+		if err != nil {
+			log.Fatalf("Error getting relative path for %s: %v", fname, err)
+		}
+		if err := os.Symlink(rel, path.Join(outdir, actual)); err != nil {
+			log.Fatalf("Error symlinking %s to %s: %v", actual, rel, err)
+		}
+	}
 }
 
 func fileExists(fname string) bool {
@@ -103,4 +125,16 @@ func fileExists(fname string) bool {
 		log.Printf("Error checking %s: %v", fname, err)
 	}
 	return true
+}
+
+func writeFile(fname, content string) {
+	if err := os.WriteFile(fname, []byte(content), 0644); err != nil {
+		log.Fatalf("Error writing %d bytes to %s: %v", len(content), fname, err)
+	}
+}
+
+func writeIfMissing(fname, content string) {
+	if !fileExists(fname) {
+		writeFile(fname, content)
+	}
 }

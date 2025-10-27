@@ -1,0 +1,72 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Run the Advent of Code solution for a day on all of its input, saving logs to
+# out/ If multiple languages have a solution, run all of them.  Run on each
+# change with ./watch day1 or watchexec ./runday day1
+
+YEAR=2025
+if (( $# == 0 )); then
+  print -u 2 "Usage: runday day1"
+  exit 1
+fi
+BASEDIR=${0:h}
+ROOT=${BASEDIR:a:h}
+if [ -f $1 ]; then
+  # e.g. runday day1/day1.lua
+  DAY=${1:h}
+  TARGETS=($1)
+else
+  # e.g. runday day1
+  DAY=$1
+  TARGETS=($BASEDIR/$DAY/(${DAY}|${(C)DAY})*)
+fi
+DAYDIR=$BASEDIR/$DAY
+DAYNUM=${DAY/day}
+if [[ ! -d "$DAYDIR" ]]; then
+  print -u 2 "No such directory: $DAYDIR"
+  exit 1
+fi
+DATEFMT='%Y%m%d-%H%M%S'
+((FAILS=0))
+FAILEDLANGS=()
+
+if [[ -s "$ROOT/.cookie-jar" && ! -s "$DAYDIR/input.actual.txt" ]]; then
+  input=$("$ROOT/fetchinput" "$YEAR" "$1")
+  # Don't directly send fetchinput to input.actual.txt to avoid changing mtime
+  # if input isn't avaliable yet
+  if [[ ! -z "$input" ]]; then
+    if [[ -d "$BASEDIR/input" ]] mkdir -p "$BASEDIR/input/$DAYNUM"
+    cat <<< $input >| $DAYDIR/input.actual.txt
+  fi
+fi
+
+function run_program {
+  local file=$1
+  local lang=${file:e}
+  local program=($BASEDIR/run -v $file)
+  mkdir -p "$DAYDIR/out"
+  local outfile="$DAYDIR/out/$lang-$(date +$DATEFMT).log"
+  local cmd=($program $DAYDIR/input.example*.txt $DAYDIR/input.actual.txt)
+  TIMEFMT="$program > $outfile %U user %S system %P cpu %*E total"
+  print -u 2
+  print -u 2 "$cmd > $outfile"
+  print -u 2
+  time ($cmd 2>&1 | tee "$outfile" ; exit ${pipestatus[1]})
+  if (( $? != 0 )); then
+    ((FAILS++))
+    FAILEDLANGS+=($lang)
+  fi
+}
+
+for i in $TARGETS ; do
+  run_program $i
+done
+for i in $FAILEDLANGS ; do
+  print -u 2 "$i failed"
+done
+exit $FAILS
