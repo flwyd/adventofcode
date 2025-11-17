@@ -1,0 +1,64 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Run a jq Advent of Code program.  jq doesn't have a good way within the
+# language to process one file at a time, so this runs each input file as a
+# separate invocation and exits with the combined status.  It sets the verbose
+# named arg if -v is passed to this script and sets expected variable to the
+# contents of input.whatever.expected.
+
+# Use # at the end of a glob as "0-or-more" for space trimming.
+setopt extendedglob
+
+if [[ $1 == -v ]]; then
+  verbose=true
+  shift
+else
+  verbose=false
+fi
+
+if (( $# == 0 )); then
+  print -u 2 "Usage: $0 day1/day1.jq day1/input.example.txt ..."
+  exit 1
+fi
+
+if [[ $(jq --version) =~ jq-1.[1-6](\.|$) ]]; then
+  # Prior to jq 1.7, stderr prints JSON-escaped strings, so doesn't print a
+  # newline to stderr when the string has a newline.  This causes the status
+  # message to get hidden when the shell overwrites the last line with prompt.
+  # See https://github.com/jqlang/jq/issues/2063
+  ((extraecho=($verbose == true)))
+else
+  ((extraecho=0))
+fi
+
+program=($1 -L ${0:h})
+shift
+if (( $# == 0 )); then
+  # Read from stdin
+  $program --arg verbose $verbose
+  exit $?
+fi
+
+((outcome=0))
+foreach infile ($@) do
+  expectedfile=${infile:r}.expected
+  expected=()
+  if [ -e $expectedfile ]; then
+    expected=(--rawfile expected $expectedfile)
+  fi
+  $program --argjson verbose $verbose $expected $infile
+  ((outcome+=$?))
+  if (( $extraecho )); then
+    print -u 2
+  fi
+done
+if (( $outcome > 0 )); then
+  exit 1
+else
+  exit 0
+fi

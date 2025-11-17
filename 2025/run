@@ -36,6 +36,7 @@ case "$program" in
   (*.ps) cmd=(gsnd -q -dNOSAFER "-I$basedir" -- $program $verbose) ;;
   (*.fs) cmd=(gforth -e "${#verbose} constant verbose" $program -e bye) ;;
   (*.go) cmd=(go run $program ${program:h}/runner.go $verbose) ;;
+  (*.jq) cmd=($basedir/runjq $verbose $program) ;;
   (*)
     runner=${program:r}${program:e}.sh
     if [[ -x "$runner" ]]; then
