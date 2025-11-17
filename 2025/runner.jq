@@ -1,4 +1,3 @@
-module "runner";
 # Copyright 2025 Trevor Stone
 #
 # Use of this source code is governed by an MIT-style
@@ -6,6 +5,7 @@ module "runner";
 # https://opensource.org/licenses/MIT.
 
 # Advent of Code runner harness for the jq language.
+module {name: "runner"};
 
 def maybelog(message):
   (if $ARGS.named.verbose // false then message else empty end |
