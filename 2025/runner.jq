@@ -45,5 +45,5 @@ def finish:
 def run($daynum; part1; part2):
   before($daynum) | rtrimstr("\n") | split("\n") |
   {part1: part1, part2: part2} |
-  "part1: \(.part1)\npart2: \(.part2)",
+  "part1: \(.part1)", "part2: \(.part2)",
   finish;

@@ -26,16 +26,6 @@ if (( $# == 0 )); then
   exit 1
 fi
 
-if [[ $(jq --version) =~ jq-1.[1-6](\.|$) ]]; then
-  # Prior to jq 1.7, stderr prints JSON-escaped strings, so doesn't print a
-  # newline to stderr when the string has a newline.  This causes the status
-  # message to get hidden when the shell overwrites the last line with prompt.
-  # See https://github.com/jqlang/jq/issues/2063
-  ((extraecho=($verbose == true)))
-else
-  ((extraecho=0))
-fi
-
 program=($1 -L ${0:h})
 shift
 if (( $# == 0 )); then
@@ -53,8 +43,8 @@ foreach infile ($@) do
   fi
   $program --argjson verbose $verbose $expected $infile
   ((outcome+=$?))
-  if (( $extraecho )); then
-    print -u 2
+  if (( $verbose == true )); then
+    print -u2 "========================================"
   fi
 done
 if (( $outcome > 0 )); then

@@ -17,6 +17,7 @@ day=$1
 daydir=$(dirname $0)/${day}
 daynum=$(tr -d -c 0-9 <<< $day)
 jqfile=$daydir/$day.jq
+echo "Generating files in $daydir"
 mkdir -p $daydir
 touch $daydir/input.example.txt
 if [ ! -s $daydir/input.example.expected ]; then
@@ -39,6 +40,7 @@ if [[ ! -e $jqfile ]]; then
 
 # Advent of Code 2025 day $daynum
 # Read the puzzle at https://adventofcode.com/2025/day/$daynum
+
 import "runner" as runner;
 
 def part1:
