@@ -9,6 +9,11 @@
 # Requires a copy of the session cookie in a .cookie-jar file.
 
 set -e
+VERBOSE=''
+if [[ $1 == '-v' ]]; then
+  VERBOSE='-v'
+  shift
+fi
 if [ $# -lt 2 ]; then
   print -u 2 "Usage: fetchinput year day"
   exit 1
@@ -35,4 +40,4 @@ if [[ "$SERVERDAY" < "$TARGETDAY" ]]; then
 fi
 URL="https://adventofcode.com/$YEAR/day/$DAY/input"
 print -u 2 "Fetching $URL"
-curl -f -b "$COOKIES" -A "$USER_AGENT" "$URL"
+curl $VERBOSE -f -b "$COOKIES" -A "$USER_AGENT" "$URL"
