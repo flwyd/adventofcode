@@ -13,17 +13,23 @@ if (( $# == 0 )); then
   exit 1
 fi
 
+basedir=${0:h}
 day=$1
 daydir=$(dirname $0)/${day}
 daynum=$(tr -d -c 0-9 <<< $day)
+inputdir=$basedir/input/$daynum
 zshfile=$daydir/$day.zsh
 echo "Generating files in $daydir"
 mkdir -p $daydir
+mkdir -p $inputdir
 touch $daydir/input.example.txt
-if [ ! -s $daydir/input.example.expected ]; then
-  echo "part1: " >> $daydir/input.example.expected
-  echo "part2: " >> $daydir/input.example.expected
-fi
+touch $inputdir/input.actual.txt
+for exp in $daydir/input.example.expected $inputdir/input.actual.expected ; do
+  if [ ! -s $exp ]; then
+    echo "part1: " >> $exp
+    echo "part2: " >> $exp
+  fi
+done
 for f in $daydir/input.actual.{txt,expected} ; do
   if [[ ! -h $f ]]; then
     ln -s ../input/$daynum/${f:t} $f
