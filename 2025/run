@@ -37,6 +37,7 @@ case "$program" in
   (*.fs) cmd=(gforth -e "${#verbose} constant verbose" $program -e bye) ;;
   (*.go) cmd=(go run $program ${program:h}/runner.go $verbose) ;;
   (*.jq) cmd=($basedir/runjq $verbose $program) ;;
+  (*.jsonnet) cmd=($basedir/runjsonnet $verbose $program) ;;
   (*)
     runner=${program:r}${program:e}.sh
     if [[ -x "$runner" ]]; then

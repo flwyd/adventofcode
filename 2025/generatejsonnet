@@ -1,0 +1,41 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Generates a skeletal Advent of Code solution in Jsonnet and creates files,
+# links, and directories as needed.
+
+if (( $# == 0 )); then
+  echo "Usage: $0 day1"
+  exit 1
+fi
+
+basedir=${0:h}
+day=$1
+daydir=$basedir/${day}
+daynum=$(tr -d -c 0-9 <<< $day)
+inputdir=$basedir/input/$daynum
+jsonnetfile=$daydir/$day.jsonnet
+echo "Generating files in $daydir"
+mkdir -p $daydir
+mkdir -p $inputdir
+touch $daydir/input.example.txt
+touch $inputdir/input.actual.txt
+for exp in $daydir/input.example.expected $inputdir/input.actual.expected ; do
+  if [ ! -s $exp ]; then
+    echo "part1: " >> $exp
+    echo "part2: " >> $exp
+  fi
+done
+for f in $daydir/input.actual.{txt,expected} ; do
+  if [[ ! -h $f ]]; then
+    ln -s ../input/$daynum/${f:t} $f
+  fi
+done
+if [[ ! -e $jsonnetfile ]]; then
+  jsonnet -S -o $jsonnetfile ${0:h}/generate.jsonnet --tla-code day=$daynum
+fi
+chmod a+x $jsonnetfile
