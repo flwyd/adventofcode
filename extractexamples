@@ -1,0 +1,61 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Find sample input data (in <pre><code> tags) in a puzzle HTML file and save
+# them to input.example.txt, input.example2.txt, etc.  If the sample input is
+# already in any input.example* then it's not saved a second time.
+
+if (( $# < 1 )); then
+  print -u 2 "Usage: $0 day1 day1/puzzle/"
+  exit 1
+fi
+daydir=$1
+puzzle=${2-$daydir/puzzle/puzzle.html}
+((exnum=0))
+read -r -d '' awkscript <<ENDAWK
+/<pre><code>/, /<\/code><\/pre>/ {
+  sub("<pre><code>", "");
+  sub("</code></pre>", "\0");
+  gsub("&lt;", "<");
+  gsub("&gt;", ">");
+  gsub("&amp;", "&");
+  print;
+}
+ENDAWK
+
+awk "$awkscript" $puzzle \
+| while read -r -d '' ex ; do
+  ((exnum++))
+  print -u 2 -f "Example %d is\n\e[1m%s\e[0m\n" $exnum $ex
+  ((doit=1))
+  foreach existing ($daydir/input.example*.txt) do
+    if diff -s -q $existing <(<<<$ex) > /dev/null ; then
+      print -u 2 "Example $exnum is already $existing"
+      ((doit=0))
+    fi
+  done
+  if (($doit)); then
+    if read -q "?Save example $exnum? " ; then
+    else
+      ((doit=0))
+    fi
+    print -u 2
+  fi
+  if (($doit)); then
+    exfile=$daydir/input.example.txt
+    if [[ -e $exfile ]]; then
+      for (( i=2 ; $i ; i++ )) do
+        exfile=$daydir/input.example$i.txt
+        if [[ ! -e $exfile ]]; then
+          break
+        fi
+      done
+    fi
+    print -u 2 "Writing example $exnum to $exfile"
+    cat <<< $ex > $exfile
+  fi
+done
