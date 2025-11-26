@@ -1,0 +1,38 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Starts a Solutions Megathread comment for r/adventofcode by indenting the
+# code block, removing comments, and adding a header.
+
+if (($# != 1)); then
+  print -u 2 "Usage: $0 day1/day1.xyz"
+  exit 1
+fi
+year=$(date +%Y)
+solution=$1
+outdir=$TMPDIR/aoc
+mdfile=$outdir/${solution:t}.md
+mkdir -p $outdir
+ext=${solution:e}
+typeset -A names
+names=(awk AWK exs Elixir jl Julia jq jq kt Kotlin pl Perl ps PostScript py Python rb Ruby zsh 'Z shell')
+langname=${names[$ext]-${(C)ext}}
+case $ext in
+  (lua) skip=(-e '/^\s*\(#|--\)/d') ;;
+  ({go,jsonnet,kt}) skip=(-e '#\t*//#d') ;;
+  (ps) skip=(-e '/^\s*%/d' -e '/cob\.require/d') ;;
+  (*) skip=(-e '/^\s*#/d')
+esac
+code=$(sed -e '/^#!/d' $skip -e '/^$/d' $solution | pr -to 4)
+echo "Writing $solution to $mdfile"
+cat > $mdfile <<EOT
+[LANGUAGE: $langname] ([on GitHub](https://github.com/flwyd/adventofcode/blob/main/$year/${solution:h:t}/${solution:t}))
+
+Thoughts
+
+$code
+EOT
