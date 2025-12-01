@@ -1,0 +1,33 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Advent of Code 2025 day 1
+# Read the puzzle at https://adventofcode.com/2025/day/1
+
+source ${0:h:h}/runner.zsh
+DAYDIR=${0:h}
+((VERBOSE=0))
+if [[ $1 == "-v" ]]; then
+  ((VERBOSE=1))
+  shift
+fi
+DAY=day1
+
+function solve {
+  local inputfile=$1
+  sed -f $DAYDIR/$DAY.sed $inputfile | dc | \
+  while IFS='' read -r line ; do
+    if [[ $line =~ 'part[12]:*' ]]; then
+      typeset ${line/: /=}
+    fi
+  done
+  PART1=$part1
+  PART2=$part2
+}
+
+runner_solve_files $@
+exit $(($FAILURES > 0))
