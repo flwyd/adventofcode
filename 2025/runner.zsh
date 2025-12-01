@@ -97,11 +97,11 @@ function runner_read_expected {
 function runner_print_results {
   echo "part1: $PART1"
   if (($VERBOSE)) then
-    runner_print_status $PART1 $EXPECTED[part1]
+    runner_print_status "$PART1" "${EXPECTED[part1]}"
   fi
   echo "part2: $PART2"
   if (($VERBOSE)) then
-    runner_print_status $PART2 $EXPECTED[part2]
+    runner_print_status "$PART2" "${EXPECTED[part2]}"
   fi
   if [[ -n $EXPECTED[part1] && $PART1 != $EXPECTED[part1] ]]; then
     ((FAILURES++))

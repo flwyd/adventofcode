@@ -59,7 +59,7 @@ function solve {
   local inputfile=\$1
   PART1=TODO
   PART2=TODO
-  while read line ; do
+  while IFS='' read -r line ; do
     # TODO
   done < \$inputfile
 }
