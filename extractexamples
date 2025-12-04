@@ -47,10 +47,10 @@ awk "$awkscript" $puzzle \
   fi
   if (($doit)); then
     exfile=$daydir/input.example.txt
-    if [[ -e $exfile ]]; then
+    if [[ -s $exfile ]]; then
       for (( i=2 ; $i ; i++ )) do
         exfile=$daydir/input.example$i.txt
-        if [[ ! -e $exfile ]]; then
+        if [[ ! -s $exfile ]]; then
           break
         fi
       done
