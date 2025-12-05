@@ -70,7 +70,7 @@ class Runner
     elsif secs < 3600
       format('%d:%0d', secs / 60, secs % 60)
     else
-      format('%d:%02d:%02d', secs / 3600, secs / 60, secs % 60)
+      format('%d:%02d:%02d', secs / 3600, secs % 3600 / 60, secs % 60)
     end
   end
 
