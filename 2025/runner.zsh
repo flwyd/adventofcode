@@ -35,7 +35,7 @@ function runner_solve_files {
       if [ -f $f ] ; then
         EXPECTED=()
         if (( $VERBOSE )) then
-          wc -l $f | read -d ' ' linecount
+          linecount=$(wc -l $f | awk '{print $1}')
           print -u2 "Running $DAY on $f ($linecount lines):"
           runner_read_expected $f
         fi
