@@ -38,6 +38,14 @@ case "$program" in
   (*.go) cmd=(go run $program ${program:h}/runner.go $verbose) ;;
   (*.jq) cmd=($basedir/runjq $verbose $program) ;;
   (*.jsonnet) cmd=($basedir/runjsonnet $verbose $program) ;;
+  (*.gv)
+    cmd=($program)
+    if [[ $verbose == "-v" ]]; then
+      cmd+=(-a -v)
+    fi
+    cmd+=(-a "$*")
+    while (( $# > 0 )) shift
+    ;;
   (*)
     runner=${program:r}${program:e}.sh
     if [[ -x "$runner" ]]; then

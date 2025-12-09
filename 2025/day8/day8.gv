@@ -1,0 +1,126 @@
+#!/usr/bin/env -S gvpr -f
+// Copyright 2025 Trevor Stone
+//
+// Use of this source code is governed by an MIT-style
+// license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
+
+// Advent of Code 2025 day 8
+// Read the puzzle at https://adventofcode.com/2025/day/8
+// Input is X,Y,Z coordinates of junction boxes that need connections.
+// Add connections iteratively in order of Euclidian distance.
+// Part 1: after adding 1000 connections (10 in example), multiply the size of
+// the three largest connected graph components.
+// Part 2: keep adding connections until all boxes are part of a single graph
+// component.  Answer is the product of the X coordinates of the last two boxes
+// which got connected.
+
+BEGIN {
+  int verbose;
+
+  void logresult(int got, int want) {
+    if (verbose) {
+      string symbol, status, message;
+      if (got == want) {
+        symbol = "✅";
+        status = "SUCCESS";
+        message = sprintf("got %d", got);
+      } else if (want == 0) {
+        symbol = "❓";
+        status = "UNKNOWN";
+        message = sprintf("got %d", got);
+      } else if (got == 0) {
+        symbol = "❗";
+        status = "TODO";
+        message = sprintf("implement it, want %d", want);
+      } else {
+        symbol = "❌";
+        status = "FAIL";
+        message = sprintf("got %d, want %d", got, want);
+      }
+      printf(2, "%s %s %s\n", symbol, status, message);
+    }
+  }
+
+  void run_file(string fname) {
+    int expected[int];
+    unset(expected);
+    int expfd;
+    string expfile = sub(fname, ".txt$", ".expected");
+    if ((expfd = openF(expfile, "r")) != -1) {
+      string expline;
+      while ((expline = readL(expfd)) != "") {
+        int part, expval;
+        sscanf(expline, "part%d: %d", &part, &expval);
+        expected[part] = expval;
+      }
+      closeF(expfd);
+    }
+    graph_t g = graph(fname, "U");
+    int infile = openF(fname, "r");
+    int x, y, z, line = 0;
+    edge_t bydist[double];
+    unset(bydist);
+    while (scanf(infile, "%d,%d,%d\n", &x, &y, &z) == 3) {
+      node_t n = node(g, sprintf("box_%d", ++line));
+      aset(n, "x", x);
+      aset(n, "y", y);
+      aset(n, "z", z);
+      node_t o;
+      for (o = fstnode(g); o != NULL; o = nxtnode(o)) {
+        if (n == o) { continue; }
+        double dist = sqrt(pow(x-aget(o, "x"), 2)
+          + pow(y-aget(o, "y"), 2) + pow(z-aget(o, "z"), 2));
+        edge_t e = edge(n, o, "");
+        bydist[dist] = e;
+        aset(e, "dist", dist);
+      }
+    }
+    if (verbose) { printf(2, "Running day8 on %s (%d lines)\n", fname, line); }
+    graph_t gc = graph(sprintf("connections"), "U");
+    double d;
+    int steps = nNodes(g) > 100 ? 1000 : 10; // actual/example problem
+    int i = 0;
+    for (bydist[d]) {
+      e = bydist[d];
+      node_t h = node(gc, sprintf("conn_%s", e.head.name));
+      node_t t = node(gc, sprintf("conn_%s", e.tail.name));
+      edge(h, t, sprintf("dist_%f", d));
+      if (++i == steps) {
+        int sizes[int];
+        for (n = fstnode(gc); n != NULL; n = nxtnode(n)) {
+          graph_t gcs = compOf(gc, n);
+          sizes[nNodes(gcs)]++;
+        }
+        int product = 1;
+        int prodsteps = 3;
+        int si;
+        forr (sizes[si]) {
+          product *= si;
+          if (--prodsteps == 0) { break; }
+        }
+        printf("part1: %d\n", product);
+        logresult(product, expected[1]);
+        // writeG(gc, sub(fname, ".txt$", ".dot"));
+      }
+      if (nNodes(compOf(gc, t)) == nNodes(g)) {
+        int hx, tx;
+        sscanf(aget(e.head, "x"), "%d", &hx);
+        sscanf(aget(e.tail, "x"), "%d", &tx);
+        printf("part2: %d\n", hx * tx);
+        logresult(hx * tx, expected[2]);
+        break;
+      }
+    }
+  }
+
+  if (ARGC == 0) {
+    run_file("/dev/stdin");
+  } else {
+    int argn;
+    for (argn = 0; argn < ARGC; argn++) {
+      if (ARGV[argn] == "-v") { verbose = 1; }
+      else { run_file(ARGV[argn]); }
+    }
+  }
+}
