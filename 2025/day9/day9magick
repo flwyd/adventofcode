@@ -1,0 +1,46 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Advent of Code 2025 day 9
+# Read the puzzle at https://adventofcode.com/2025/day/9
+# Creates an SVG of the input shape and uses ImageMagic to crop each rectangle
+# in part 2; if there are no white pixels it's a candidate for the answer.
+# This script only works on the example input, the actual input uses a grid
+# 100,000 points on a side which would be a 10 gigapixel image.
+
+zmodload zsh/mathfunc
+infile=${0:h}/input.example.txt
+svgfile=$(mktemp -t XXXXXX-${infile:t:r}.svg)
+convert -size 15x15 xc:white -fill black -stroke black -draw "path 'M $(cat $infile) Z'" $svgfile
+xs=()
+ys=()
+while IFS=, read -r x y ; do
+  xs+=$x
+  ys+=$y
+done < $infile
+((part1=0))
+((part2=0))
+for ((i = 1; i <= $#xs; i++)) do
+  for ((j = i + 1; j <= $#xs; j++)) do
+    ((w=abs(xs[i] - xs[j]) + 1))
+    ((h=abs(ys[i] - ys[j]) + 1))
+    ((area=w * h))
+    if ((area > part1)); then
+      ((part1=area))
+    fi
+    if ((area > part2)); then
+      if ((xs[i] <= xs[j])); then ((x=xs[i])) ; else ((x=xs[j])) ; fi
+      if ((ys[i] <= ys[j])); then ((y=ys[i])) ; else ((y=ys[j])) ; fi
+      geom="${w}x${h}+$x+$y"
+      if (! convert $svgfile -crop $geom -format '%c' histogram:info:- | grep -q white); then
+        ((part2=area))
+      fi
+    fi
+  done
+done
+echo "part1: $part1"
+echo "part2: $part2"
