@@ -23,7 +23,7 @@ if [ -f $1 ]; then
 else
   # e.g. runday day1
   DAY=$1
-  TARGETS=($BASEDIR/$DAY/(${DAY}|${(C)DAY})*)
+  TARGETS=($BASEDIR/$DAY/(${DAY}|${(C)DAY})*.*)
 fi
 DAYDIR=$BASEDIR/$DAY
 DAYNUM=${DAY/day}

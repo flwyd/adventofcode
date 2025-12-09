@@ -47,7 +47,7 @@ case "$program" in
     while (( $# > 0 )) shift
     ;;
   (*)
-    runner=${program:r}${program:e}.sh
+    runner=${program:r}${program:e}
     if [[ -x "$runner" ]]; then
       cmd=("$runner" $verbose)
     elif [[ -x "$program" ]]; then
