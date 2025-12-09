@@ -1,0 +1,29 @@
+#!/bin/zsh
+# Copyright 2025 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Advent of Code 2025 day 9
+# Read the puzzle at https://adventofcode.com/2025/day/9
+# Runs PostgreSQL with a PostGIS SQL solution.
+
+DBNAME=geotest
+DAYDIR=${0:h}
+source ${0:h:h}/runner.zsh
+((VERBOSE=0))
+if [[ $1 == "-v" ]]; then
+  ((VERBOSE=1))
+  shift
+fi
+DAY=day9
+
+function solve {
+  local inputfile=$1
+  psql $DBNAME -A -t -q -c "$(cat $DAYDIR/day9.sql)" < $inputfile |\
+    IFS='|' read -r PART1 PART2
+}
+
+runner_solve_files $@
+exit $(($FAILURES > 0))
