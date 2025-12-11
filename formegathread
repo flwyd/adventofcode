@@ -19,12 +19,13 @@ mdfile=$outdir/${solution:t}.md
 mkdir -p $outdir
 ext=${solution:e}
 typeset -A names
-names=(awk AWK exs Elixir jl Julia jq jq kt Kotlin pl Perl ps PostScript py Python rb Ruby zsh 'Z shell')
+names=(awk AWK exs Elixir jl Julia jq jq kt Kotlin pl Perl ps PostScript py Python rb Ruby sql SQL zsh 'Z shell')
 langname=${names[$ext]-${(C)ext}}
 case $ext in
   (lua) skip=(-e '/^\s*\(#|--\)/d') ;;
   ({go,jsonnet,kt}) skip=(-e '#\t*//#d') ;;
   (ps) skip=(-e '/^\s*%/d' -e '/cob\.require/d') ;;
+  (sql) skip=(-e '/^\s*--/d') ;;
   (*) skip=(-e '/^\s*#/d')
 esac
 code=$(sed -e '/^#!/d' $skip -e '/^$/d' $solution | pr -to 4)
