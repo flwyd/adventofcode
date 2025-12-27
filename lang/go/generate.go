@@ -1,4 +1,5 @@
-// Copyright 2023 Google LLC
+//usr/bin/true; exec /usr/bin/env go run \"$0\" \"`dirname $0`/generate.go\" \"$@\"
+//// Copyright 2023 Google LLC
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file or at
