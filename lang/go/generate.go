@@ -28,7 +28,8 @@ const dayCode = `// Copyright YEAR Trevor Stone
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-// Advent of Code YEAR day DAYNUM https://adventofcode.com/YEAR/day/DAYNUM
+// Advent of Code YEAR day DAYNUM
+// Read the puzzle at https://adventofcode.com/YEAR/day/DAYNUM
 package main
 
 func part1(lines []string) string {
