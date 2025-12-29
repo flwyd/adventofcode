@@ -95,7 +95,7 @@ function Runner.runpart(day, part, lines, expected, fname)
   local endclock = os.clock()
   local endtime = os.time()
   local difftime = os.difftime(endtime, starttime)
-  if difftime < 10 then
+  if difftime < 60 and difftime < (endclock - startclock) then
     difftime = endclock - startclock
   end
   print(string.format('%s: %s', part, result))
@@ -120,11 +120,9 @@ function Runner.runpart(day, part, lines, expected, fname)
         message = string.format('implement it, want %s', expected)
       end
     end
-    if Runner.verbose then
-      io.stderr:write(string.format('%s %s %s\n', Runner.signs[status], status:upper(), message))
-      io.stderr:write(string.format('%s took %s on %s\n', part, format_elapsed(difftime), fname))
-      io.stderr:write(string.rep('=', 40) .. '\n')
-    end
+    io.stderr:write(string.format('%s %s %s\n', Runner.signs[status], status:upper(), message))
+    io.stderr:write(string.format('%s took %s on %s\n', part, format_elapsed(difftime), fname))
+    io.stderr:write(string.rep('=', 40) .. '\n')
   end
   return status
 end
