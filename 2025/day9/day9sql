@@ -9,7 +9,6 @@
 # Read the puzzle at https://adventofcode.com/2025/day/9
 # Runs PostgreSQL with a PostGIS SQL solution.
 
-DBNAME=geotest
 DAYDIR=${0:h}
 source ${0:h:h}/runner.zsh
 ((VERBOSE=0))
@@ -18,11 +17,50 @@ if [[ $1 == "-v" ]]; then
   shift
 fi
 DAY=day9
+typeset -A dbcmds
+dbcmds[sqlite]=${SPATIALITE-spatialite}
+dbcmds[postgres]=${PSQL-psql}
+typeset -A solvers
+solvers[sqlite]=solve_spatialite
+solvers[postgres]=solve_postgis
+
+function solve_postgis {
+  local inputfile=$1
+  # "No function matches" errors? You need to run `postgis enable $DBNAME`
+  dbname=${DBNAME-postgres}
+  $dbcmds[postgres] $dbname -A -t -q -c "$(cat $DAYDIR/day9.sql)" < $inputfile \
+    | IFS='|' read -r PART1 PART2
+}
+
+function solve_spatialite {
+  local inputfile=$1
+  tmpfile=$(mktemp $TMPDIR/day9.XXXXXX)
+  sed -e "s|day9/input.example.txt|$inputfile|g" $DAYDIR/day9sqlite \
+    | $dbcmds[sqlite] -silent $tmpfile \
+    | IFS=',' read -r PART1 PART2
+}
 
 function solve {
   local inputfile=$1
-  psql $DBNAME -A -t -q -c "$(cat $DAYDIR/day9.sql)" < $inputfile |\
-    IFS='|' read -r PART1 PART2
+  if (( $+solvers[$DBSYS] )); then
+    db=$DBSYS
+  else
+    foreach k (${(k)solvers}) do
+      if (( $+commands[$dbcmds[$k]] )); then
+        db=$k
+        break
+      fi
+    done
+  fi
+  if [[ -z $db ]]; then
+    print -u2 "No RDBMS available, set \$DBSYS or install one of $dbcmds"
+  else
+    if (( $+solvers[$db] )); then
+      $solvers[$db] $inputfile
+    else
+      print -u2 "No solver for database $db"
+    fi
+  fi
 }
 
 runner_solve_files $@
