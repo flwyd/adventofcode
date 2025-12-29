@@ -26,10 +26,10 @@ class Runner
     log "Running #{day.class} on #{fname} (#{lines.size} lines)"
     expected = Hash.new ""
     expfile = fname.sub('.txt', '.expected')
-    if fname != '-' and File.exists? expfile
+    if fname != '-' and File.exist? expfile
       IO.readlines(expfile, chomp: true).each do |line|
         part, exp = line.split /:\s*/
-        expected[part.to_sym] = exp.gsub('\n', "\n") # handle ASCII art letters
+        expected[part.to_sym] = (exp||'').gsub('\n', "\n") # handle ASCII art letters
       end
     end
     results = [:part1, :part2].map do |p|
@@ -68,7 +68,7 @@ class Runner
     elsif secs < 60
       format("%.3fs", secs)
     elsif secs < 3600
-      format('%d:%0d', secs / 60, secs % 60)
+      format('%d:%02d', secs / 60, secs % 60)
     else
       format('%d:%02d:%02d', secs / 3600, secs % 3600 / 60, secs % 60)
     end

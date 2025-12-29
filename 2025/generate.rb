@@ -59,6 +59,6 @@ end
 %w(input.example.txt input.actual.txt).map {|f| dir + f}.each do |f|
   f.write '' unless f.exist?
 end
-%w(input.example.exmaple input.actual.exmaple).map {|f| dir + f}.each do |f|
+%w(input.example.expected input.actual.expected).map {|f| dir + f}.each do |f|
   f.write "part1: \npart2: \n" unless f.exist?
 end
