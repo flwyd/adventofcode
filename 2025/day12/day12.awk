@@ -22,7 +22,7 @@ function init() {
 }
 function finish() {}
 
-/x/ { part1 += ($1 * $2) > ($3 + $4 + $5 + $6 + $7 + $8) * 7 + 2; }
+/x/ { part1 += ($1 * $2) > (0 + $3 + $4 + $5 + $6 + $7 + $8) * 7 + 2; }
 
 BEGIN { DAY = "day12"; init(); }
 END { finish(); printf "part1: %s\npart2: %s\n", part1, part2; }
