@@ -18,10 +18,10 @@ DAY=day11
 
 function solve {
   local inputfile=$1
-  dotfile=$(mktemp -t "${DAY}_dot1")
-  dotfileout=$(mktemp -t "${DAY}_dot2")
-  dotfileout2=$(mktemp -t "${DAY}_dot3")
-  dotfileout3=$(mktemp -t "${DAY}_dot4")
+  dotfile=$(mktemp -t "${DAY}_dot1_XXXXXX")
+  dotfileout=$(mktemp -t "${DAY}_dot2_XXXXXX")
+  dotfileout2=$(mktemp -t "${DAY}_dot3_XXXXXX")
+  dotfileout3=$(mktemp -t "${DAY}_dot4_XXXXXX")
   # echo "DOT in $dotfile outfile $dotfileout $dotfileout2 $dotfileout3"
   echo 'digraph {' >> $dotfile
   awk -F': ' '{
