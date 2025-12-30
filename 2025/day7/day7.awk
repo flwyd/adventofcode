@@ -20,7 +20,6 @@ function finish() { for (i in beams) { part2 += beams[i] } }
 /S/ {
   for (i = 1; i <= NF; i++) { beams[i] = 0; }
   beams[index($0, "S")] = 1;
-  # printline();
 }
 
 /\^/ {
@@ -33,18 +32,6 @@ function finish() { for (i in beams) { part2 += beams[i] } }
       beams[i] = 0;
     }
   }
-  # printline();
-}
-
-# /^\.*$/ { printline() }
-
-function printline() {
-  for (i = 1; i <= NF; i++) {
-    if ($i == "^" || $i == "S") { printf($i); }
-    else if (beams[i]) { printf("|"); }
-    else { printf("."); }
-  }
-  printf("\n");
 }
 
 BEGIN { DAY = "day7"; init(); }
