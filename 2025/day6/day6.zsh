@@ -38,7 +38,7 @@ function solve {
     op=$ops[$i]
     nums=()
     for ((j = $i; ; j++)) do
-      num=$(head -n -1 $inputfile | cut -c $j |
+      num=$(grep '[0-9]' $inputfile | cut -c $j |
         pr -t -s' ' -$counts[1] | sed -e 's/ //g')
       if [[ -n $num ]]; then
         nums+=$num
