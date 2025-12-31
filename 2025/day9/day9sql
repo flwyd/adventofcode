@@ -34,10 +34,11 @@ function solve_postgis {
 
 function solve_spatialite {
   local inputfile=$1
-  tmpfile=$(mktemp $TMPDIR/day9.XXXXXX)
+  tmpfile=$(mktemp -t day9.XXXXXX)
   sed -e "s|day9/input.example.txt|$inputfile|g" $DAYDIR/day9sqlite \
     | $dbcmds[sqlite] -silent $tmpfile \
     | IFS=',' read -r PART1 PART2
+  rm $tmpfile
 }
 
 function solve {

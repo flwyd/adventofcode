@@ -14,7 +14,7 @@ if (($# != 1)); then
 fi
 year=$(date +%Y)
 solution=$1
-outdir=$TMPPREFIX/aoc
+outdir=${TMPDIR-/tmp}/aoc
 mdfile=$outdir/${solution:t}.md
 mkdir -p $outdir
 ext=${solution:e}
