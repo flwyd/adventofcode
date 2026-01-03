@@ -42,4 +42,4 @@ else
   args+=(--tla-code "files=[$files]")
 fi
 set -x
-jsonnet -S $basedir/runner.jsonnet --tla-code-file "solve=$program" $args
+jsonnet -t 64 -s 3000 -S $basedir/runner.jsonnet --tla-code-file "solve=$program" $args
