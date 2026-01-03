@@ -81,10 +81,10 @@ local bifurcate(machine, combos, cache, stack) =
     local parity = levelParity(cur.levels);
     local ways = if std.objectHas(combos, parity) then std.uniq(std.sort(combos[parity])) else [];
     local halves = [{
-      levels: halfLevel(subtractButtons(machine, cur.levels, w) tailstrict),
+      levels: halfLevel(subtractButtons(machine, cur.levels, w)),
       key: std.toString(self.levels),
       add: std.length(w),
-    } for w in ways if notNegative(subtractButtons(machine, cur.levels, w) tailstrict)];
+    } for w in ways if notNegative(subtractButtons(machine, cur.levels, w))];
     if std.all([std.objectHas(cache, h.key) for h in halves]) then
       local vals = [cache[h.key] * 2 + h.add for h in halves];
       local best = if vals == [] then HUGE else minArray(vals);
