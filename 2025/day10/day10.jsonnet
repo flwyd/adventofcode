@@ -21,8 +21,12 @@
 // big stack size.  Evan though tailstrict is used in the build() function
 // inside std.slice, it somehow creates a pretty huge stack to resolve the
 // recursively constructed stack in the bifurcate function.
+// The C++ implementation of Jsonnet runs for hours without terminating on the
+// actual input, so make sure to use https://github.com/google/go-jsonnet
 
 // std.jsonnet functions that might not be available
+// added in 0.20.0
+local sum(arr) = std.foldl(function(a, b) a + b, arr, 0);
 // added in 0.21.0
 local contains(arr, elem) = std.any([e == elem for e in arr]);
 // added in 0.21.0
@@ -46,8 +50,7 @@ local parseLine(line) = {
   levels: std.map(std.parseInt, std.split(std.stripChars(words[std.length(words) - 1], '{}'), ',')),
 };
 
-local stringXor(a, b) =
-  std.join('', [if std.xor(a[i] == '#', b[i] == '#') then '#' else '.' for i in indexRange(a)]);
+local stringXor(a, b) = std.join('', [if a[i] != b[i] then '#' else '.' for i in indexRange(a)]);
 
 local buttonCombinations(buttons, bindex, cache) =
   if bindex == std.length(buttons) then cache
@@ -73,7 +76,7 @@ local notNegative(levels) = std.all([l >= 0 for l in levels]);
 local halfLevel(js) = [std.floor(x / 2) for x in js];
 
 // Cribbed from the excellent tutorial by u/tenthmascot at
-// reddit.com/r/adventofcode/comments/1pk87hl/2025_day_10_part_2_bifurcate_your_way_to_victory/
+// https://reddit.com/r/adventofcode/comments/1pk87hl/2025_day_10_part_2_bifurcate_your_way_to_victory/
 local bifurcate(machine, combos, cache, stack) =
   if std.length(stack) == 0 then cache[std.toString(machine.levels)]
   else
@@ -107,6 +110,6 @@ function(lines) {
   } for m in machines],
 
   dayname: 'day10',
-  part1: std.sum([s.part1 for s in solutions]),
-  part2: std.sum([s.part2 for s in solutions]),
+  part1: sum([s.part1 for s in solutions]),
+  part2: sum([s.part2 for s in solutions]),
 }
