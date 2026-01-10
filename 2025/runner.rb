@@ -14,7 +14,7 @@ class Runner
     verbose, files = args.partition {|s| %w(-v --verbose).include? s}
     @verbose = !verbose.empty?
     files = ['-'] if files.empty?
-    files.each {|f| run_file day, f}.count.clamp(0, 1)
+    files.each {|f| run_file day, f}.all? ? 0 : 1
   end
 
   def run_file(day, fname)
