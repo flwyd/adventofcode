@@ -23,7 +23,7 @@ names=(awk AWK exs Elixir jl Julia jq jq kt Kotlin pl Perl ps PostScript py Pyth
 langname=${names[$ext]-${(C)ext}}
 case $ext in
   (lua) skip=(-e '/^\s*\(#|--\)/d') ;;
-  ({go,jsonnet,kt}) skip=(-e '#\t*//#d') ;;
+  (go|jsonnet|kt) skip=(-e '/^\s*\/\//d') ;;
   (ps) skip=(-e '/^\s*%/d' -e '/cob\.require/d') ;;
   (sql) skip=(-e '/^\s*--/d') ;;
   (*) skip=(-e '/^\s*#/d')
