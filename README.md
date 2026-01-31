@@ -28,6 +28,7 @@ Year           | Language | Thoughts
 [2022](./2022) | [Elixir](https://elixir-lang.org/) | [Blog post](https://flwyd.dreamwidth.org/405717.html)
 [2023](./2023) | [Julia](https://julialang.org/) |
 [2024](./2024) | [PostScript](https://en.wikipedia.org/wiki/PostScript) |
+[2025](./2025) | Glue languages that might already be installed on your system: [AWK](https://en.wikipedia.org/wiki/AWK), [dc](https://en.wikipedia.org/wiki/Dc_(computer_program)), [gvpr (Graphviz)](https://graphviz.org/docs/cli/gvpr/), [Jsonnet](https://jsonnet.org/), [jq](https://jqlang.org/), [Lua](https://lua.org/about.html), [sed](https://en.wikipedia.org/wiki/Sed), [SQL/MM](https://en.wikipedia.org/wiki/Simple_Features#Spatial), [zsh](https://en.wikipedia.org/wiki/Z_shell) plus [Go](https://go.dev/) and [Ruby](https://ruby-lang.org/) to explore some puzzles | [Blog post](https://flwyd.dreamwidth.org/417936.html)
 
 This code is made available under an [MIT-style license](./LICENSE). I do not
 accept pull requests to this repo, but you’re welcome to point out anything you
