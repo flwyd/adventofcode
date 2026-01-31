@@ -145,6 +145,7 @@ func (e execution) run() bool {
 		}
 		log.Println(msg)
 		log.Printf("%s took %s on %s", e.partName, elapsed, e.fileName)
+		log.Printf(strings.Repeat("=", 40))
 	}
 	return res == e.expected || e.expected == "" || res == "TODO"
 }
