@@ -113,7 +113,7 @@ type matrix [][]int
 
 func newMatrix(rows, cols int) matrix {
 	m := make([][]int, rows)
-	for i := range rows {
+	for i := 0; i < rows; i++ {
 		m[i] = make([]int, cols)
 	}
 	return m
@@ -158,7 +158,7 @@ func (m matrix) negate(i int) matrix {
 	n := make(matrix, m.rows())
 	copy(n, m)
 	n[i] = make([]int, m.cols())
-	for c := range m.cols() {
+	for c := 0; c < m.cols(); c++ {
 		n[i][c] = m[i][c] * -1
 	}
 	return n
@@ -168,7 +168,7 @@ func (m matrix) add(dest, src, factor int) matrix {
 	n := make(matrix, m.rows())
 	copy(n, m)
 	n[dest] = make([]int, m.cols())
-	for c := range m.cols() {
+	for c := 0; c < m.cols(); c++ {
 		n[dest][c] = m[dest][c] + m[src][c]*factor
 	}
 	return n
@@ -302,7 +302,7 @@ outer:
 		if m[col][col] < 0 {
 			m = m.negate(col)
 		}
-		for i := range m.rows() {
+		for i := 0; i < m.rows(); i++ {
 			if i == col {
 				continue
 			}
@@ -353,7 +353,7 @@ func machinePart2(x machine) int {
 	m = reduce(m)
 	// log.Printf("%d: reduced system of equations:\n%s\n%s", x.num, m, sys)
 	initial := freevars{vars: map[int]bool{}}
-	for i := range m.cols() - 1 {
+	for i := 0; i < m.cols()-1; i++ {
 		if i >= m.rows() || m[i][i] == 0 {
 			initial.vars[i] = true
 		}
