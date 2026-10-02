@@ -11,6 +11,7 @@ package main
 
 import (
 	"errors"
+	"io/fs"
 	"log"
 	"os"
 	"path"
@@ -71,7 +72,8 @@ func main() {
 	if fileExists(gofile) {
 		log.Fatalf("%s already exists, exiting", gofile)
 	}
-	writeFile(gofile, code)
+	log.Printf("Creating files in %s", outdir)
+	writeFile(gofile, code, true)
 	// create a symlink to runner.go, which is adjacent to generate.go
 	runnerlink := filepath.Join(outdir, "runner.go")
 	if !fileExists(runnerlink) {
@@ -100,7 +102,7 @@ func main() {
 		if fileExists(outfile) {
 			continue
 		}
-		inputdir := filepath.Join(filepath.Dir(outdir), "input", strings.TrimPrefix(outdir, "day"))
+		inputdir := filepath.Join(filepath.Dir(outdir), "input", daynum)
 		if !fileExists(inputdir) {
 			if err := os.Mkdir(inputdir, 0755); err != nil {
 				log.Fatalf("Error creating %s: %v", inputdir, err)
@@ -129,14 +131,19 @@ func fileExists(fname string) bool {
 	return true
 }
 
-func writeFile(fname, content string) {
-	if err := os.WriteFile(fname, []byte(content), 0644); err != nil {
+func writeFile(fname, content string, executable bool) {
+	mode := fs.FileMode(0644)
+	if executable {
+		mode |= 0100
+	}
+	if err := os.WriteFile(fname, []byte(content), mode); err != nil {
 		log.Fatalf("Error writing %d bytes to %s: %v", len(content), fname, err)
 	}
+	log.Printf("Created %s", fname)
 }
 
 func writeIfMissing(fname, content string) {
 	if !fileExists(fname) {
-		writeFile(fname, content)
+		writeFile(fname, content, false)
 	}
 }
