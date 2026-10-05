@@ -43,7 +43,7 @@ foreach infile ($@) do
   fi
   $program --argjson verbose $verbose $expected $infile
   ((outcome+=$?))
-  if (( $verbose == true )); then
+  if [[ $verbose == true ]]; then
     print -u2 "========================================"
   fi
 done
