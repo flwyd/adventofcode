@@ -88,6 +88,7 @@ BEGIN {
       edge(h, t, sprintf("dist_%f", d));
       if (++i == steps) {
         int sizes[int];
+        unset(sizes);
         for (n = fstnode(gc); n != NULL; n = nxtnode(n)) {
           graph_t gcs = compOf(gc, n);
           sizes[nNodes(gcs)]++;
@@ -112,6 +113,7 @@ BEGIN {
         break;
       }
     }
+    if (verbose) { printf(2, "========================================\n"); }
   }
 
   if (ARGC == 0) {
