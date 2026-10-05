@@ -20,7 +20,7 @@ DAY=day1
 
 function solve {
   local inputfile=$1
-  sed -f $DAYDIR/$DAY.sed $inputfile | dc | \
+  sed -f $DAYDIR/$DAY.sed $inputfile | ${DC-dc} | \
   while IFS='' read -r line ; do
     if [[ $line =~ 'part[12]:*' ]]; then
       typeset ${line/: /=}
