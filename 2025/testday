@@ -29,7 +29,16 @@ for day in $DAYS ; do
   ((daycount+=1))
   ((fails=0))
   programs=($day/(${day:t}|${(C)day:t})${EXTENSION-*})
+  typeset -A skip
+  skip=()
   for program in $programs ; do
+    if (( $skip[$program] )); then
+      continue
+    fi
+    if [[ ${program:t} = *.* ]] then
+      # If we already tested day1.foo don't also test day1foo
+      skip+=([${program:r}${program:e}]=1)
+    fi
     echo "# Subtest: $program"
     ((filecount=0))
     ((indent+=4))
