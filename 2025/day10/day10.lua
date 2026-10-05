@@ -18,7 +18,11 @@ In part 2, buttons increase the joltage level at each given index, the
 answer is the minimum number of button presses to reach the desired levels.
 ]]--
 
-require('runner')
+local function require_relative(script)
+  local scriptdir = debug.getinfo(2, "S").source:match('@(.*/)') or ''
+  require(string.format('%s/%s', scriptdir, script))
+end
+require_relative('runner')
 
 local function parsemachine(line)
   local a, b, c = string.match(line, "[[]([.#]*)[]] (.*) [{]([0-9,]*)[}]")

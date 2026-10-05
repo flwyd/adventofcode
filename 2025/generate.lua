@@ -51,7 +51,11 @@ LUA_TEMPLATE =
 Read the puzzle at https://adventofcode.com/2025/day/_DAYNUM_
 ]]--
 
-require('runner')
+local function require_relative(script)
+  local scriptdir = debug.getinfo(2, "S").source:match('@(.*/)') or ''
+  require(string.format('%s/%s', scriptdir, script))
+end
+require_relative('runner')
 
 local function parseinput(lines)
   return lines
@@ -96,6 +100,10 @@ for i, dir in ipairs(arg) do
     f:write(content)
     f:close()
     os.execute('chmod a+x ' .. luafile)
+  end
+  local runnerlua = string.format('%s/runner.lua', dir)
+  if not exists(runnerlua) then
+      os.execute(string.format('ln -s ../runner.lua %s', runnerlua))
   end
   maybewrite(dir .. '/input.example.txt', '')
   maybewrite(dir .. '/input.example.expected', 'part1: \npart2: \n')
