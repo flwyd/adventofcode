@@ -137,6 +137,7 @@ fn run_part<D: Day>(
   let now = Instant::now();
   let result = func(input);
   let elapsed = now.elapsed();
+  println!("{name}: {result}");
   let empty = &String::new();
   let outcome = Outcome::from(&result, expected.get(name).unwrap_or(empty));
   if verbose {
