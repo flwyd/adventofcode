@@ -41,14 +41,14 @@ end
 
 LUA_TEMPLATE =
 [==[#!/usr/bin/env lua
--- Copyright 2025 Trevor Stone
+-- Copyright _COPYDATE_ Trevor Stone
 --
 -- Use of this source code is governed by an MIT-style
 -- license that can be found in the LICENSE file or at
 -- https://opensource.org/licenses/MIT.
 
---[[ Advent of Code 2025 day _DAYNUM_
-Read the puzzle at https://adventofcode.com/2025/day/_DAYNUM_
+--[[ Advent of Code _YEAR_ day _DAYNUM_
+Read the puzzle at https://adventofcode.com/_YEAR_/day/_DAYNUM_
 ]]--
 
 local function require_relative(script)
@@ -86,9 +86,11 @@ end
 
 for i, dir in ipairs(arg) do
   local daynum = dir:match('(%d+)$')
+  local curyear = math.floor(os.time() / (60*60*24*365.2425) + 1970)
+  local year = dir:match('(%d%d%d%d)/[^/]*$') or os.getenv('PWD'):match('/(%d%d%d%d)$') or curyear
   print('Generating files in ' .. dir)
   mkdir(dir)
-  local luafile = string.format('%s/%s.lua', dir, dir)
+  local luafile = string.format('%s/%s.lua', dir, dir:gsub('.*/', ''))
   if exists(luafile) then
     print(luafile .. ' already exists')
   else
@@ -96,14 +98,14 @@ for i, dir in ipairs(arg) do
     if not f then
       error('could not open ' .. luafile)
     end
-    local content = LUA_TEMPLATE:gsub('_DAYNUM_', daynum)
+    local content = LUA_TEMPLATE:gsub('_DAYNUM_', daynum):gsub('_YEAR_', year):gsub('_COPYDATE_', curyear)
     f:write(content)
     f:close()
     os.execute('chmod a+x ' .. luafile)
   end
   local runnerlua = string.format('%s/runner.lua', dir)
   if not exists(runnerlua) then
-      os.execute(string.format('ln -s ../runner.lua %s', runnerlua))
+      os.execute(string.format('ln -s ../../lang/lua/runner.lua %s', runnerlua))
   end
   maybewrite(dir .. '/input.example.txt', '')
   maybewrite(dir .. '/input.example.expected', 'part1: \npart2: \n')

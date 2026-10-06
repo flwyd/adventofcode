@@ -39,16 +39,10 @@ foreach my $fname (@inputs) {
   }
   chomp(my @lines = readline $fh);
   close $fh;
-  print STDERR "Running $dayname on $fname (" . +@lines . " lines)\n" if $verbose;
+  say STDERR "Running $dayname on $fname (" . +@lines . " lines)" if $verbose;
   foreach $part (qw(part1 part2)) {
     $success = &runpart($part, $fname, \@lines) || $exit;
   }
-  # my $p1 = &part1(@lines);
-  # say "part1: $p1";
-  # say STDERR '=' x 40 if $verbose;
-  # my $p2 = &part2(@lines);
-  # say "part2: $p2";
-  # say STDERR '=' x 40 if $verbose;
 }
 exit !$success;
 

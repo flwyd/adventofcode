@@ -14,7 +14,7 @@
 # and "more pips than spaces in the grid," so the NP-complete problem has been
 # turned into an O(1) problem.
 
-source ${0:h:h}/runner.zsh
+source ${0:a:h:h:h}/lang/zsh/runner.zsh
 ((VERBOSE=0))
 if [[ $1 == "-v" ]]; then
   ((VERBOSE=1))

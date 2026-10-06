@@ -11,6 +11,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
@@ -18,12 +19,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 const shebang = "//usr/bin/true; exec /usr/bin/env go run \"$0\" \"`dirname $0`/runner.go\" \"$@\""
 
 // TODO use template/text
-const dayCode = `// Copyright YEAR Trevor Stone
+const dayCode = `// Copyright COPYDATE Trevor Stone
 //
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file or at
@@ -58,6 +60,7 @@ func main() {
 	if err := os.MkdirAll(outdir, 0755); err != nil {
 		log.Fatalf("Could not create %s: %v", outdir, err)
 	}
+	thisyear := fmt.Sprintf("%d", time.Now().Year())
 	var year string
 	if p, err := filepath.Abs(path.Dir(outdir)); err != nil {
 		log.Fatalf("Could not determine year from directory %s: %v", outdir, err)
@@ -66,8 +69,8 @@ func main() {
 	}
 	dayname := filepath.Base(outdir)
 	daynum := strings.TrimPrefix(dayname, "day")
-	code := shebang + "\n" +
-		strings.ReplaceAll(strings.ReplaceAll(dayCode, "DAYNUM", daynum), "YEAR", year)
+	rep := strings.NewReplacer("DAYNUM", daynum, "YEAR", year, "COPYDATE", thisyear)
+	code := shebang + "\n" + rep.Replace(dayCode)
 	gofile := filepath.Join(outdir, dayname+".go")
 	if fileExists(gofile) {
 		log.Fatalf("%s already exists, exiting", gofile)

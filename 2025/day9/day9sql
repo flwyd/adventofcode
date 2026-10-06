@@ -9,8 +9,8 @@
 # Read the puzzle at https://adventofcode.com/2025/day/9
 # Runs PostgreSQL with a PostGIS SQL solution.
 
+source ${0:a:h:h:h}/lang/zsh/runner.zsh
 DAYDIR=${0:h}
-source ${0:h:h}/runner.zsh
 ((VERBOSE=0))
 if [[ $1 == "-v" ]]; then
   ((VERBOSE=1))

@@ -9,29 +9,36 @@
 
 use strict;
 use feature qw(say);
+use Cwd qw(cwd);
+use File::Basename;
+use File::Spec;
 
 die "Usage: $0 day1" unless @ARGV;
 my $daydir = shift;
-my $day;
-($day = $daydir) =~ s/\D+//;
-my $year = 2025;
 if (!-d $daydir) {
   mkdir $daydir or die "Cannot create $daydir: $!";
 };
+my $day = basename($daydir);
+my $year = basename(dirname(File::Spec->rel2abs($daydir)));
+my $daynum;
+($daynum = $day) =~ s/\D+//;
+my @now = localtime;
+my $copyyear = $now[5] + 1900;
+my $langdir = File::Spec->abs2rel(dirname(__FILE__), File::Spec->rel2abs($daydir));
 say "Generating files in $daydir";
-my $perlfile = "$daydir/$daydir.pl";
+my $perlfile = "$daydir/$day.pl";
 if (!-e $perlfile) {
-  open my $fh, '>', $perlfile;
+  open my $fh, '>', $perlfile or die "Cannot open $perlfile: $!";
   print $fh <<~EOT
   #!/usr/bin/env -S perl -w
-  # Copyright 2025 Trevor Stone
+  # Copyright $copyyear Trevor Stone
   #
   # Use of this source code is governed by an MIT-style
   # license that can be found in the LICENSE file or at
   # https://opensource.org/licenses/MIT.
 
-  # Advent of Code $year day $day
-  # Read the puzzle at https://adventofcode.com/$year/day/$day
+  # Advent of Code $year day $daynum
+  # Read the puzzle at https://adventofcode.com/$year/day/$daynum
 
   use strict;
 
@@ -45,25 +52,24 @@ if (!-e $perlfile) {
 
   unless (caller) {
     use FindBin qw(\$Bin);
-    require "\$Bin/../runner.pl";
+    require "\$Bin/$langdir/runner.pl";
   }
   EOT
   ; close($fh);
   chmod 0755, $perlfile;
 }
-my $inputdir = "input/$day";
-mkdir $inputdir or die "Can't make $inputdir: $!" unless -d "input/$day";
+my $inputdir = "$daydir/../input/$daynum";
+mkdir $inputdir or die "Can't make $inputdir: $!" unless -d $inputdir;
 foreach my $f (qw(input.actual.txt input.actual.expected)) {
   &touch("$inputdir/$f") unless -e "$inputdir/$f";
   unless (-e "$daydir/$f") {
-    my $time = time;
     &touch("$inputdir/$f");
     symlink "../$inputdir/$f", "$daydir/$f";
   }
 }
 foreach my $f (qw(input.actual.expected input.example.expected)) {
   if (!-e "$daydir/$f" || -z "$daydir/$f") {
-    open my $fh, ">", "$daydir/$f";
+    open my $fh, ">", "$daydir/$f" or die "Cannot open $daydir/$f: $!";
     print $fh "part1: \npart2: \n";
     close $fh;
   }

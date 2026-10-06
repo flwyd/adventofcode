@@ -5,7 +5,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-# Generates a skeletal Advent of Code solution in AWK and creates files, links,
+# Generates a skeletal Advent of Code solution in zsh and creates files, links,
 # and directories as needed.
 
 if (( $# == 0 )); then
@@ -13,12 +13,14 @@ if (( $# == 0 )); then
   exit 1
 fi
 
-basedir=${0:h}
-day=$1
-daydir=$(dirname $0)/${day}
-daynum=$(tr -d -c 0-9 <<< $day)
+daydir=$1
+day=${daydir:t}
+basedir=${daydir:a:h}
+year=${basedir:t}
+curyear=$(date +%Y)
+daynum=${day//[^0-9]}
 inputdir=$basedir/input/$daynum
-awkfile=$daydir/$day.awk
+zshfile=$daydir/$day.zsh
 echo "Generating files in $daydir"
 mkdir -p $daydir
 mkdir -p $inputdir
@@ -35,30 +37,37 @@ for f in $daydir/input.actual.{txt,expected} ; do
     ln -s ../input/$daynum/${f:t} $f
   fi
 done
-if [[ ! -e $awkfile ]]; then
-  cat > $awkfile <<ENDCODE
-#!/usr/bin/env -S awk -f
-# Copyright 2025 Trevor Stone
+if [[ ! -s $zshfile ]]; then
+  cat > $zshfile <<ENDCODE
+#!/bin/zsh
+# Copyright $curyear Trevor Stone
 #
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-# Advent of Code 2025 day $daynum
-# Read the puzzle at https://adventofcode.com/2025/day/$daynum
+# Advent of Code $year day $daynum
+# Read the puzzle at https://adventofcode.com/$year/day/$daynum
 
-function init() {
-  part1 = "TODO"; part2 = "TODO";
+source \${0:a:h:h:h}/lang/zsh/runner.zsh
+((VERBOSE=0))
+if [[ \$1 == "-v" ]]; then
+  ((VERBOSE=1))
+  shift
+fi
+DAY=day$daynum
+
+function solve {
+  local inputfile=\$1
+  PART1=TODO
+  PART2=TODO
+  while IFS='' read -r line ; do
+    # TODO
+  done < \$inputfile
 }
 
-function finish() {
-}
-
-{
-  # TODO process input
-}
-
-BEGIN { DAY = "day$daynum"; init(); }
-END { finish(); printf "part1: %s\npart2: %s\n", part1, part2; }
+runner_solve_files \$@
+exit \$((\$FAILURES > 0))
 ENDCODE
+  chmod a+x $zshfile
 fi

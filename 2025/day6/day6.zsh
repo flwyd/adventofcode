@@ -14,7 +14,7 @@
 # the column, with numbers read horizontally.
 # Part 2: do the same, but numbers are read vertically.
 
-source ${0:h:h}/runner.zsh
+source ${0:a:h:h:h}/lang/zsh/runner.zsh
 ((VERBOSE=0))
 if [[ $1 == "-v" ]]; then
   ((VERBOSE=1))

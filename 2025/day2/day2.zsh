@@ -13,7 +13,7 @@
 # twice with no intervening (1212 is invalid, 12312 is fine).
 # Part 2: invalid numbers are formed from any repeating digit sets: 121212 etc.
 
-source ${0:h:h}/runner.zsh
+source ${0:a:h:h:h}/lang/zsh/runner.zsh
 ((VERBOSE=0))
 if [[ $1 == "-v" ]]; then
   ((VERBOSE=1))

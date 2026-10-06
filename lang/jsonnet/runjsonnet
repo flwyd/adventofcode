@@ -14,6 +14,8 @@
 # still output values to stdout (making assertEquals challenging).
 
 basedir=${0:h}
+# Allow large recursive programs
+stack=(-t 64 -s 3000)
 args=()
 if [[ $1 == -v ]]; then
   args+=(--tla-code verbose=true)
@@ -41,5 +43,4 @@ else
   done
   args+=(--tla-code "files=[$files]")
 fi
-set -x
-jsonnet -t 64 -s 3000 -S $basedir/runner.jsonnet --tla-code-file "solve=$program" $args
+jsonnet $stack -S $basedir/runner.jsonnet --tla-code-file "solve=$program" $args

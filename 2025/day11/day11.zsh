@@ -8,7 +8,7 @@
 # Advent of Code 2025 day 11
 # Read the puzzle at https://adventofcode.com/2025/day/11
 
-source ${0:h:h}/runner.zsh
+source ${0:a:h:h:h}/lang/zsh/runner.zsh
 ((VERBOSE=0))
 if [[ $1 == "-v" ]]; then
   ((VERBOSE=1))

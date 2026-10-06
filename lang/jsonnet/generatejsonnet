@@ -13,10 +13,12 @@ if (( $# == 0 )); then
   exit 1
 fi
 
-basedir=${0:h}
-day=$1
-daydir=$basedir/${day}
-daynum=$(tr -d -c 0-9 <<< $day)
+daydir=$1
+day=${daydir:t}
+basedir=${daydir:a:h}
+year=${basedir:t}
+curyear=$(date +%Y)
+daynum=${day//[^0-9]}
 inputdir=$basedir/input/$daynum
 jsonnetfile=$daydir/$day.jsonnet
 echo "Generating files in $daydir"
@@ -36,6 +38,9 @@ for f in $daydir/input.actual.{txt,expected} ; do
   fi
 done
 if [[ ! -e $jsonnetfile ]]; then
-  jsonnet -S -o $jsonnetfile ${0:h}/generate.jsonnet --tla-code day=$daynum
+  jsonnet -S -o $jsonnetfile \
+    --tla-code "day=$daynum" --tla-code "year=$year" \
+    --tla-code "copydate=$curyear" \
+    ${0:h}/generate.jsonnet || exit $!
 fi
 chmod a+x $jsonnetfile

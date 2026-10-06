@@ -17,7 +17,7 @@
 # total processes), and actual input takes 62 iterations to stabilize, so it
 # was reimplemented in jq instead.
 
-source ${0:h:h}/runner.zsh
+source ${0:a:h:h:h}/lang/zsh/runner.zsh
 ((VERBOSE=0))
 if [[ $1 == "-v" ]]; then
   ((VERBOSE=1))

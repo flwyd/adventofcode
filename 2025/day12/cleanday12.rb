@@ -18,20 +18,20 @@ LOG = Logger.new(STDERR)
 # and 2 each of shape #4 and #5."  The atomic shape grids can be flipped and
 # rotated and overlap open spaces.  The answer is the number of input lines
 # where the given shape counts can all fit in a grid of the given size.
-#
-# Note that the general problem is NP-complete, and the shapes in the actual
-# input form several perfect packings of various sizes, see
-# https://www.reddit.com/r/adventofcode/comments/1q168p8/2025_day_12_part_1_perfect_packing_revisited/
 class Day12
   def part1 lines
     atoms, goals = parse_input lines
+    atoms.each do |a|
+      LOG.info "##{a.id} has #{a.family.size} family members"
+      # a.family.each {|f| LOG.info "Family member #{f}"}
+    end
     0.upto(goals.size-1).count do |goali|
       goal = goals[goali]
-      # LOG.info "#{goali+1}: solving #{goal}"
+      LOG.info "#{goali+1}: solving #{goal}"
       grid = trivial_solve goal, atoms # comment out for nicer packing
       # grid = simple_solve goal, atoms
       grid = packed_solve goal, atoms unless grid
-      # LOG.info "Solved with\n#{grid}" if grid
+      LOG.info "Solved with\n#{grid}" if grid
       grid != nil
     end
   end
@@ -51,6 +51,8 @@ class Day12
     end
     goals = slices.last.map do |line|
       line =~ /(\d+)x(\d+): (.*)/
+      # everything can be rotated, so normalize to width >= height
+      # height, width = [$1.to_i, $2.to_i].minmax
       width, height = [$1, $2].map(&:to_i)
       targets = Hash.new(0)
       $3.split(' ').map(&:to_i).each_with_index {|x,i| targets[i] = x if x > 0}
@@ -111,33 +113,53 @@ class Day12
     packed_recurse empty, order
   end
 
-  def packed_recurse grid, atoms, badstates=Set.new
+  def packed_recurse grid, atoms, badstates=Set.new, hits=[0]
     return grid if atoms.empty?
     avail = (grid.width * grid.height - grid.point_count)
     return nil if atoms.sum {|a| a.points.size} > avail
     state = [atoms.last.id, grid.points.keys.to_set]
     if badstates.include? state
+      hits[0] += 1
       return nil
     end
     a = atoms.pop
+    # LOG.info "Trying with #{atoms.size} left #{a}\n#{grid}" if badstates.size % 5000 == 1
     grid.open.sort.each do |point|
       if grid.worth_trying? point, a then
+        # LOG.info "Worth trying #{point} with #{a.id}"
         a.family.each do |f|
           g = grid.merge_with f, point.x, point.y
           if g != nil then
-            g = packed_recurse g, atoms, badstates
-            return g if g != nil
+            g = packed_recurse g, atoms, badstates, hits
+            if g != nil then
+              # LOG.info "Found after #{hits[0]} hits in cache size #{badstates.size}"
+              return g
+            end
           end
         end
       end
     end
     atoms.push a
     badstates.add state
+    # LOG.info "Nope #{a.id} size #{grid.point_count} cache #{badstates.size} #{hits[0]} hits" if badstates.size % 5000 == 2
     nil
   end
 end
 
-Point = Struct.new('Point', :x, :y) do |clazz|
+# Point = Struct.new('Point', :x, :y) do |clazz|
+class Point
+  attr_reader :x, :y
+
+  def initialize x, y
+    @x = x
+    @y = y
+  end
+
+  def eql?(o) = self.class == o.class && x == o.x && y == o.y
+  alias == eql?
+
+  def hash = x << 8 | y
+
   def to_s = "#{self.x},#{self.y}"
 
   def <=> o
@@ -198,7 +220,7 @@ class Grid
         raise "Collision: adding #{pts} to #{self}" if ps.has_key? k
         ps[k] = v
       end
-      @points = ps.freeze
+      @points = ps#.freeze
       @point_count = base.point_count + pts.size
       op = base.open.dup
     else
@@ -215,9 +237,9 @@ class Grid
         ps[Point.new(width, y)] = ':'
         ps[Point.new(width+1, y)] = ':'
       end
-      @points = ps.freeze
+      @points = ps#.freeze
       @point_count = pts.size
-      op = (0..w-2).flat_map {|x| (0..h-2).map {|y| Point.new x, y}}.to_set
+      op = (0..w-2).flat_map {|x| (0..h-2).map {|y| Point.new x, y}}
     end
     unless pts.empty? then
       keys = pts.keys
@@ -230,7 +252,7 @@ class Grid
         end
       end
     end
-    @open = op.freeze
+    @open = op#.freeze
   end
 
   def merge_with atom, offx, offy
@@ -280,6 +302,6 @@ Goal = Struct.new('Goal', :width, :height, :sizes) do |clazz|
 end
 
 if __FILE__ == $PROGRAM_NAME
-  require_relative '../../lang/ruby/runner.rb'
+  require_relative '../runner.rb'
   exit Runner.new.run_day(Day12.new, ARGV)
 end
