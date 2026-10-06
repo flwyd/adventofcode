@@ -29,6 +29,7 @@ if [[ ! -f "$program" ]]; then
   print -u 2 "$program file not found"
   exit 1
 fi
+daydir=${program:h}
 langdir=${0:h}/lang
 
 case "$program" in
@@ -38,9 +39,19 @@ case "$program" in
   (*.jq) cmd=($langdir/jq/runjq $verbose $program) ;;
   (*.jsonnet) cmd=($langdir/jsonnet/runjsonnet $verbose $program) ;;
   (*)
-    runner=${program:r}${program:e}
-    if [[ -x "$runner" ]]; then
-      cmd=("$runner" $verbose)
+    runner=${program:t:r}${program:e}
+    if [[ -f $daydir/Makefile ]]; then
+      # `make bin/day1rs` but don't fail if there's no `make bin/day1sed`
+      if make -n -C $daydir bin/$runner > /dev/null 2>&1 ; then
+        make --quiet -C $daydir bin/$runner || exit 1
+      else
+        make -C $daydir || exit 1
+      fi
+    fi
+    if [[ -x "$daydir/$runner" ]]; then
+      cmd=("$daydir/$runner" $verbose)
+    elif [[ -x "$daydir/bin/$runner" ]]; then
+      cmd=("$daydir/bin/$runner" $verbose)
     elif [[ -x "$program" ]]; then
       cmd=("$program" $verbose)
     else
