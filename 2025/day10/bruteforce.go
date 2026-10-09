@@ -32,6 +32,10 @@ import (
 	"time"
 )
 
+type Day10BruteForce struct{}
+
+func (_ Day10BruteForce) String() string { return "day10BruteForce" }
+
 type button uint
 
 func (b button) size() int { return bits.OnesCount(uint(b)) }
@@ -313,7 +317,7 @@ func bruteNumPressesPart2(ctx context.Context, m machine) int {
 	}
 }
 
-func brutePart1(lines []string) string {
+func (_ Day10BruteForce) Part1(lines []string) string {
 	var machines []machine
 	for i, l := range lines {
 		m := bruteParseMachine(l)
@@ -329,7 +333,7 @@ func brutePart1(lines []string) string {
 	return strconv.Itoa(sum)
 }
 
-func brutePart2(lines []string) string {
+func (_ Day10BruteForce) Part2(lines []string) string {
 	var machines []machine
 	for i, l := range lines {
 		m := bruteParseMachine(l)
@@ -352,7 +356,5 @@ func brutePart2(lines []string) string {
 var maxMachineTime = 45 * time.Minute
 
 func main() {
-	runMain(brutePart1, brutePart2)
+	runDay(Day10BruteForce{})
 }
-
-const dayName = "day10"

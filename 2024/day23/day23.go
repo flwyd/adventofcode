@@ -5,7 +5,8 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-// Advent of Code 2024 day 23 https://adventofcode.com/2024/day/23
+// Advent of Code 2024 day 23
+// Read the puzzle at https://adventofcode.com/2024/day/23
 //
 // Input is lines like ab-cd indicating an undirected connection between two
 // computers in a network.  Part 1 answer is the number of groups of three
@@ -22,6 +23,10 @@ import (
 	"strconv"
 	"strings"
 )
+
+type Day23 struct{}
+
+func (_ Day23) String() string { return "day23" }
 
 type stringset map[string]bool
 
@@ -92,7 +97,7 @@ func fullyConnected(comps map[string]stringset, s stringset) bool {
 	return true
 }
 
-func part1(lines []string) string {
+func (_ Day23) Part1(lines []string) string {
 	comps := makeComputers(lines)
 	seen := make(map[string]bool)
 	for a, s := range comps {
@@ -109,7 +114,7 @@ func part1(lines []string) string {
 	return strconv.Itoa(len(seen))
 }
 
-func part2(lines []string) string {
+func (_ Day23) Part2(lines []string) string {
 	comps := makeComputers(lines)
 	var pq setqueue
 	seen := make(map[string]bool)
@@ -163,7 +168,5 @@ func makeComputers(lines []string) map[string]stringset {
 }
 
 func main() {
-	runMain(part1, part2)
+	runDay(Day23{})
 }
-
-const dayName = "day23"

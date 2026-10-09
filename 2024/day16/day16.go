@@ -5,7 +5,8 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-// Advent of Code 2024 day 16 https://adventofcode.com/2024/day/16
+// Advent of Code 2024 day 16
+// Read the puzzle at https://adventofcode.com/2024/day/16
 //
 // Input is a grid surrounded by a wall.  # marks walls, . marks open spaces,
 // S and E mark start and end.  Part 1 answer is the length of a shortest path
@@ -19,6 +20,10 @@ import (
 	"log"
 	"strings"
 )
+
+type Day16 struct{}
+
+func (_ Day16) String() string { return "day16" }
 
 const (
 	dot  = '.'
@@ -199,17 +204,17 @@ func solve(grid []string, start state) *solver {
 	}
 }
 
-func part1(lines []string) string {
+func (_ Day16) Part1(lines []string) string {
 	start := state{pos: position{row: len(lines) - 2, col: 1}, dir: east}
 	if lines[start.pos.row][start.pos.col] != 'S' {
 		start = state{pos: position{row: 1, col: len(lines[0]) - 2}, dir: south}
 	}
 	s := solve(lines, start)
-	s.printgrid()
+	// s.printgrid()
 	return fmt.Sprintf("%d", s.cheapest)
 }
 
-func part2(lines []string) string {
+func (_ Day16) Part2(lines []string) string {
 	start := state{pos: position{row: len(lines) - 2, col: 1}, dir: east}
 	if lines[start.pos.row][start.pos.col] != 'S' {
 		start = state{pos: position{row: 1, col: len(lines[0]) - 2}, dir: south}
@@ -231,7 +236,5 @@ func part2(lines []string) string {
 }
 
 func main() {
-	runMain(part1, part2)
+	runDay(Day16{})
 }
-
-const dayName = "day16"

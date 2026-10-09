@@ -22,11 +22,9 @@ import (
 	"strconv"
 )
 
-func main() {
-	runMain(part1, part2)
-}
+type Day20 struct{}
 
-const dayName = "day20"
+func (_ Day20) String() string { return "day20" }
 
 type Node struct {
 	value      int
@@ -100,7 +98,7 @@ func stringsToInts(strs []string) []int {
 	return res
 }
 
-func part1(lines []string) string {
+func (_ Day20) Part1(lines []string) string {
 	ints := stringsToInts(lines)
 	size := len(ints)
 	nodes := buildList(ints, 1)
@@ -112,7 +110,7 @@ func part1(lines []string) string {
 
 const part2Multiplier = 811589153
 
-func part2(lines []string) string {
+func (_ Day20) Part2(lines []string) string {
 	ints := stringsToInts(lines)
 	size := len(ints)
 	nodes := buildList(ints, part2Multiplier)
@@ -147,4 +145,8 @@ func score(nodes []*Node) int {
 	two := one.find(1000)
 	three := two.find(2000)
 	return one.value + two.value + three.value
+}
+
+func main() {
+	runDay(Day20{})
 }

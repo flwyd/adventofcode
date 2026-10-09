@@ -1,4 +1,4 @@
-//usr/bin/true; exec /usr/bin/env go run \"$0\" \"`dirname $0`/generate.go\" \"$@\"
+//usr/bin/true; exec /usr/bin/env go run "$0" "$@"
 //// Copyright 2023 Google LLC
 //
 // Use of this source code is governed by an MIT-style
@@ -35,16 +35,20 @@ const dayCode = `// Copyright COPYDATE Trevor Stone
 // Read the puzzle at https://adventofcode.com/YEAR/day/DAYNUM
 package main
 
-func part1(lines []string) string {
+type DayDAYNUM struct{}
+
+func (_ DayDAYNUM) String() string { return "dayDAYNUM" }
+
+func (_ DayDAYNUM) Part1(lines []string) string {
 	return "TODO"
 }
 
-func part2(lines []string) string {
+func (_ DayDAYNUM) Part2(lines []string) string {
 	return "TODO"
 }
 
 func main() {
-	runMain(part1, part2)
+	runDay(DayDAYNUM{})
 }
 
 const dayName = "dayDAYNUM"

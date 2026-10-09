@@ -5,7 +5,8 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-// Advent of Code 2024 day 21 https://adventofcode.com/2024/day/21
+// Advent of Code 2024 day 21
+// Read the puzzle at https://adventofcode.com/2024/day/21
 //
 // Input is five lines with a series of digits followed by an A.  These need to
 // be entered in a 789/456/123/_0A keypad which is controlled by several levels
@@ -25,6 +26,10 @@ import (
 	"strconv"
 	"strings"
 )
+
+type Day21 struct{}
+
+func (_ Day21) String() string { return "day21" }
 
 type pad map[rune]map[rune][]string
 
@@ -183,16 +188,14 @@ func solve(lines []string, levels int) string {
 	return strconv.Itoa(total)
 }
 
-func part1(lines []string) string {
+func (_ Day21) Part1(lines []string) string {
 	return solve(lines, 2)
 }
 
-func part2(lines []string) string {
+func (_ Day21) Part2(lines []string) string {
 	return solve(lines, 25)
 }
 
 func main() {
-	runMain(part1, part2)
+	runDay(Day21{})
 }
-
-const dayName = "day21"

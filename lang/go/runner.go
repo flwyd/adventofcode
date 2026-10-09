@@ -25,11 +25,15 @@ import (
 
 type Part func(lines []string) string
 
-var (
-	verbose = false
-)
+type Day interface {
+	fmt.Stringer
+	Part1(lines []string) string
+	Part2(lines []string) string
+}
 
-func runMain(part1, part2 Part) {
+var verbose = false
+
+func runDay(day Day) {
 	log.SetFlags(log.Ltime)
 	flag.BoolVar(&verbose, "verbose", false, "log time and status")
 	flag.BoolVar(&verbose, "v", false, "log time and status")
@@ -40,7 +44,7 @@ func runMain(part1, part2 Part) {
 	}
 	success := true
 	for _, fname := range files {
-		success = runFile(fname, part1, part2) && success
+		success = runFile(fname, day) && success
 	}
 	if success {
 		os.Exit(0)
@@ -48,14 +52,16 @@ func runMain(part1, part2 Part) {
 	os.Exit(1)
 }
 
-func runFile(fname string, part1, part2 Part) bool {
+func runFile(fname string, day Day) bool {
 	lines, err := readLines(fname)
 	if err != nil {
 		log.Fatal(err)
 	}
 	expect := readExpected(fname)
-	p1 := execution{part: part1, partName: "part1", fileName: fname, lines: lines, expected: expect[0]}
-	p2 := execution{part: part2, partName: "part2", fileName: fname, lines: lines, expected: expect[1]}
+	p1 := execution{part: day.Part1, partName: "part1", dayName: day.String(),
+		fileName: fname, lines: lines, expected: expect[0]}
+	p2 := execution{part: day.Part2, partName: "part2", dayName: day.String(),
+		fileName: fname, lines: lines, expected: expect[1]}
 	success := p1.run()
 	success = p2.run() && success
 	return success
@@ -108,20 +114,22 @@ func readExpected(inputfname string) [2]string {
 	for i, t := range res {
 		res[i] = strings.ReplaceAll(t, "\\n", "\n")
 	}
+	if err := s.Err(); err != nil {
+		panic(fmt.Sprintf("error reading %s: %v", efname, err))
+	}
 	return res
 }
 
 type execution struct {
-	part     Part
-	partName string
-	fileName string
-	lines    []string
-	expected string
+	part                        Part
+	partName, dayName, fileName string
+	lines                       []string
+	expected                    string
 }
 
 func (e execution) run() bool {
 	if verbose {
-		log.Printf("Running %s %s on %s (%d lines)", dayName, e.partName, e.fileName, len(e.lines))
+		log.Printf("Running %s %s on %s (%d lines)", e.dayName, e.partName, e.fileName, len(e.lines))
 	}
 	start := time.Now()
 	l := make([]string, len(e.lines))

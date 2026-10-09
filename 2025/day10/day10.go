@@ -27,6 +27,10 @@ import (
 	"strings"
 )
 
+type Day10 struct{}
+
+func (_ Day10) String() string { return "day10" }
+
 type machine struct {
 	desired uint
 	buttons []uint
@@ -93,7 +97,7 @@ func machinePresses1(m machine) int {
 	}
 }
 
-func part1(lines []string) string {
+func (_ Day10) Part1(lines []string) string {
 	var machines []machine
 	for i, l := range lines {
 		m := parseMachine(l)
@@ -394,7 +398,7 @@ func machinePart2(x machine) int {
 	return best
 }
 
-func part2(lines []string) string {
+func (_ Day10) Part2(lines []string) string {
 	var machines []machine
 	for i, l := range lines {
 		m := parseMachine(l)
@@ -446,7 +450,5 @@ func sumSlice(s []int) int {
 }
 
 func main() {
-	runMain(part1, part2)
+	runDay(Day10{})
 }
-
-const dayName = "day10"
