@@ -61,4 +61,8 @@ case "$program" in
     ;;
 esac
 
+if [[ $program = *.rs ]]; then
+  export RUST_BACKTRACE=1
+fi
+
 exec $cmd "$@"
