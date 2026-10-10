@@ -31,6 +31,16 @@ if [[ ! -f "$program" ]]; then
 fi
 daydir=${program:h}
 langdir=${0:h}/lang
+runner=${program:t:r}${program:e}
+
+# make if needed
+case $program in
+  (*.rs) maketarget=bin/$runner ;;
+  (*) maketarget= ;;
+esac
+if [[ ! -z $maketarget ]]; then
+  make --quiet -C $daydir $maketarget
+fi
 
 case "$program" in
   (*.awk) cmd=(gawk --lint=no-ext -i $langdir/awk/runner.gawk -f $program -- $verbose) ;;
@@ -38,16 +48,8 @@ case "$program" in
   (*.go) cmd=(go run $program ${program:h}/runner.go $verbose) ;;
   (*.jq) cmd=($langdir/jq/runjq $verbose $program) ;;
   (*.jsonnet) cmd=($langdir/jsonnet/runjsonnet $verbose $program) ;;
+  (*.rs) export RUST_BACKTRACE=1 ; cmd=($daydir/bin/$runner $verbose) ;;
   (*)
-    runner=${program:t:r}${program:e}
-    if [[ -f $daydir/Makefile ]]; then
-      # `make bin/day1rs` but don't fail if there's no `make bin/day1sed`
-      if make -n -C $daydir bin/$runner > /dev/null 2>&1 ; then
-        make --quiet -C $daydir bin/$runner || exit 1
-      else
-        make -C $daydir || exit 1
-      fi
-    fi
     if [[ -x "$daydir/$runner" ]]; then
       cmd=("$daydir/$runner" $verbose)
     elif [[ -x "$daydir/bin/$runner" ]]; then
@@ -60,9 +62,5 @@ case "$program" in
     fi
     ;;
 esac
-
-if [[ $program = *.rs ]]; then
-  export RUST_BACKTRACE=1
-fi
 
 exec $cmd "$@"

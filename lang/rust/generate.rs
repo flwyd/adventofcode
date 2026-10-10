@@ -55,25 +55,14 @@ const MAKEFILE_TEMPLATE: &str = r##"# Copyright 2026 Trevor Stone
 # https://opensource.org/licenses/MIT.
 
 DAY = dayDAYNUM
-RUSTC = rustc --edition=2024
-RUSTBIN = bin/$(DAY)rs
 
-bin: rust
-
-rust: $(RUSTBIN)
-
-$(RUSTBIN): $(DAY).rs runner.rs
-	mkdir -p bin
-	$(RUSTC) -o $(RUSTBIN) $(DAY).rs
-
-runner.rs:
-	ln -s RUNNERSOURCE .
+build: build-rust
 
 clean: clean-rust
 
-clean-rust:
-	rm $(RUSTBIN)
+include LANGRUSTDIR/rules.mk
 "##;
+
 const INPUT_EXPECTED: &str = "part1: \npart2: \n";
 
 pub fn main() -> Result<(), String> {
@@ -108,12 +97,11 @@ fn create_files(daypath: &str) -> Result<(), Box<dyn Error>> {
   if rs.exists() {
     return Err(format!("{} already exists, not creating any files", rs.display()).into());
   }
-  let runnersourcestr = runnersource.as_path().to_str().expect("non-unicode path");
+  let langrust = runnersource.as_path().parent().unwrap().to_str().expect("non-unicode path");
   let text = TEMPLATE.replace("YEAR", &year).replace("DAYNUM", &day);
   maybe_create_file(rs.as_path(), &text)?;
   let makefile = dir.join("Makefile");
-  let maketext =
-    MAKEFILE_TEMPLATE.replace("DAYNUM", &day).replace("RUNNERSOURCE", &runnersourcestr);
+  let maketext = MAKEFILE_TEMPLATE.replace("DAYNUM", &day).replace("LANGRUSTDIR", &langrust);
   maybe_create_file(makefile.as_path(), &maketext)?;
   let runnerlink = dir.join("runner.rs");
   maybe_link_file(&runnersource, runnerlink.as_path())?;
