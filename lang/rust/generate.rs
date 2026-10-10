@@ -4,10 +4,15 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+/// Advent of Code template generator script for Rust.
+/// Usage: generate 2001/day1 2001/day2 ...
+/// Creates the named dayX directory and fills it with dayX.rs, a link to
+/// runner.rs, and input.{example,actual}.{txt,expected} files.  Files which
+/// already exist will not be changed.
 use std::env;
 use std::error::Error;
 use std::ffi::OsStr;
-use std::fs::{create_dir_all, File};
+use std::fs::{File, OpenOptions, create_dir_all};
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
@@ -50,24 +55,24 @@ const MAKEFILE_TEMPLATE: &str = r##"# Copyright 2026 Trevor Stone
 # https://opensource.org/licenses/MIT.
 
 DAY = dayDAYNUM
-RUSTC = rustc
-RUSTBIN = bin/${DAY}rs
+RUSTC = rustc --edition=2024
+RUSTBIN = bin/$(DAY)rs
 
 bin: rust
 
-rust: ${RUSTBIN}
+rust: $(RUSTBIN)
 
-${RUSTBIN}: ${DAY}.rs runner.rs
+$(RUSTBIN): $(DAY).rs runner.rs
 	mkdir -p bin
-	${RUSTC} -o ${RUSTBIN} ${DAY}.rs
+	$(RUSTC) -o $(RUSTBIN) $(DAY).rs
 
 runner.rs:
-	ln -s ../../lang/rust/runner.rs .
+	ln -s RUNNERSOURCE .
 
 clean: clean-rust
 
 clean-rust:
-	rm ${RUSTBIN}
+	rm $(RUSTBIN)
 "##;
 const INPUT_EXPECTED: &str = "part1: \npart2: \n";
 
@@ -75,7 +80,6 @@ pub fn main() -> Result<(), String> {
   if env::args().len() == 1 {
     return Err(format!("Usage: {} path/to/dayX ...", env::args().nth(0).unwrap()));
   }
-  // TODO other generators loop through path/to/dayX args, infer year from basedir
   for daydir in env::args().skip(1) {
     create_files(&daydir).map_err(|e| format!("could not generate files in {daydir}: {e}"))?;
   }
@@ -90,27 +94,29 @@ fn create_files(daypath: &str) -> Result<(), Box<dyn Error>> {
   if day.is_empty() {
     return Err(format!("no day number in {base}").into());
   }
-  let year = dir
+  create_dir_all(dir)?;
+  let dirabs = dir.canonicalize().expect("dir should canonicalize");
+  let year = dirabs
     .parent()
     .and_then(Path::file_name)
     .and_then(OsStr::to_str)
     .ok_or(format!("Parent of {daypath} is not a year"))?;
-  // let base = format!("day{day}");
-  // let mut dir = env::current_dir()?;
-  // if !dir.as_path().ends_with(year) {
-  //   dir.push(year);
-  // }
-  // dir.push(&base);
-  create_dir_all(dir /*.as_path()*/)?;
+  let runnersource =
+    relative_path_to_runner(dir).unwrap_or_else(|| PathBuf::from("../../lang/rust/runner.rs"));
+  println!("Creating files in {}", dir.display());
   let rs = dir.join(&base).with_extension("rs");
   if rs.exists() {
     return Err(format!("{} already exists, not creating any files", rs.display()).into());
   }
+  let runnersourcestr = runnersource.as_path().to_str().expect("non-unicode path");
   let text = TEMPLATE.replace("YEAR", &year).replace("DAYNUM", &day);
   maybe_create_file(rs.as_path(), &text)?;
   let makefile = dir.join("Makefile");
-  let maketext = MAKEFILE_TEMPLATE.replace("DAYNUM", &day);
+  let maketext =
+    MAKEFILE_TEMPLATE.replace("DAYNUM", &day).replace("RUNNERSOURCE", &runnersourcestr);
   maybe_create_file(makefile.as_path(), &maketext)?;
+  let runnerlink = dir.join("runner.rs");
+  maybe_link_file(&runnersource, runnerlink.as_path())?;
   let exp = dir.join("input.example.expected");
   maybe_create_file(exp.as_path(), INPUT_EXPECTED)?;
   let txt = dir.join("input.example.txt");
@@ -132,6 +138,23 @@ fn create_files(daypath: &str) -> Result<(), Box<dyn Error>> {
   } else {
     eprintln!("Missing {} dir, create a symlink", inputdir.display());
   }
+  // Allow `cargo run day1` and let Rust ecosystem tools know about the files
+  if let Some(cargo) = dir.parent().and_then(|p| Some(p.join("Cargo.toml")))
+    && cargo.exists()
+  {
+    match OpenOptions::new().append(true).open(cargo.as_path()) {
+      Ok(mut cargofile) => {
+        if let Err(err) =
+          write!(cargofile, "\n[[bin]]\nname = \"{base}\"\npath = \"{base}/{base}.rs\"\n")
+        {
+          eprintln!("Could not open {}: {}", cargo.display(), err);
+        }
+      }
+      Err(err) => eprintln!("Could not open {}: {}", cargo.display(), err),
+    }
+  } else {
+    eprintln!("No Cargo.toml in {year}");
+  }
   Ok(())
 }
 
@@ -143,6 +166,20 @@ fn maybe_create_file(path: &Path, text: &str) -> std::io::Result<()> {
     f.write_all(text.as_bytes())?;
   }
   Ok(())
+}
+
+fn relative_path_to_runner(start: &Path) -> Option<PathBuf> {
+  let runner: &Path = Path::new("lang/rust/runner.rs");
+  let canonical = start.canonicalize().ok()?;
+  let mut path = PathBuf::new();
+  for a in canonical.ancestors() {
+    if a.join(runner).as_path().exists() {
+      path.push(runner);
+      return Some(path);
+    }
+    path.push("..");
+  }
+  None
 }
 
 #[cfg(unix)]
