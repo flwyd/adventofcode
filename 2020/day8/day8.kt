@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 8
+ * Read the puzzle at https://adventofcode.com/2020/day/8
+ */
+
 package day8
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input is "acc/jmp/nop +/-number" for accumulate, jump, or no-op. acc adds to an accumulator and
 advances program counter by 1, jmp advances program counter, nop advances program counter by 1. */
@@ -36,8 +40,8 @@ sealed class Instruction {
 }
 
 /* Outputs value of accumulator when program would loop. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day8 : Day {
+  override fun part1(input: List<String>): String {
     val instructions = input.map(Instruction::parse).toList()
     var acc = 0
     var pc = 0
@@ -55,11 +59,9 @@ object Part1 {
     }
     return acc.toString()
   }
-}
 
-/* Replaces one jmp to a nop or vice versa to make the program terminate, then prints accumulated
-value after running full program. */
-object Part2 {
+  /* Replaces one jmp to a nop or vice versa to make the program terminate, then prints accumulated
+  value after running full program. */
   sealed class InstructionList(val altUsed: Boolean) {
     abstract fun get(i: Int): Instruction
     open val size = 0
@@ -114,24 +116,13 @@ object Part2 {
     return result
   }
 
-  fun solve(input: Sequence<String>): String {
+  override fun part2(input: List<String>): String {
     val base = InstructionList.Base(input.map(Instruction::parse).toList())
     return recurse(base, 0, 0, mutableSetOf())?.toString() ?: "no solution found"
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day8, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

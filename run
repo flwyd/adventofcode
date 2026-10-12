@@ -34,12 +34,17 @@ langdir=${0:h}/lang
 runner=${program:t:r}${program:e}
 
 # make if needed
-case $program in
-  (*.rs) maketarget=bin/$runner ;;
-  (*) maketarget= ;;
-esac
-if [[ ! -z $maketarget ]]; then
-  make --quiet -C $daydir $maketarget
+if [[ -f $daydir/Makefile ]]; then
+  case $program in
+    (*)
+      if make -n -C $daydir bin/$runner > /dev/null 2>&1 ; then
+        maketarget=bin/$runner
+      fi
+      ;;
+  esac
+  if [[ ! -z $maketarget ]]; then
+    make --quiet -C $daydir $maketarget || exit $!
+  fi
 fi
 
 case "$program" in

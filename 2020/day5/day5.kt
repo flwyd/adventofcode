@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 5
+ * Read the puzzle at https://adventofcode.com/2020/day/5
+ */
+
 package day5
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: 7 F or B then 3 L or R representing 7-digit binary row # and 3-digit binary column #.
  * Output seat ID is 8 * row + col.
@@ -46,17 +50,15 @@ fun seatIds(input: Sequence<String>): Sequence<Int> {
     .map { it.first * 8 + it.second }
 }
 
-/* Return the largest seat ID. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
-    return seatIds(input).maxOrNull()?.toString() ?: "Empty input"
+object Day5 : Day {
+  /* Return the largest seat ID. */
+  override fun part1(input: List<String>): String {
+    return seatIds(input.asSequence()).maxOrNull()?.toString() ?: "Empty input"
   }
-}
 
-/* Return the missing seat ID, with some at the beginning and end not in the available set. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
-    val sorted = seatIds(input).toList().sorted()
+  /* Return the missing seat ID, with some at the beginning and end not in the available set. */
+  override fun part2(input: List<String>): String {
+    val sorted = seatIds(input.asSequence()).toList().sorted()
     for ((index, id) in sorted.withIndex()) {
       if (id - index != sorted.first()) {
         return (id - 1).toString()
@@ -66,18 +68,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day5, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

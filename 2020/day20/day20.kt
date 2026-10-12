@@ -8,6 +8,8 @@
 
 package day20
 
+import runner.Day
+import runner.runMain
 import kotlin.math.sqrt
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
@@ -222,9 +224,9 @@ class TileGrid(val size: Int) {
     cells.joinToString("\n") { row -> row.map { it?.id }.joinToString("\t") }
 }
 
-/* Output: product of the ID of the four corners of the joined grid. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day20 : Day {
+  /* Output: product of the ID of the four corners of the joined grid. */
+  override fun part1(input: List<String>): String {
     val originalTiles = input.toParagraphs().map { Tile.parse(it) }.toList()
     val originalById = originalTiles.map { it.id to it }.toMap()
     val withVariantsById = originalById.mapValues { it.value.variants() + it.value }
@@ -245,12 +247,10 @@ object Part1 {
     }
     return product.toString()
   }
-}
 
-/* Match a sea monster pattern to # positions. Output: number of # not covered by sea monster. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
-    val seaMonsterAsciiArt = """                  # 
+  /* Match a sea monster pattern to # positions. Output: number of # not covered by sea monster. */
+  override fun part2(input: List<String>): String {
+    val seaMonsterAsciiArt = """                  #
 #    ##    ##    ###
  #  #  #  #  #  #   """
     val seaMonster = PixelPattern.parse(seaMonsterAsciiArt)
@@ -352,23 +352,12 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day20, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }
 
-fun Sequence<String>.toParagraphs(): Sequence<String> {
+fun List<String>.toParagraphs(): Sequence<String> {
   var paragraph = mutableListOf<String>()
   return sequence {
     forEach { line ->

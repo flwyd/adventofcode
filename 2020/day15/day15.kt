@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 15
+ * Read the puzzle at https://adventofcode.com/2020/day/15
+ */
+
 package day15
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input is comma-delimited initial numbers. Say each initial number, then for each turn say how
 many turns it had been since the previous number had been spoken. */
@@ -30,39 +34,26 @@ fun playToN(n: Int, initial: List<Int>): Int {
   return next
 }
 
-/* Turn count is 2020. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day15 : Day {
+  /* Turn count is 2020. */
+  override fun part1(input: List<String>): String {
     return input.map { it.split(",").map(String::toInt) }
       .map { playToN(2020, it) }
       .joinToString("\n")
   }
-}
 
-/* Turn count is 30,000,000. */
-object Part2 {
+  /* Turn count is 30,000,000. */
   /* Maybe there's an analytic solution? The examples all involve 3,611,000 to 3,611,999 unique
   numbers, yet the final number ranges from 18 to over 6 million.
   Iterative solution takes a few seconds. */
-  fun solve(input: Sequence<String>): String {
+  override fun part2(input: List<String>): String {
     return input.map { it.split(",").map(String::toInt) }
       .map { playToN(30_000_000, it) }
       .joinToString("\n")
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day15, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

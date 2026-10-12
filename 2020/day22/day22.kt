@@ -6,16 +6,20 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 22
+ * Read the puzzle at https://adventofcode.com/2020/day/22
+ */
+
 package day22
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: "Player 1:" and "Player 2:" followed by a list of integers, one per line, representing
 cards in two halves of a deck.  Output: winning player's score. */
 
-fun parseDecks(input: Sequence<String>): List<Deck> {
+fun parseDecks(input: List<String>): List<Deck> {
   val result = mutableListOf<Deck>()
   var name = ""
   var cards = ArrayDeque<Int>()
@@ -53,11 +57,11 @@ data class Deck(val name: String, private val cards: ArrayDeque<Int>) {
   fun take(count: Int) = copy(cards = ArrayDeque(cards.take(count)))
 }
 
-/* Game: Flip top two; winner has higher value card and gets both cards at the bottom of their deck,
-with their flipped card first. Game ends when one player has no cards left; winner's score is the
-product of the bottom-up index times card value. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day22 : Day {
+  /* Game: Flip top two; winner has higher value card and gets both cards at the bottom of their
+   deck, with their flipped card first. Game ends when one player has no cards left; winner's score
+   is the product of the bottom-up index times card value. */
+  override fun part1(input: List<String>): String {
     val (player1, player2) = parseDecks(input)
     while (player1.isNotEmpty() && player2.isNotEmpty()) {
       val card1 = player1.draw()
@@ -71,15 +75,13 @@ object Part1 {
     }
     return listOf(player1, player2).first(Deck::isNotEmpty).score().toString()
   }
-}
 
-/* Game: similar to part 1, but if the number both players draw is less than or equal to the number
-of cards left in their deck, play a recursive game where both players start with a copy of the first
-N cards in their deck, where N is the number they just drew; the winner of that game gets the two
-cards drawn in this round, even if their card was lower. If the two decks before a draw are in
-an identical state to those in previous round, player 1 wins to prevent infinite loops.
- */
-object Part2 {
+  /* Game: similar to part 1, but if the number both players draw is less than or equal to the
+   number of cards left in their deck, play a recursive game where both players start with a copy of
+   the first N cards in their deck, where N is the number they just drew; the winner of that game
+   gets the two cards drawn in this round, even if their card was lower. If the two decks before a
+   draw are in an identical state to those in previous round, player 1 wins to prevent infinite
+   loops. */
   private fun recursiveCombat(player1: Deck, player2: Deck): Deck {
     val nextPrevious = mutableSetOf<Pair<Deck, Deck>>()
     while (player1.isNotEmpty() && player2.isNotEmpty()) {
@@ -107,24 +109,13 @@ object Part2 {
     }
   }
 
-  fun solve(input: Sequence<String>): String {
+  override fun part2(input: List<String>): String {
     val (player1, player2) = parseDecks(input)
     return recursiveCombat(player1, player2).score().toString()
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day22, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 23
+ * Read the puzzle at https://adventofcode.com/2020/day/23
+ */
+
 package day23
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: A string of digits, representing a cycle. Current cup is the first digit. Repeat N times:
 1. Remove the three cups after the current cup from the cycle. 2: Destination value is current value
@@ -79,9 +83,9 @@ class CupCycle(initial: List<Int>, totalSize: Int) {
   }
 }
 
-/* Play 100 rounds, print the numbers in the cycle between "one after 1" and "one before 1". */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day23 : Day {
+  /* Play 100 rounds, print the numbers in the cycle between "one after 1" and "one before 1". */
+  override fun part1(input: List<String>): String {
     return input.map { line ->
       val list = line.toCharArray().map(Char::toString).map(String::toInt)
       val cups = CupCycle(list, list.size)
@@ -93,12 +97,10 @@ object Part1 {
       node.next.take(list.size - 1).map(ListNode::value).joinToString("")
     }.joinToString("\n")
   }
-}
 
-/* Extend the list to contain one million cups and play ten million rounds. Output: product of the
-two values following 1. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
+  /* Extend the list to contain one million cups and play ten million rounds. Output: product of the
+  two values following 1. */
+  override fun part2(input: List<String>): String {
     return input.map { line ->
       val list = line.toCharArray().map(Char::toString).map(String::toInt)
       val cups = CupCycle(list, 1_000_000)
@@ -112,18 +114,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day23, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

@@ -6,19 +6,23 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 13
+ * Read the puzzle at https://adventofcode.com/2020/day/13
+ */
+
 package day13
 
 import java.lang.Math.floorMod
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: Two lines; the first is a timestamp of arrival, the second is a comma-separated list of
 bus periods, with "x" values for buses that can be ignored. */
 
-/* Output: time waiting for the first bust after timestamp, times bus period. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day13 : Day {
+  /* Output: time waiting for the first bust after timestamp, times bus period. */
+  override fun part1(input: List<String>): String {
     val lines = input.toList()
     val myTime = lines.first().toInt()
     return lines[1].split(",")
@@ -29,14 +33,12 @@ object Part1 {
       .let { (k, v) -> k * v }
       .toString()
   }
-}
 
-/* Ignore the first line. Output is the first time where each bus will be (it's position) time units
-after that time. I.e. apply the Chinese Remainder Theorem to find a number x where x mod first = 0,
-x mod fifth = 4, etc. */
-object Part2 {
-  fun solve(input: String): String {
-    val pairs = input.split(",")
+  /* Ignore the first line. Output is the first time where each bus will be (it's position) time
+   units after that time. I.e. apply the Chinese Remainder Theorem to find a number x where
+   x mod first = 0, x mod fifth = 4, etc. */
+  override fun part2(input: List<String>): String {
+    val pairs = input[1].split(",")
       .mapIndexed(::Pair)
       .filter { it.second != "x" }
       .map {
@@ -92,25 +94,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  // TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines[1]) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-//  println()
-//  println("Extra examples:")
-//  listOf("67,7,59,61", "67,x,7,59,61", "67,7,x,59,61", "1789,37,47,1889").forEach {
-//    println(it)
-//    println(Part2.solve(it))
-//  }
+  val result = runMain(Day13, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

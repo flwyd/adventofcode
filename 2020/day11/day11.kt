@@ -6,20 +6,24 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 11
+ * Read the puzzle at https://adventofcode.com/2020/day/11
+ */
+
 package day11
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: grid of floor (.), open (L), occupied (#) seats. Output is number of occupied seats after
  applying rules repeatedly until they stabilize. */
 
 fun List<String>.toCharArrays() = Array(size) { get(it).toCharArray() }
 
-object Part1 {
-  fun solve(input: Sequence<String>): String {
-    var grid = Grid(input.toList().toCharArrays())
+object Day11 : Day {
+  override fun part1(input: List<String>): String {
+    var grid = GridPart1(input.toList().toCharArrays())
     while (true) {
       val next = grid.evolve()
       if (next === grid) {
@@ -33,11 +37,11 @@ object Part1 {
 
   /* If open and adjacent to no closed spots, spot becomes occupied.
   If occupied and adjacent to >= 4 occupied, becomes open. */
-  class Grid(val cells: Array<CharArray>) {
+  class GridPart1(val cells: Array<CharArray>) {
     private val height = cells.size
     private val width = cells[0].size
 
-    fun evolve(): Grid {
+    fun evolve(): GridPart1 {
       val newCells = Array(height) { CharArray(width) }
       var changes = 0
       for (i in 0 until height) {
@@ -53,7 +57,7 @@ object Part1 {
           }
         }
       }
-      return if (changes == 0) this else Grid(newCells)
+      return if (changes == 0) this else GridPart1(newCells)
     }
 
     private fun countNeighbors(row: Int, col: Int, c: Char): Int {
@@ -68,11 +72,9 @@ object Part1 {
       return matches
     }
   }
-}
 
-object Part2 {
-  fun solve(input: Sequence<String>): String {
-    var grid = Grid(input.toList().toCharArrays())
+  override fun part2(input: List<String>): String {
+    var grid = GridPart2(input.toList().toCharArrays())
     while (true) {
       val next = grid.evolve()
       if (next === grid) {
@@ -86,11 +88,11 @@ object Part2 {
 
   /* Decisions are made by line-of-sight.  If open can't see occupied, becomes occupied.
   If occupied and sees >= 5 occupied, becomes open. */
-  class Grid(val cells: Array<CharArray>) {
+  class GridPart2(val cells: Array<CharArray>) {
     private val height = cells.size
     private val width = cells[0].size
 
-    fun evolve(): Grid {
+    fun evolve(): GridPart2 {
       val newCells = Array(height) { CharArray(width) }
       var changes = 0
       for (i in 0 until height) {
@@ -106,7 +108,7 @@ object Part2 {
           }
         }
       }
-      return if (changes == 0) this else Grid(newCells)
+      return if (changes == 0) this else GridPart2(newCells)
     }
 
     private fun countVisible(row: Int, col: Int, c: Char): Int {
@@ -134,18 +136,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day11, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

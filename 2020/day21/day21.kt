@@ -6,19 +6,23 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 21
+ * Read the puzzle at https://adventofcode.com/2020/day/21
+ */
+
 package day21
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: lines of space-separated gibberish ingredients followed by "(contains …)" with a
 comma-space separated list of English allergens. Each allergen comes from just one ingredient. */
 val linePattern = Regex("""((?:\w+\s+)+)\(contains (\w+(?:,\s*\w+)*)\)""")
 
-/* Count the number of ingredient occurrences that logically can't be any of the allergens. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day21 : Day {
+  /* Count the number of ingredient occurrences that logically can't be any of the allergens. */
+  override fun part1(input: List<String>): String {
     val ingredientCounts = mutableMapOf<String, Int>()
     val allergenCandidates = mutableMapOf<String, Set<String>>()
     input.forEach { line ->
@@ -40,11 +44,9 @@ object Part1 {
     return (ingredientCounts.keys - allergenCandidates.values.flatten())
       .map(ingredientCounts::getValue).sum().toString()
   }
-}
 
-/* Output: comma-delimited list of unique gibberish ingredients sorted by English allergen. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
+  /* Output: comma-delimited list of unique gibberish ingredients sorted by English allergen. */
+  override fun part2(input: List<String>): String {
     val knownIngredients = mutableSetOf<String>()
     val allergenCandidates = mutableMapOf<String, Set<String>>()
     input.forEach { line ->
@@ -78,18 +80,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day21, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

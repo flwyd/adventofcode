@@ -6,19 +6,23 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 14
+ * Read the puzzle at https://adventofcode.com/2020/day/14
+ */
+
 package day14
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input is a sequence of instructions, either "mask = …" or "mem[x] = i". mask instructions set a
 36-bit mask with X, 0, and 1 values. mem instructions set a memory value. Output is sum of all
 values in memory at the end. */
 
-/* Masks are applied to assigned values, with 0/1 overwriting bits and X leaving them untouched. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day14 : Day {
+  /* Masks are applied to assigned values with 0/1 overwriting bits and X leaving them untouched. */
+  override fun part1(input: List<String>): String {
     var zeroMask = "1".repeat(36).toLong(2)
     var oneMask = 0L
     val mem = mutableMapOf<Int, Long>()
@@ -42,12 +46,10 @@ object Part1 {
     }
     return mem.values.sum().toString()
   }
-}
 
-/* Masks are applied to memory addresses, with 0 meaning "don't touch", 1 meaning "set to 1", and
-X meaning "set to both 0 and 1." The number of memory sets per instruction is max(2^#x, 1). */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
+  /* Masks are applied to memory addresses, with 0 meaning "don't touch", 1 meaning "set to 1", and
+  X meaning "set to both 0 and 1." The number of memory sets per instruction is max(2^#x, 1). */
+  override fun part2(input: List<String>): String {
     var mask = "0".repeat(36)
     val memPattern = Regex("""mem\[(\d+)\] = (\d+)""")
     val mem = mutableMapOf<Long, Long>()
@@ -100,18 +102,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day14, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

@@ -6,22 +6,10 @@
 
 # https://adventofcode.com/2020/day/15
 
-KOTLIN = kotlin
-KOTLINC = kotlinc
-CLASSES = classes
-PACKAGE = day15
-MAIN_CLASS = Day15Kt
+DAY = day15
 
-compile: $(CLASSES)/$(PACKAGE)/$(MAIN_CLASS).class
+build: build-kotlin
 
-$(CLASSES)/$(PACKAGE)/$(MAIN_CLASS).class: $(PACKAGE).kt
-	@mkdir -p $(CLASSES)
-	$(KOTLINC) -d $(CLASSES) $(PACKAGE).kt
+clean: clean-kotlin
 
-output.%.txt: input.%.txt compile
-	$(KOTLIN) -cp $(CLASSES) $(PACKAGE).$(MAIN_CLASS) < $< | tee $@
-
-out: output.example.txt output.example2.txt output.example3.txt output.example4.txt output.example5.txt output.example6.txt output.example7.txt output.actual.txt
-
-clean:
-	rm -r $(CLASSES)
+include ../../lang/kotlin/rules.mk

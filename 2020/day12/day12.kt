@@ -6,6 +6,11 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 12
+ * Read the puzzle at https://adventofcode.com/2020/day/12
+ */
+
 package day12
 
 import java.lang.Math.floorMod
@@ -18,9 +23,8 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: (operation)(number) instructions to move on a Cartesian grid. EWNS move in cardinal
    directions. LR rotate (always increments of 90). F moves in the current direction. */
@@ -33,9 +37,9 @@ val Pair<Int, Int>.crowDistance get() = sqrt(first.toDouble().pow(2) + second.to
 val pattern = Regex("""([NSEWLRF])(\d+)""")
 val headings = mapOf("E" to (+1 to 0), "W" to (-1 to 0), "N" to (0 to +1), "S" to (0 to -1))
 
-/* Initial state: ship heading east. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day12 : Day {
+  /* Initial state: ship heading east. */
+  override fun part1(input: List<String>): String {
     val headingCycle = listOf("N", "W", "S", "E") // counterclockwise, like trig functions
     var heading = "E"
     var position = 0 to 0
@@ -55,12 +59,10 @@ object Part1 {
       }
     return position.manhattanDistance.toString()
   }
-}
 
-/* Operations are relative to a waypoint. EWNS move the waypoint, F moves ship along waypoint vector
-   and LR rotate the vector around the ship. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
+  /* Operations are relative to a waypoint. EWNS move the waypoint, F moves ship along waypoint
+  vector and LR rotate the vector around the ship. */
+  override fun part2(input: List<String>): String {
     var waypoint = 10 to 1 // 10 east, 1 north
     var position = 0 to 0
     input.map { pattern.matchEntire(it)!!.groups }.map { it[1]!!.value to it[2]!!.value.toInt() }
@@ -81,18 +83,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day12, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

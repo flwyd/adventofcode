@@ -6,17 +6,21 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 1
+ * Read the puzzle at https://adventofcode.com/2020/day/1
+ */
+
 package day1
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
-/* Input is integers. Find the two which sum to 2020, print their product. */
-object Part1 {
-  fun solve(lines: Sequence<String>): String {
+object Day1 : Day {
+  /* Input is integers. Find the two which sum to 2020, print their product. */
+  override fun part1(input: List<String>): String {
     val seen = mutableSetOf<Int>()
-    return lines.map(String::toInt)
+    return input.map(String::toInt)
       .filter {
         try {
           (2020 - it) in seen
@@ -29,15 +33,13 @@ object Part1 {
       .map { it * (2020 - it) }
       .joinToString("\n")
   }
-}
 
-/* Input is integers. Find three which sum to 2020, print their product. */
-object Part2 {
-  fun solve(lines: Sequence<String>): String {
+  /* Input is integers. Find three which sum to 2020, print their product. */
+  override fun part2(input: List<String>): String {
     val seen = mutableSetOf<Int>()
     val sums = mutableMapOf<Int, Pair<Int, Int>>()
     val results = mutableListOf<Int>()
-    for (i in lines.map(String::toInt)) {
+    for (i in input.map(String::toInt)) {
       if ((2020 - i) in sums) {
         results.add(sums.getValue(2020 - i).let { i * it.first * it.second })
       }
@@ -48,18 +50,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day1, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

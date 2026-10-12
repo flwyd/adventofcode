@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 24
+ * Read the puzzle at https://adventofcode.com/2020/day/24
+ */
+
 package day24
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: non-delimited lines consisting of e, w, se, sw, ne, nw instructions to move in those
 six directions of a hexagonal grid, with each move list starting at the same tile. The final tile
@@ -58,20 +62,18 @@ fun directionSequence(line: String) = sequence {
 /* Steps through each indicated direction and returns the identified tile. */
 fun findTile(line: String) = directionSequence(line).fold(HexTile(0f, 0f), HexTile::plus)
 
-/* Output: number of tiles which have been flipped an odd number of times after all input lines have
-been followed. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day24 : Day {
+  /* Output: number of tiles which have been flipped an odd number of times after all input lines
+   have been followed. */
+  override fun part1(input: List<String>): String {
     return input.map(::findTile).groupingBy { it }.eachCount().filterValues { it % 2 == 1 }.count()
       .toString()
   }
-}
 
-/* Output: Once the initial state from part 1 is established, run 100 rounds with the following
-game-of-life type rules: flipped tiles remain flipped if they're adjacent to 1 or 2 other flipped
-tiles; unflipped tiles are flipped if they're adjacent to 2 flipped tiles. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
+  /* Output: Once the initial state from part 1 is established, run 100 rounds with the following
+  game-of-life type rules: flipped tiles remain flipped if they're adjacent to 1 or 2 other flipped
+  tiles; unflipped tiles are flipped if they're adjacent to 2 flipped tiles. */
+  override fun part2(input: List<String>): String {
     var flipped =
       input.map(::findTile).groupingBy { it }.eachCount().filterValues { it % 2 == 1 }.keys.toSet()
     repeat(100) {
@@ -85,18 +87,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day24, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

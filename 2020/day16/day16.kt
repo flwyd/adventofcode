@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 16
+ * Read the puzzle at https://adventofcode.com/2020/day/16
+ */
+
 package day16
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: three sections, the first is "field name: #-# or #-#", second starts with "your tickets:"
 and is comma-delimited ints, third starts with "nearby tickets:" and is several lines of
@@ -29,9 +33,9 @@ class DisjointIntRange(private val ranges: List<IntRange>) {
   override fun toString(): String = ranges.joinToString(" or ")
 }
 
-/* Output: the product of all "nearby tickets" values that don't match any range. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day16 : Day {
+  /* Output: the product of all "nearby tickets" values that don't match any range. */
+  override fun part1(input: List<String>): String {
     val fields = mutableMapOf<String, DisjointIntRange>()
     val invalidValues = mutableListOf<Int>()
     var section = "fields"
@@ -51,12 +55,10 @@ object Part1 {
     }
     return invalidValues.sum().toString()
   }
-}
 
-/* Throw out all rows with invalid values, then determine the field position for each field.
-Output: product of the "your tickets" values for fields that start with "departure". */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
+  /* Throw out all rows with invalid values, then determine the field position for each field.
+  Output: product of the "your tickets" values for fields that start with "departure". */
+  override fun part2(input: List<String>): String {
     val fields = mutableMapOf<String, DisjointIntRange>()
     val possiblePositions = mutableMapOf<String, MutableSet<Int>>()
     var yourTicket = listOf<Int>()
@@ -113,18 +115,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day16, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

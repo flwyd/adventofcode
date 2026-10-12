@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 19
+ * Read the puzzle at https://adventofcode.com/2020/day/19
+ */
+
 package day19
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: Two sections, blank line delimited. First section is rules with an int rule ID followed
 by colon and then rule definition. Rules can be a string ("x"), a space-separated sequence of rule
@@ -64,9 +68,9 @@ sealed class Rule {
 
 val linePattern = Regex("""(\d+):\s*(.*)""")
 
-/* Rules can't create cycles. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day19 : Day {
+  /* Rules can't create cycles. */
+  override fun part1(input: List<String>): String {
     val rules = mutableMapOf<Int, Rule>()
     val iter = input.iterator()
     while (iter.hasNext()) {
@@ -84,11 +88,9 @@ object Part1 {
       .flatMap { line -> rules.getValue(0).matches(line, rules).filter { it == line.length } }
       .count().toString()
   }
-}
 
-/* Rules can create cycles in some circumstances; problem statement has two rule replacements. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
+  /* Rules can create cycles in some circumstances; problem statement has two rule replacements. */
+  override fun part2(input: List<String>): String {
     val replacements = mapOf(8 to "42 | 42 8", 11 to "42 31 | 42 11 31")
     val rules = mutableMapOf<Int, Rule>()
     val iter = input.iterator()
@@ -111,18 +113,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day19, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

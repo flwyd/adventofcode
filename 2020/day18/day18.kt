@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 18
+ * Read the puzzle at https://adventofcode.com/2020/day/18
+ */
+
 package day18
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: Lines of infix expressions with only +, *, parentheses, and integers.
 Output: sum of expression value of each line. */
@@ -43,9 +47,9 @@ fun parse(line: String): List<Token> = tokenPattern.findAll(line).map {
   }
 }.toList()
 
-/* Parenthesized expressions first, but no precedence difference between + and *. */
-object Part1 {
-  private fun evaluate(tokens: Iterator<Token>): Long {
+object Day18 : Day {
+  /* Parenthesized expressions first, but no precedence difference between + and *. */
+  private fun evaluatePart1(tokens: Iterator<Token>): Long {
     var result = 0L
     var operator: Token.Operator = Token.Plus
     while (tokens.hasNext()) {
@@ -53,21 +57,19 @@ object Part1 {
         is Token.Number -> result = operator.op(result, token.value)
         is Token.Plus -> operator = token
         is Token.Times -> operator = token
-        is Token.OpenParen -> result = operator.op(result, evaluate(tokens))
+        is Token.OpenParen -> result = operator.op(result, evaluatePart1(tokens))
         is Token.CloseParen -> return result
       }
     }
     return result
   }
 
-  fun solve(input: Sequence<String>): String {
-    return input.map(::parse).map { evaluate(it.iterator()) }.sum().toString()
+  override fun part1(input: List<String>): String {
+    return input.map(::parse).map { evaluatePart1(it.iterator()) }.sum().toString()
   }
-}
 
-/* Parenthesized expressions first, + has higher precedence than *. */
-object Part2 {
-  private fun evaluate(tokens: Iterator<Token>): Long {
+  /* Parenthesized expressions first, + has higher precedence than *. */
+  private fun evaluatePart2(tokens: Iterator<Token>): Long {
     val operators = ArrayDeque<Token.Operator>()
     val numbers = ArrayDeque<Long>()
     operators.addLast(Token.Plus)
@@ -91,30 +93,19 @@ object Part2 {
         is Token.Number -> accumulate(token.value)
         is Token.Plus -> operators.addLast(token)
         is Token.Times -> operators.addLast(token)
-        is Token.OpenParen -> accumulate(evaluate(tokens))
+        is Token.OpenParen -> accumulate(evaluatePart2(tokens))
         is Token.CloseParen -> return calculate()
       }
     }
     return calculate()
   }
 
-  fun solve(input: Sequence<String>): String {
-    return input.map(::parse).map { evaluate(it.iterator()) }.sum().toString()
+  override fun part2(input: List<String>): String {
+    return input.map(::parse).map { evaluatePart2(it.iterator()) }.sum().toString()
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day18, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

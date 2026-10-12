@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 17
+ * Read the puzzle at https://adventofcode.com/2020/day/17
+ */
+
 package day17
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: 2D grid of active (#) and inactive (.) cubes/hypercubes. Conway-style changes: each round,
 active cubes become inactive unless they have 2 or 3 active neighbors; inactive cubes become active
@@ -48,30 +52,17 @@ fun countActiveAfter(rounds: Int, dimensions: Int, initialState: Sequence<String
   return prevActive.size
 }
 
-object Part1 {
-  fun solve(input: Sequence<String>): String {
-    return countActiveAfter(6, 3, input).toString()
+object Day17 : Day {
+  override fun part1(input: List<String>): String {
+    return countActiveAfter(6, 3, input.asSequence()).toString()
+  }
+
+  override fun part2(input: List<String>): String {
+    return countActiveAfter(6, 4, input.asSequence()).toString()
   }
 }
 
-object Part2 {
-  fun solve(input: Sequence<String>): String {
-    return countActiveAfter(6, 4, input).toString()
-  }
-}
-
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day17, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

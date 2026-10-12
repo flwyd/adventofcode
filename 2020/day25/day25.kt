@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 25
+ * Read the puzzle at https://adventofcode.com/2020/day/25
+ */
+
 package day25
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input: Two lines with integer public keys in a Diffie–Hellman–Merkle style key exchange.
 Transforming a value consists of repeating N (private key) times to set the current value to the
@@ -40,8 +44,8 @@ fun reverseTransform(pubKey: Int, subject: Int): Int {
   return count
 }
 
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day25 : Day {
+  override fun part1(input: List<String>): String {
     val inputList = input.toList()
     check(inputList.size == 2)
     val pubKey1 = inputList.first().toInt()
@@ -55,27 +59,11 @@ object Part1 {
     check(encryptionKey1 == encryptionKey2)
     return encryptionKey1.toString()
   }
+
+  override fun part2(input: List<String>) = "Merry Christmas!"
 }
 
-object Part2 {
-  @Suppress("UNUSED_PARAMETER")
-  fun solve(input: Sequence<String>): String {
-    return "There is no part 2, Merry Christmas"
-  }
-}
-
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day25, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

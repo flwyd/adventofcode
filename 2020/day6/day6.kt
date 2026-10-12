@@ -6,26 +6,28 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 6
+ * Read the puzzle at https://adventofcode.com/2020/day/6
+ */
+
 package day6
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
-/* Input: groups of lines with a-z, for each group find total letter counts, then sum them. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
-    return input
+object Day6 : Day {
+  /* Input: groups of lines with a-z, for each group find total letter counts, then sum them. */
+  override fun part1(input: List<String>): String {
+    return input.toParagraphs()
       .map { line -> line.associateWith { true }.filterKeys { it in 'a'..'z' }.size }
       .sum()
       .toString()
   }
-}
 
-/* Now find just the counts of letters where all lines have a match. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
-    return input
+  /* Now find just the counts of letters where all lines have a match. */
+  override fun part2(input: List<String>): String {
+    return input.toParagraphs()
       .map { para ->
         val matches = para.filter { it in 'a'..'z' }.toHashSet()
         para.split("\n").forEach { matches.retainAll(it.toSet()) }
@@ -36,23 +38,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
-fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toParagraphs().toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-}
-
-fun Sequence<String>.toParagraphs(): Sequence<String> {
+fun List<String>.toParagraphs(): Sequence<String> {
   var paragraph = mutableListOf<String>()
   return sequence {
     forEach { line ->
@@ -69,4 +55,8 @@ fun Sequence<String>.toParagraphs(): Sequence<String> {
       yield(paragraph.joinToString("\n"))
     }
   }
+}
+fun main(args: Array<String>) {
+  val result = runMain(Day6, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

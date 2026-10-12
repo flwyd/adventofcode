@@ -6,11 +6,15 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 7
+ * Read the puzzle at https://adventofcode.com/2020/day/7
+ */
+
 package day7
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input is bag containment rules: "foo bar bags contain …" where containment is either
  * "no other bags" or a comma-space-delimited list of "# baz qux bag(s)".
@@ -53,9 +57,9 @@ fun parseEdge(g: Graph, line: String) {
   }
 }
 
-/* Count the number of bag types that can transitively include a shiny gold bag. */
-object Part1 {
-  fun solve(input: Sequence<String>): String {
+object Day7 : Day {
+  /* Count the number of bag types that can transitively include a shiny gold bag. */
+  override fun part1(input: List<String>): String {
     val graph = Graph()
     input.forEach { parseEdge(graph, it) }
     val seen = mutableSetOf<String>()
@@ -66,11 +70,9 @@ object Part1 {
     recurse("shiny gold")
     return seen.minus("shiny gold").size.toString()
   }
-}
 
-/* Count the transitive number of bags contained in a shiny gold bag. */
-object Part2 {
-  fun solve(input: Sequence<String>): String {
+  /* Count the transitive number of bags contained in a shiny gold bag. */
+  override fun part2(input: List<String>): String {
     val graph = Graph()
     input.forEach { parseEdge(graph, it) }
     fun recursiveSum(parent: String): Int =
@@ -79,18 +81,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toList()
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day7, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

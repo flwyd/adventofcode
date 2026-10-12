@@ -6,28 +6,30 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 4
+ * Read the puzzle at https://adventofcode.com/2020/day/4
+ */
+
 package day4
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
 /* Input is whitespace-separated key:value pairs. Count number with required keys are present. */
-object Part1 {
+object Day4 : Day {
   private val required = setOf("byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid") // cid is optional
   private val whitespace = Regex("""\s+""")
 
-  fun solve(input: Sequence<String>): String {
-    return input
+  override fun part1(input: List<String>): String {
+    return input.toParagraphs()
       .map { line -> whitespace.split(line).map { it.substringBefore(':') } }
       .filter { it.containsAll(required) }
       .count()
       .toString()
   }
-}
 
-/* Now validate value rules. */
-object Part2 {
+  /* Now validate value rules. */
   enum class Field(val pattern: Regex) {
     BYR(Regex("""\d{4}""")) {
       override fun validate(value: String) = pattern.matches(value) && value.toInt() in 1920..2002
@@ -54,10 +56,9 @@ object Part2 {
 
     open fun validate(value: String) = pattern.matches(value)
   }
-  private val whitespace = Regex("""\s+""")
 
-  fun solve(input: Sequence<String>): String {
-    return input
+  override fun part2(input: List<String>): String {
+    return input.toParagraphs()
       .map { whitespace.split(it) }
       .filter { fields ->
         fields.map { it.split(':') }
@@ -70,24 +71,8 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
-fun main(args: Array<String>) {
-  val lines = generateSequence(::readLine).toParagraphs().toList()
-  // println("Lines has ${lines.size} paragraphs")
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence()) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-}
 
-fun Sequence<String>.toParagraphs(): Sequence<String> {
+fun List<String>.toParagraphs(): Sequence<String> {
   var paragraph = mutableListOf<String>()
   return sequence {
     forEach { line ->
@@ -104,4 +89,8 @@ fun Sequence<String>.toParagraphs(): Sequence<String> {
       yield(paragraph.joinToString("\n"))
     }
   }
+}
+fun main(args: Array<String>) {
+  val result = runMain(Day4, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }

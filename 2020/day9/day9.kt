@@ -6,24 +6,23 @@
  * https://opensource.org/licenses/MIT.
  */
 
+/**
+ * Advent of Code 2020 day 9
+ * Read the puzzle at https://adventofcode.com/2020/day/9
+ */
+
 package day9
 
-import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
-import kotlin.time.measureTimedValue
+import runner.Day
+import runner.runMain
 
-/* Input is a series of numbers. After the first w numbers, each number should be the sum of two
-from the previous w numbers. Find the first violating number. */
-object Part1 {
-  fun solve(input: Sequence<String>, windowSize: Int = 25): String {
-    return try {
-      find(input, windowSize).toString()
-    } catch (e: Exception) {
-      e.toString()
-    }
-  }
+object Day9 : Day {
+  /* Input is a series of numbers. After the first w numbers, each number should be the sum of two
+  from the previous w numbers. Find the first violating number. */
+  override fun part1(input: List<String>) =
+    find(input, if (input.size < 30) 5 else 25).toString()
 
-  fun find(input: Sequence<String>, windowSize: Int = 25): Long {
+  fun find(input: List<String>, windowSize: Int = 25): Long {
     val window = ArrayDeque<Long>(windowSize)
     val available = mutableSetOf<Long>()
     input.map(String::toLong).forEach {
@@ -41,13 +40,12 @@ object Part1 {
     }
     throw IllegalStateException("All values matched two previous, window is ${window.size}")
   }
-}
 
-/* A sequence of at least two numbers sums to the odd-number-out. Return the sum of the largest and
-smallest numbers in that sequence. */
-object Part2 {
-  fun solve(input: Sequence<String>, windowSize: Int = 25): String {
-    val match = Part1.find(input, windowSize)
+  /* A sequence of at least two numbers sums to the odd-number-out. Return the sum of the largest
+  and smallest numbers in that sequence. */
+  override fun part2(input: List<String>): String {
+    val windowSize = if (input.size < 30) 5 else 25
+    val match = find(input, windowSize)
     val window = ArrayDeque<Long>(windowSize)
     var sum: Long = 0
     input.map(String::toLong).forEach {
@@ -64,20 +62,7 @@ object Part2 {
   }
 }
 
-@ExperimentalTime
-@Suppress("UNUSED_PARAMETER")
 fun main(args: Array<String>) {
-  // input.example.txt uses windowSize=5, input.actual.txt uses windowSize=25
-  val lines = generateSequence(::readLine).toList()
-  val windowSize = if (lines.size < 30) { 5 } else { 25 }
-  print("part1: ")
-  TimeSource.Monotonic.measureTimedValue { Part1.solve(lines.asSequence(), windowSize) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
-  print("part2: ")
-  TimeSource.Monotonic.measureTimedValue { Part2.solve(lines.asSequence(), windowSize) }.let {
-    println(it.value)
-    System.err.println("Completed in ${it.duration}")
-  }
+  val result = runMain(Day9, args)
+  kotlin.system.exitProcess(if (result) 0 else 1)
 }
