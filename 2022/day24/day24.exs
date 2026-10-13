@@ -37,7 +37,8 @@ defmodule Day24 do
     {%{entrance: ent, exit: exit, height: height, width: width} = dims, grid} = parse_input(input)
     dist = distance(ent, exit)
     start = {ent, 0}
-    if height * width < 50, do: print_grid(grid, ent, dims)
+    # if height * width < 50, do: print_grid(grid, ent, dims)
+    if height * width < 10, do: print_grid(grid, ent, dims)
     bfs(exit, dims, %{0 => grid}, PQ.new(dist, start), MapSet.new([start]))
   end
 

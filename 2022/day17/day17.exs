@@ -61,8 +61,7 @@ defmodule Day17 do
         drop_rock(rock, height, stack, jets)
       end)
 
-    IO.puts(:stderr, "top 25 of stack are ")
-    print_stack(Enum.take(stack, 25))
+    if false, do: print_stack(Enum.take(stack, 25))
     height
   end
 
@@ -108,8 +107,7 @@ defmodule Day17 do
         end
       end)
 
-    IO.puts(:stderr, "top 25 of stack are ")
-    print_stack(Enum.take(stack, 25))
+    if false, do: print_stack(Enum.take(stack, 25))
     :ets.delete(cache)
     height
   end

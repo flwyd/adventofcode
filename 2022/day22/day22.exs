@@ -53,7 +53,8 @@ defmodule Day22 do
           {final, face, traverse}
       end)
 
-    if max_row < 10, do: print_traverse(traverse, grid, max_row, max_col)
+    # if max_row < 10, do: print_traverse(traverse, grid, max_row, max_col)
+     if max_row < 1, do: print_traverse(traverse, grid, max_row, max_col)
     password(row, col, face)
   end
 
@@ -99,7 +100,8 @@ defmodule Day22 do
           {final, final_face, traverse}
       end)
 
-    if max_row < 100, do: print_traverse(traverse, grid, max_row, max_col)
+    # if max_row < 100, do: print_traverse(traverse, grid, max_row, max_col)
+    if max_row < 1, do: print_traverse(traverse, grid, max_row, max_col)
     password(row, col, face)
   end
 

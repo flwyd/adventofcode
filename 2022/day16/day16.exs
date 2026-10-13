@@ -67,10 +67,10 @@ defmodule Day16 do
     cache_stats = :ets.new(:cache_stats, [:set])
     value = find_best_score(flows, compact, initial, cache, cache_stats)
 
-    [hits, misses] =
-      Enum.map([:hits, :misses], fn key -> Keyword.fetch!(:ets.lookup(cache_stats, key), key) end)
+    # [hits, misses] =
+    #   Enum.map([:hits, :misses], fn key -> Keyword.fetch!(:ets.lookup(cache_stats, key), key) end)
+    # IO.puts(:stderr, "Cache hits: #{hits} misses: #{misses}")
 
-    IO.puts(:stderr, "Cache hits: #{hits} misses: #{misses}")
     :ets.delete(cache)
     :ets.delete(cache_stats)
     value

@@ -100,13 +100,12 @@ defmodule Day19 do
     :ets.update_counter(stats, :misses, 0, {:misses, 0})
     best = best_score(state, bp, time, cache, stats)
 
-    [hits, misses] =
-      Enum.map([:hits, :misses], fn key -> Keyword.fetch!(:ets.lookup(stats, key), key) end)
-
-    IO.puts(
-      :stderr,
-      "Blueprint #{bp.id} cache hits: #{hits} misses: #{misses} #{inspect(self())}"
-    )
+    # [hits, misses] =
+    #   Enum.map([:hits, :misses], fn key -> Keyword.fetch!(:ets.lookup(stats, key), key) end)
+    # IO.puts(
+    #   :stderr,
+    #   "Blueprint #{bp.id} cache hits: #{hits} misses: #{misses} #{inspect(self())}"
+    # )
 
     :ets.delete(cache)
     :ets.delete(stats)
