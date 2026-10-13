@@ -9,6 +9,11 @@
 # are provided on the command line.  Delegates to ./run to run the day's program
 # which defaults to dayXX/dayXX* unless EXTENSION=.yz is set to choose a
 # specific language.
+#
+# Usage:
+# testday path/to/day1 path/to/day2 ... # run specific days
+# testday 2001 2002 ... # run all days in a year's directory
+# testday # run all days in the current directory
 
 indent() {
   pr -to $1
@@ -25,7 +30,19 @@ if [[ $# -eq 0 ]]; then
     exit 1
   fi
 else
-  DAYS=($@)
+  DAYS=()
+  for arg in $@ ; do
+    if [[ $arg = [0-9][0-9][0-9][0-9] ]]; then
+      DAYS+=($arg/day*(n))
+    else
+      DAYS+=$arg
+    fi
+  done
+  if (( ${#DAYS} == 0 )); then
+    print -u 2 "No days found in $@"
+    print -u 2 "Usage: $0 path/to/day1 ..."
+    exit 1
+  fi
 fi
 
 echo "TAP version 14"
