@@ -4,21 +4,23 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-/// Advent of Code runner library for Rust.  Puzzle implementations implement
-/// the Day trait by providing two functions which take a vector of String, one
-/// per input line, and return an owned String with the answer.  The dayX.rs
-/// file should have a main function which returns the ExitCode result of
-/// runner::run_day::<DayX>().
+//! Advent of Code runner library for Rust.  Puzzle implementations implement
+//! the Day trait by providing two functions which take a vector of String, one
+//! per input line, and return an owned String with the answer.  The dayX.rs
+//! file should have a main function which returns the ExitCode result of
+//! runner::run_day::<DayX>().
+
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{stdin, BufRead, BufReader};
+use std::fmt;
+use std::fs::{self};
+use std::io::{self, stdin};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
 pub trait Day {
-  fn part1(input: &[String]) -> String;
-  fn part2(input: &[String]) -> String;
+  fn part1(lines: &[&str]) -> String;
+  fn part2(lines: &[&str]) -> String;
   fn day_name() -> &'static str;
 }
 
@@ -92,26 +94,15 @@ pub fn run_day<D: Day>() -> ExitCode {
       }
     }
   }
-  if success {
-    ExitCode::SUCCESS
-  } else {
-    ExitCode::FAILURE
-  }
+  if success { ExitCode::SUCCESS } else { ExitCode::FAILURE }
 }
 
-pub fn run_file<D: Day>(fname: &String, verbose: bool) -> Result<bool, std::io::Error> {
-  let (input, expected) = if fname == "-" {
-    (stdin().lines().collect::<Result<Vec<String>, std::io::Error>>()?, HashMap::new())
-  } else {
-    (
-      BufReader::new(File::open(fname)?)
-        .lines()
-        .collect::<Result<Vec<String>, std::io::Error>>()?,
-      maybe_read_expected(fname),
-    )
-  };
-  let result1 = run_part::<D>(PartNumber::One, fname, &input, &expected, verbose);
-  let result2 = run_part::<D>(PartNumber::Two, fname, &input, &expected, verbose);
+pub fn run_file<D: Day>(fname: &String, verbose: bool) -> Result<bool, io::Error> {
+  let data = if fname == "-" { io::read_to_string(stdin())? } else { fs::read_to_string(fname)? };
+  let expected = if fname == "-" { HashMap::new() } else { maybe_read_expected(fname) };
+  let input = Input { fname: &fname, lines: data.lines().collect(), expected: expected };
+  let result1 = input.run_part::<D>(PartNumber::One, verbose);
+  let result2 = input.run_part::<D>(PartNumber::Two, verbose);
   Ok(result1 && result2)
 }
 
@@ -120,50 +111,65 @@ enum PartNumber {
   Two = 2,
 }
 
-fn run_part<D: Day>(
-  part: PartNumber,
-  fname: &String,
-  input: &Vec<String>,
-  expected: &HashMap<String, String>,
-  verbose: bool,
-) -> bool {
-  let (name, func): (&str, fn(&[String]) -> String) = match part {
-    PartNumber::One => ("part1", D::part1),
-    PartNumber::Two => ("part2", D::part2),
-  };
-  if verbose {
-    eprintln!("Running {} {name} on {fname} ({} lines)", D::day_name(), input.len());
+impl PartNumber {
+  fn name(&self) -> &'static str {
+    match self {
+      PartNumber::One => "part1",
+      PartNumber::Two => "part2",
+    }
   }
-  let now = Instant::now();
-  let result = func(input);
-  let elapsed = now.elapsed();
-  println!("{name}: {result}");
-  let empty = &String::new();
-  let outcome = Outcome::from(&result, expected.get(name).unwrap_or(empty));
-  if verbose {
-    eprintln!("{}", outcome.message());
-    let dur = if elapsed > Duration::from_secs(60) {
-      let mins = elapsed.as_secs() / 60;
-      let secs = elapsed.as_secs() % 60;
-      format!("{mins}:{secs:02}")
-    } else if elapsed < Duration::from_micros(1) {
-      format!("{elapsed:?}")
-    } else {
-      format!("{elapsed:.3?}")
-    };
-    eprintln!("{name} took {dur} on {fname}");
-    eprintln!("{}", "=".repeat(40));
-  }
-  outcome.exit_status()
 }
 
-fn maybe_read_expected(fname: &String) -> HashMap<String, String> {
+impl fmt::Display for PartNumber {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { write!(f, "{}", self.name()) }
+}
+
+struct Input<'a> {
+  fname:    &'a str,
+  lines:    Vec<&'a str>,
+  expected: HashMap<String, String>,
+}
+
+impl<'a> Input<'a> {
+  fn run_part<D: Day>(&self, part: PartNumber, verbose: bool) -> bool {
+    let func = match part {
+      PartNumber::One => D::part1,
+      PartNumber::Two => D::part2,
+    };
+    if verbose {
+      eprintln!("Running {} {part} on {} ({} lines)", D::day_name(), self.fname, self.lines.len());
+    }
+    let now = Instant::now();
+    let result = func(&self.lines);
+    let elapsed = now.elapsed();
+    println!("{part}: {result}");
+    let empty = &String::new();
+    let outcome = Outcome::from(&result, self.expected.get(part.name()).unwrap_or(empty));
+    if verbose {
+      eprintln!("{}", outcome.message());
+      let dur = if elapsed > Duration::from_secs(60) {
+        let mins = elapsed.as_secs() / 60;
+        let secs = elapsed.as_secs() % 60;
+        format!("{mins}:{secs:02}")
+      } else if elapsed < Duration::from_micros(1) {
+        format!("{elapsed:?}")
+      } else {
+        format!("{elapsed:.3?}")
+      };
+      eprintln!("{part} took {dur} on {}", self.fname);
+      eprintln!("{}", "=".repeat(40));
+    }
+    outcome.exit_status()
+  }
+}
+
+fn maybe_read_expected(fname: &str) -> HashMap<String, String> {
   let mut expected = HashMap::new();
   let mut path = PathBuf::from(fname);
   path.set_extension("expected");
   if path.exists() {
-    if let Ok(f) = File::open(path) {
-      for line in BufReader::new(f).lines().filter_map(|r| r.ok()) {
+    if let Ok(content) = fs::read_to_string(path) {
+      for line in content.lines() {
         if let Some((part, exp)) = line.split_once(':') {
           expected.insert(String::from(part), String::from(exp.trim()));
         }
