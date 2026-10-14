@@ -3,24 +3,30 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
-//
-// https://adventofcode.com/2022/day/20
 
-/*
-day20 in Go since I could not figure out what was wrong with my Elixir
-solution so I figured I'd reimplement it in a different language to see if I
-had a hard-to-spot bug.  Turns out it was an unclear specification.
-XXX This program implements the incorrect interpretation of the problem
-(tea party guests move but chairs stay put); day20.exs implements the correct
-interpretation (tea party guests carry their chair around the table).
-https://www.reddit.com/r/adventofcode/comments/zrggym/2022_day_20_alice_in_wonderland_explains_the_two/
-*/
+// Advent of Code 2022 day 20
+// Read the puzzle at https://adventofcode.com/2022/day/20
+//
+// Input is lines of integers (positive and negative, plus exactly one 0)
+// representing a circular cycle.  To "mix" a file of integers, each is moved
+// forward or backwards in the circle a number of places equal to the number.
+// Numbers are moved in the order they appear in the file, not in their current
+// circular order.  In part one, mix the file once.  In part two, multiply each
+// value by a large number and mix the file ten times.
 package main
 
 import (
 	"log"
 	"strconv"
 )
+
+/*
+Reimplemented the Elixir solution in Go because I couldn't figure out why it
+got the wrong answer, and maybe rewriting in a new language would avoid a
+subtle bug.  Turns out it was an unclear specification.  I've explained the two
+interpretations at
+https://www.reddit.com/r/adventofcode/comments/zrggym/2022_day_20_alice_in_wonderland_explains_the_two/
+*/
 
 type Day20 struct{}
 
@@ -143,7 +149,7 @@ func score(nodes []*Node) int {
 	zero := nodes[0].findValue(0)
 	one := zero.find(1000)
 	two := one.find(1000)
-	three := two.find(2000)
+	three := two.find(1000)
 	return one.value + two.value + three.value
 }
 
