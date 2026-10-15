@@ -1,11 +1,12 @@
 #!/usr/bin/env elixir
-# Copyright 2022 Google LLC
+# Copyright <%= copy_date %> Trevor Stone
 #
 # Use of this source code is governed by an MIT-style
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
-#
-# https://adventofcode.com/2022/day/<%= day_num %>
+
+# Advent of Code <%= year %> day <%= day_num %>
+# Read the puzzle at https://adventofcode.com/2022/day/<%= day_num %>
 
 defmodule Day<%= day_num %> do
   def part1(input) do
@@ -17,7 +18,7 @@ defmodule Day<%= day_num %> do
   end
 
   def main() do
-    unless function_exported?(Runner, :main, 1), do: Code.compile_file("../runner.ex", __DIR__)
+    unless function_exported?(Runner, :main, 1), do: Code.compile_file("<%= runner_path %>", __DIR__)
     success = Runner.main(Day<%= day_num %>, System.argv())
     exit({:shutdown, if(success, do: 0, else: 1)})
   end

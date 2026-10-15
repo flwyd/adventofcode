@@ -26,7 +26,7 @@ defmodule Day6 do
   end
 
   def main() do
-    unless function_exported?(Runner, :main, 1), do: Code.compile_file("../runner.ex", __DIR__)
+    unless function_exported?(Runner, :main, 1), do: Code.compile_file("../../lang/elixir/runner.ex", __DIR__)
     success = Runner.main(Day6, System.argv())
     exit({:shutdown, if(success, do: 0, else: 1)})
   end

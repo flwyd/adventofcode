@@ -17,10 +17,15 @@ defmodule Generate do
     exsfile = Path.join(daydir, "day#{daynum}.exs")
     iexfile = Path.join(daydir, ".iex.exs")
     if File.exists?(exsfile), do: abort("#{exsfile} already exists")
+    IO.puts(:stderr, "Generating files in #{daydir}")
+    absday = Path.absname(daydir)
+    year = Path.dirname(absday)
+    langdir = Path.relative_to(Path.relative_to_cwd(__DIR__), daydir, [:force])
     File.mkdir_p!(daydir)
-    File.write!(exsfile, EEx.eval_file(@template, day_num: daynum))
+    File.write!(exsfile, EEx.eval_file(@template, runner_path: Path.join(langdir, "runner.ex"),
+        day_num: daynum, year: year, copy_date: Date.utc_today().year))
     File.chmod!(exsfile, 0o755)
-    File.write!(iexfile, EEx.eval_file(@iex, day_num: daynum))
+    File.write!(iexfile, EEx.eval_file(@iex, day_num: daynum, main_iex: Path.join(langdir, ".iex.exs")))
 
     for base <- ~w[input.example input.actual] do
       txt = Path.join(daydir, base <> ".txt")

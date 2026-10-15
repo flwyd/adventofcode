@@ -77,7 +77,7 @@ defmodule Day10 do
   defp parse_line("addx " <> amount), do: {2, String.to_integer(amount)}
 
   def main() do
-    unless function_exported?(Runner, :main, 1), do: Code.compile_file("../runner.ex", __DIR__)
+    unless function_exported?(Runner, :main, 1), do: Code.compile_file("../../lang/elixir/runner.ex", __DIR__)
     success = Runner.main(Day10, System.argv())
     exit({:shutdown, if(success, do: 0, else: 1)})
   end

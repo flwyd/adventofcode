@@ -1,4 +1,4 @@
-import_file("../.iex.exs")
+import_file("<%= main_iex %>")
 c("day<%= day_num %>.exs")
 daymod = Day<%= day_num %>
 exampletxt = "input.example.txt"

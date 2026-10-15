@@ -1,4 +1,4 @@
-import_file("../.iex.exs")
+import_file("../../lang/elixir/.iex.exs")
 c("day16.exs")
 daymod = Day16
 exampletxt = "input.example.txt"
