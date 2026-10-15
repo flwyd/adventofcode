@@ -77,7 +77,7 @@ defmodule Day13 do
     {int, rest}
   end
 
-  defp parse_list_items([?[ | rest] = full, acc) do
+  defp parse_list_items([?[ | _rest] = full, acc) do
     {list, more} = parse_list(full)
     parse_list_items(more, acc ++ [list])
   end

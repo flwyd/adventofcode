@@ -29,7 +29,7 @@ defmodule Day15 do
       |> Enum.sort()
 
     {_, count} =
-      Enum.reduce(ranges, {first, Range.size(first)}, fn curlo..curhi, {prevlo..prevhi, count} ->
+      Enum.reduce(ranges, {first, Range.size(first)}, fn curlo..curhi//_, {prevlo..prevhi//_, count} ->
         if prevhi >= curhi do
           {prevlo..prevhi, count}
         else
@@ -61,7 +61,7 @@ defmodule Day15 do
         {col, row}
 
       {s, b} ->
-        with _start..edge = x_range(s, b, row, 0, max_coord) do
+        with _start..edge//_ = x_range(s, b, row, 0, max_coord) do
           if edge == max_coord,
             do: find_gap(pairs, max_coord, 0, row + 1),
             else: find_gap(pairs, max_coord, edge + 1, row)

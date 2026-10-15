@@ -89,11 +89,11 @@ defmodule Day9 do
         Enum.join(
           for col <- mincol..maxcol do
             cond do
-              {row, col} == head -> 'H'
+              {row, col} == head -> ~c"H"
               {row, col} in tail -> [?1 + Enum.find_index(tail, &(&1 == {row, col}))]
-              {row, col} == @origin -> 's'
-              {row, col} in points -> '#'
-              true -> '.'
+              {row, col} == @origin -> ~c"s"
+              {row, col} in points -> ~c"#"
+              true -> ~c"."
             end
           end
         )

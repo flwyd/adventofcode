@@ -176,9 +176,9 @@ defmodule Day22 do
       {idx, range} =
         case face do
           @down -> {0, 1..max_row}
-          @up -> {0, max_row..1}
+          @up -> {0, max_row..1//-1}
           @right -> {1, 1..max_col}
-          @left -> {1, max_row..1}
+          @left -> {1, max_row..1//-1}
         end
 
       Enum.map(range, fn i -> put_elem(pos, idx, i) end)

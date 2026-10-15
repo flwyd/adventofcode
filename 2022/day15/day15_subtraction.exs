@@ -41,8 +41,8 @@ defmodule Day15Subtraction do
     def left_remainder(%Rectangle{top: ft, bottom: fb, left: fl},
       %Rectangle{top: ht, bottom: hb, left: hl}) do
         [ %Rectangle{left: fl, right: hl, top: max(ft, ht), bottom: min(fb, hb)}] ++
-          if ft < ht, do: [%Rectangle{left: fl, right: hl, top: ft, bottom: ht}], else: [] ++
-          if fb > hb, do: [%Rectangle{left: fl, right: hl, top: hb, bottom: fb}], else: []
+          if(ft < ht, do: [%Rectangle{left: fl, right: hl, top: ft, bottom: ht}], else: []) ++
+          if(fb > hb, do: [%Rectangle{left: fl, right: hl, top: hb, bottom: fb}], else: [])
       end
 
     def right_remainder(%Rectangle{right: fr}, %Rectangle{right: hr}) when fr <= hr, do: []
@@ -53,8 +53,8 @@ defmodule Day15Subtraction do
     def right_remainder(%Rectangle{top: ft, bottom: fb, right: fr},
       %Rectangle{top: ht, bottom: hb, right: hr}) do
         [ %Rectangle{left: hr, right: fr, top: max(ft, ht), bottom: min(fb, hb)}] ++
-          if ft < ht, do: [%Rectangle{left: hr, right: fr, top: ft, bottom: ht}], else: [] ++
-          if fb > hb, do: [%Rectangle{left: hr, right: fr, top: hb, bottom: fb}], else: []
+          if(ft < ht, do: [%Rectangle{left: hr, right: fr, top: ft, bottom: ht}], else: []) ++
+          if(fb > hb, do: [%Rectangle{left: hr, right: fr, top: hb, bottom: fb}], else: [])
       end
 
     def top_remainder(%Rectangle{top: ft}, %Rectangle{top: ht}) when ft >= ht, do: []
@@ -90,7 +90,7 @@ defmodule Day15Subtraction do
       |> Enum.sort()
 
     {_, count} =
-      Enum.reduce(ranges, {first, Range.size(first)}, fn curlo..curhi, {prevlo..prevhi, count} ->
+      Enum.reduce(ranges, {first, Range.size(first)}, fn curlo..curhi//_, {prevlo..prevhi//_, count} ->
         if prevhi >= curhi do
           {prevlo..prevhi, count}
         else
@@ -122,7 +122,7 @@ defmodule Day15Subtraction do
         {col, row}
 
       {s, b} ->
-        with _start..edge = x_range(s, b, row, 0, max_coord) do
+        with _start..edge//_ = x_range(s, b, row, 0, max_coord) do
           if edge == max_coord,
             do: find_gap(pairs, max_coord, 0, row + 1),
             else: find_gap(pairs, max_coord, edge + 1, row)

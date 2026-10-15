@@ -65,10 +65,13 @@ defmodule Day14 do
     end)
     |> Enum.chunk_every(2, 1, :discard)
     |> Enum.reduce(into, fn
-      [{ax, y}, {bx, y}], acc -> Enum.reduce(ax..bx, acc, &MapSet.put(&2, {&1, y}))
-      [{x, ay}, {x, by}], acc -> Enum.reduce(ay..by, acc, &MapSet.put(&2, {x, &1}))
+      [{ax, y}, {bx, y}], acc -> Enum.reduce(xrange(ax, bx), acc, &MapSet.put(&2, {&1, y}))
+      [{x, ay}, {x, by}], acc -> Enum.reduce(xrange(ay, by), acc, &MapSet.put(&2, {x, &1}))
     end)
   end
+
+  # Elixir warns on Range.new(high, low), so be explicit
+  defp xrange(first, last), do: Range.new(first, last, if(first < last, do: 1, else: -1))
 
   def main() do
     unless function_exported?(Runner, :main, 1), do: Code.compile_file("../../lang/elixir/runner.ex", __DIR__)

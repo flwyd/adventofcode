@@ -55,7 +55,7 @@ defmodule Day5 do
       |> Enum.filter(fn {char, _i} -> char in ?A..?Z end)
       |> reduce(input, fn {char, column}, acc ->
         stack = div(column + 3, 4)
-        cur = Map.get(acc.stacks, stack, '')
+        cur = Map.get(acc.stacks, stack, ~c"")
         %Input{acc | stacks: Map.put(acc.stacks, stack, cur ++ [char])}
       end)
     end

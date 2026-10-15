@@ -30,7 +30,7 @@ defmodule Day4 do
 
   defp range_subset?({first, second}) do
     # sort by Range start, ties go to the longer range
-    [a, b] = sort_by([first, second], fn lo .. hi -> {lo, -hi} end)
+    [a, b] = sort_by([first, second], fn lo..hi//_ -> {lo, -hi} end)
     a.last >= b.last
   end
 

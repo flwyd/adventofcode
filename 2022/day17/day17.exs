@@ -148,9 +148,9 @@ defmodule Day17 do
     {height - min_y_or_zero, new_stack}
   end
 
-  @pixels %{clear: '.', blocked: '#'}
+  @pixels %{clear: ~c".", blocked: ~c"#"}
   def print_stack(stack) do
-    Enum.map(stack, fn line -> IO.puts(:stderr, '|' ++ Enum.map(line, &@pixels[&1]) ++ '|') end)
+    Enum.map(stack, fn line -> IO.puts(:stderr, ~c"|" ++ Enum.map(line, &@pixels[&1]) ++ ~c"|") end)
     IO.puts(:stderr, "+-------+")
   end
 

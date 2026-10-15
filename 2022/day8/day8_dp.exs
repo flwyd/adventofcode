@@ -13,9 +13,9 @@ defmodule Day8_DP do
   if all intervening numbers are less than the subject number.
 
   This is a dynamic programming variation on the main O(n^3-ish) implementation
-  in day8.exs.  Despite having techniccally loower complexity (something like
+  in day8.exs.  Despite having technically lower complexity (something like
   O(n^2 + 40n), n is small enough that this implementation is actually
-  _twice as slow_ as the other approach because n is pretty small.
+  _twice as slow_ as the other approach.
   """
 
   @doc "Count the points visible from outside the grid."
@@ -54,13 +54,13 @@ defmodule Day8_DP do
         Map.merge(acc, build_highest_table(for(col <- 0..maxcol, do: {row, col}), grid, :col))
       end),
       Enum.reduce(0..maxrow, %{}, fn row, acc ->
-        Map.merge(acc, build_highest_table(for(col <- maxcol..0, do: {row, col}), grid, :col))
+        Map.merge(acc, build_highest_table(for(col <- maxcol..0//-1, do: {row, col}), grid, :col))
       end),
       Enum.reduce(0..maxcol, %{}, fn col, acc ->
         Map.merge(acc, build_highest_table(for(row <- 0..maxrow, do: {row, col}), grid, :row))
       end),
       Enum.reduce(0..maxcol, %{}, fn col, acc ->
-        Map.merge(acc, build_highest_table(for(row <- maxrow..0, do: {row, col}), grid, :row))
+        Map.merge(acc, build_highest_table(for(row <- maxrow..0//-1, do: {row, col}), grid, :row))
       end)
     }
   end
@@ -69,7 +69,7 @@ defmodule Day8_DP do
     {table, _} =
       Enum.reduce(points, {%{}, %{}}, fn {row, col}, {res, acc} ->
         {Map.put(res, {row, col}, acc),
-         Enum.reduce(grid[{row, col}]..0, acc, fn val, acc2 ->
+         Enum.reduce(grid[{row, col}]..0//-1, acc, fn val, acc2 ->
            Map.put(
              acc2,
              val,

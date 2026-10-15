@@ -61,7 +61,7 @@ defmodule Day10 do
   end
 
   defp xvalue(step, xvals) do
-    xvals[Enum.filter(step..(step - 1), &Map.has_key?(xvals, &1)) |> List.first()]
+    xvals[Enum.filter(step..(step - 1)//-1, &Map.has_key?(xvals, &1)) |> List.first()]
   end
 
   defp compute_xvalues(instructions) do
