@@ -22,11 +22,19 @@ defmodule Generate do
     year = Path.dirname(absday)
     langdir = Path.relative_to(Path.relative_to_cwd(__DIR__), daydir, [:force])
     File.mkdir_p!(daydir)
-    File.write!(exsfile, EEx.eval_file(@template, runner_path: Path.join(langdir, "runner.ex"),
-        day_num: daynum, year: year, copy_date: Date.utc_today().year))
+    File.write!(exsfile, EEx.eval_file(@template, day_num: daynum, year: year,
+      copy_date: Date.utc_today().year,
+      runner_path: Path.join(langdir, "runner.ex")))
     File.chmod!(exsfile, 0o755)
-    File.write!(iexfile, EEx.eval_file(@iex, day_num: daynum, main_iex: Path.join(langdir, ".iex.exs")))
+    File.write!(iexfile, EEx.eval_file(@iex, day_num: daynum,
+      main_iex: Path.join(langdir, ".iex.exs")))
 
+    inputdir = Path.join(["..", "input", daynum])
+    File.mkdir_p!(Path.join(daydir, inputdir))
+    for f <- ~w[input.actual.txt input.actual.expected] do
+      p = Path.join(daydir, f)
+      if !File.exists?(p), do: File.ln_s!(Path.join(inputdir, f), p)
+    end
     for base <- ~w[input.example input.actual] do
       txt = Path.join(daydir, base <> ".txt")
       if !File.exists?(txt), do: File.touch!(txt)
