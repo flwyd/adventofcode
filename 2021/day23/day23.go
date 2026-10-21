@@ -3,28 +3,25 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
+
+// Advent of Code 2021 day 23
+// Read the puzzle at https://adventofcode.com/2021/day/23
 //
-// https://adventofcode.com/2021/day/23
+// day23 computes the cost to move amphipods from four rooms into their proper
+// rooms; moves are blocked if there's an amphipod in the way.  Amphipods have
+// letter-based kinds.  Each space move costs A=1, B=10, C=100, D=1000.
+// Go implementation because I had trouble finding a bug in my Raku solution,
+// and each run took tens of minutes.
 package main
 
-/* day23 computes the cost to move amphipods from four rooms into their proper
-rooms; moves are blocked if there's an amphipod in the way.  Amphipods have
-letter-based kinds.  Each space move costs A=1, B=10, C=100, D=1000.
-Go implementation because I had trouble finding a bug in my Raku solution,
-and each run took tens of minutes.  Board structure is hard-coded for
-example and actual input because I didn't want to focus on parsing; this
-turned out to be convenient since part 2 added new input. */
-
 import (
-	"flag"
 	"fmt"
 	"log"
-	"os"
+	"strconv"
 	"strings"
-	"time"
 )
 
-var printWinner = flag.Bool("print-winner", false, "Show winning moves")
+var printWinner = false
 
 func absInt(a int) int {
 	if a >= 0 {
@@ -72,8 +69,7 @@ func (p Position) String() string {
 }
 
 var validHall = []Position{
-	Position{hall: 1}, Position{hall: 2}, Position{hall: 4}, Position{hall: 6},
-	Position{hall: 8}, Position{hall: 10}, Position{hall: 11},
+	{hall: 1}, {hall: 2}, {hall: 4}, {hall: 6}, {hall: 8}, {hall: 10}, {hall: 11},
 }
 
 type Amphipod struct {
@@ -287,6 +283,28 @@ func (b *Board) String() string {
 	return strings.Join(lines, "\n")
 }
 
+func parseBoard(lines []string) *Board {
+	/* Input looks like
+	#############
+	#...........#
+	###B#C#B#D###
+		#A#D#C#A#
+		#########
+	Walls are always in the same positions, only the arrangement of letters
+	(amphipods) changes, and in part 2 there are four rows of amphipods.
+	*/
+	depth := len(lines) - 3
+	rooms := [4]int{3, 5, 7, 9}
+	pods := make([]Amphipod, 0, 4*depth)
+	for slot := 1; slot <= depth; slot++ {
+		line := lines[slot+1]
+		for _, room := range rooms {
+			pods = append(pods, newAmphipod(line[room], Position{slot: slot, room: room}))
+		}
+	}
+	return newBoard(0, depth, pods...)
+}
+
 func solve(initial *Board) int {
 	seen := make(map[BoardKey]int)
 	seen[initial.key()] = 0
@@ -295,7 +313,7 @@ func solve(initial *Board) int {
 	q[0] = []*Board{initial}
 	var pri, seenSkipped int
 	for {
-		for q[pri] == nil || len(q[pri]) == 0 {
+		for len(q[pri]) == 0 {
 			pri++
 			if pri > 1000000 {
 				log.Fatalf("Somehow got to cost %d, seen %d boards", pri, len(seen))
@@ -304,8 +322,8 @@ func solve(initial *Board) int {
 		for i := 0; i < len(q[pri]); i++ {
 			b := q[pri][i]
 			if b.satisfied() {
-				log.Printf("Found winner at cost %d with %d seen skipped:\n", pri, seenSkipped)
-				if *printWinner {
+				if printWinner {
+					log.Printf("Found winner at cost %d with %d seen skipped:\n", pri, seenSkipped)
 					for x := b; x != nil; x = parent[x] {
 						log.Printf("Cost %d\n%s\n", x.cost, x)
 					}
@@ -330,67 +348,25 @@ func solve(initial *Board) int {
 		}
 		delete(q, pri)
 	}
-	log.Fatalf("Somehow ran out of boards at cost %d, seen %d boards", pri, len(seen))
-	return 0
 }
 
-func runPart(part int, initial *Board, expected int, name string) bool {
-	fmt.Printf("Running part %d on %s expecting %d\n", part, name, expected)
-	start := time.Now()
-	res := solve(initial)
-	dur := time.Since(start)
-	m := "❌"
-	if res == expected {
-		m = "✓"
-	}
-	fmt.Printf("%s Part %d on %s got %d in %s\n", m, part, name, res, dur)
-	if expected != 0 && res != expected {
-		fmt.Printf("❌ got %d but want %d\n\n", res, expected)
-		return false
-	}
-	fmt.Println()
-	return true
+type Day23 struct{}
+
+func (_ Day23) Part1(lines []string) string {
+	board := parseBoard(lines)
+	return strconv.Itoa(solve(board))
 }
 
-var part1Example = newBoard(0, 2,
-	newAmphipod('B', Position{room: 3, slot: 1}), newAmphipod('A', Position{room: 3, slot: 2}),
-	newAmphipod('C', Position{room: 5, slot: 1}), newAmphipod('D', Position{room: 5, slot: 2}),
-	newAmphipod('B', Position{room: 7, slot: 1}), newAmphipod('C', Position{room: 7, slot: 2}),
-	newAmphipod('D', Position{room: 9, slot: 1}), newAmphipod('A', Position{room: 9, slot: 2}),
-)
-
-var part1Actual = newBoard(0, 2,
-	newAmphipod('C', Position{room: 3, slot: 1}), newAmphipod('B', Position{room: 3, slot: 2}),
-	newAmphipod('B', Position{room: 5, slot: 1}), newAmphipod('D', Position{room: 5, slot: 2}),
-	newAmphipod('D', Position{room: 7, slot: 1}), newAmphipod('A', Position{room: 7, slot: 2}),
-	newAmphipod('A', Position{room: 9, slot: 1}), newAmphipod('C', Position{room: 9, slot: 2}),
-)
-
-var part2Example = newBoard(0, 4,
-	newAmphipod('B', Position{room: 3, slot: 1}), newAmphipod('D', Position{room: 3, slot: 2}), newAmphipod('D', Position{room: 3, slot: 3}), newAmphipod('A', Position{room: 3, slot: 4}),
-	newAmphipod('C', Position{room: 5, slot: 1}), newAmphipod('C', Position{room: 5, slot: 2}), newAmphipod('B', Position{room: 5, slot: 3}), newAmphipod('D', Position{room: 5, slot: 4}),
-	newAmphipod('B', Position{room: 7, slot: 1}), newAmphipod('B', Position{room: 7, slot: 2}), newAmphipod('A', Position{room: 7, slot: 3}), newAmphipod('C', Position{room: 7, slot: 4}),
-	newAmphipod('D', Position{room: 9, slot: 1}), newAmphipod('A', Position{room: 9, slot: 2}), newAmphipod('C', Position{room: 9, slot: 3}), newAmphipod('A', Position{room: 9, slot: 4}),
-)
-
-var part2Actual = newBoard(0, 4,
-	newAmphipod('C', Position{room: 3, slot: 1}), newAmphipod('D', Position{room: 3, slot: 2}), newAmphipod('D', Position{room: 3, slot: 3}), newAmphipod('B', Position{room: 3, slot: 4}),
-	newAmphipod('B', Position{room: 5, slot: 1}), newAmphipod('C', Position{room: 5, slot: 2}), newAmphipod('B', Position{room: 5, slot: 3}), newAmphipod('D', Position{room: 5, slot: 4}),
-	newAmphipod('D', Position{room: 7, slot: 1}), newAmphipod('B', Position{room: 7, slot: 2}), newAmphipod('A', Position{room: 7, slot: 3}), newAmphipod('A', Position{room: 7, slot: 4}),
-	newAmphipod('A', Position{room: 9, slot: 1}), newAmphipod('A', Position{room: 9, slot: 2}), newAmphipod('C', Position{room: 9, slot: 3}), newAmphipod('C', Position{room: 9, slot: 4}),
-)
+func (_ Day23) Part2(lines []string) string {
+	moreLines := make([]string, len(lines)+2)
+	copy(moreLines, lines[0:3])
+	moreLines[3] = "  #D#C#B#A#"
+	moreLines[4] = "  #D#B#A#C#"
+	copy(moreLines[5:], lines[3:])
+	board := parseBoard(moreLines)
+	return strconv.Itoa(solve(board))
+}
 
 func main() {
-	var success [4]bool
-	success[0] = runPart(1, part1Example, 12521, "input.example.txt")
-	success[1] = runPart(1, part1Actual, 13520, "input.actual.txt")
-	success[2] = runPart(2, part2Example, 44169, "input.example.txt")
-	success[3] = runPart(2, part2Actual, 48708, "input.actual.txt")
-	fmt.Printf("Success? %v\n", success)
-	for _, s := range success {
-		if !s {
-			os.Exit(1)
-		}
-	}
-	os.Exit(0)
+	runDay(Day23{})
 }
