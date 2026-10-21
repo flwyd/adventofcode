@@ -5,13 +5,22 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 #
-# https://adventofcode.com/2021/day/15
+
+=begin pod
+=head1 Advent of Code 2021 day 15
+Read the puzzle at L<https://adventofcode.com/2021/day/15>
+=end pod
+
 use v6.d;
 use fatal;
+unless %*ENV<RAKULIB> {
+  use lib $?FILE.IO.parent(1).add('../../lang/raku').resolve;
+}
+use Runner;
 
 class Solver {
   has Str $.input is required;
-  has Str $.algorithm = 'astar';
+  has Str $.algorithm = 'dijkstra';
   has %.grid{Complex} = self.make-grid($!input);
   has Complex $.target = self.identify-target(%!grid); # %!grid.keys.max;
 
@@ -229,54 +238,16 @@ class Part2 is Solver {
   }
 }
 
-class RunContext {
-  has $.input-file;
-  has $.input;
-  has %.expected is rw;
-  has @.passed;
-  has $.algorithm;
+class Day15 does Day {
+  method part1(Str @lines --> Str(Cool)) {
+    Part1.new(:input(@lines.join("\n") ~ "\n")).solve();
+  }
 
-  method run-part(Solver:U $part) {
-    my $num = $part.^name.comb(/\d+/).head;
-    my $expected = $.expected«$num» // '';
-    $*ERR.say: "Running Day15 part $num with $!algorithm on $!input-file expecting '$expected'";
-    my $start = now;
-    my $solver = $part.new(:$!input, :$!algorithm);
-    my $make-time = now;
-    my $result = $solver.solve();
-    my $end = now;
-    put "part$num: $result";
-    $*ERR.printf("Part $num took %.3fms\n", ($end - $start) * 1000);
-    $*ERR.printf("Construction took %.3fms solve took %.3fms\n", ($make-time - $start) * 1000, ($end - $make-time) * 1000);
-    @!passed.push($result eq 'TODO' || $expected && $expected eq $result);
-    if $expected {
-      if $expected eq $result {
-        $*ERR.say: "\c[CHECK MARK] PASS with expected value '$result'";
-      } else {
-        $*ERR.say: "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
-      }
-    }
+  method part2(Str @lines --> Str(Cool)) {
+    Part2.new(:input(@lines.join("\n") ~ "\n")).solve();
   }
 }
 
-sub MAIN(*@input-files, :$algorithm = "dijkstra") {
-  my $exit = all();
-  for @input-files -> $input-file {
-    if $input-file.IO.slurp -> $input {
-      my $context = RunContext.new(:$input, :$input-file, :$algorithm);
-      if (my $expected-file = $input-file.IO.extension('expected')).f {
-        for $expected-file.lines {
-          $context.expected«$0» = $1.trim if m/part (\d+) \: \s* (.*)/;
-        }
-      }
-      $context.run-part(Part1);
-      $*ERR.say: '';
-      $context.run-part(Part2);
-      $exit &= all($context.passed);
-    } else {
-      $*ERR.say: "EMPTY INPUT FILE: $input-file";
-    }
-    $*ERR.say: '=' x 40;
-  }
-  exit $exit ?? 0 !! 1;
+sub MAIN(Bool :v(:$verbose), *@input-files) {
+  runMain(Day15, @input-files, :$verbose);
 }

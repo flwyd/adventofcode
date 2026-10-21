@@ -5,9 +5,18 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 #
-# https://adventofcode.com/2021/day/24
+
+=begin pod
+=head1 Advent of Code 2021 day 24
+Read the puzzle at L<https://adventofcode.com/2021/day/24>
+=end pod
+
 use v6.d;
 use fatal;
+unless %*ENV<RAKULIB> {
+  use lib $?FILE.IO.parent(1).add('../../lang/raku').resolve;
+}
+use Runner;
 
 # This Raku program "cheats" by using a magic suffix (for part 1) or a magic
 # infix (for part 2) found by the day24.go program.  The (not optimized)
@@ -138,7 +147,7 @@ class Part1 is Solver {
       my $model = ModelNumber.new($num);
       my $state = $prog.eval($model);
       if $state.get-register('z') == 0 {
-        $*ERR.say: "Found z=0 for $model == $num";
+        # $*ERR.say: "Found z=0 for $model == $num";
         return $model.Str;
       }
     }
@@ -227,7 +236,7 @@ class Part2 is Solver {
         my $model = ModelNumber.new($num);
         my $state = $prog.eval($model);
         if $state.get-register('z') == 0 {
-          $*ERR.say: "Found z=0 for $model == $num";
+          # $*ERR.say: "Found z=0 for $model == $num";
           return $model.Str;
         }
       }
@@ -237,53 +246,16 @@ class Part2 is Solver {
   }
 }
 
-class RunContext {
-  has $.input-file;
-  has $.input;
-  has %.expected is rw;
-  has @.passed;
+class Day24 does Day {
+  method part1(Str @lines --> Str(Cool)) {
+    Part1.new(:input(@lines.join("\n") ~ "\n")).solve();
+  }
 
-  method run-part(Solver:U $part) {
-    my $num = $part.^name.comb(/\d+/).head;
-    my $expected = $.expected«$num» // '';
-    $*ERR.say: "Running Day24 part $num on $!input-file expecting '$expected'";
-    my $start = now;
-    my $solver = $part.new(:$!input);
-    my $result = $solver.solve();
-    my $end = now;
-    put "part$num: $result";
-    $*ERR.printf("Part $num took %.3fms\n", ($end - $start) * 1000);
-    @!passed.push($result eq 'TODO' || $expected && $expected eq $result);
-    if $expected {
-      if $expected eq $result {
-        $*ERR.say: "\c[CHECK MARK] PASS with expected value '$result'";
-      } else {
-        $*ERR.say: "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
-      }
-    }
-    $*OUT.flush;
-    $*ERR.flush;
+  method part2(Str @lines --> Str(Cool)) {
+    Part2.new(:input(@lines.join("\n") ~ "\n")).solve();
   }
 }
 
-sub MAIN(*@input-files) {
-  my $exit = all();
-  for @input-files -> $input-file {
-    if $input-file.IO.slurp -> $input {
-      my $context = RunContext.new(:$input, :$input-file);
-      if (my $expected-file = $input-file.IO.extension('expected')).f {
-        for $expected-file.lines {
-          $context.expected«$0» = $1.trim if m/part (\d+) \: \s* (.*)/;
-        }
-      }
-      $context.run-part(Part1);
-      $*ERR.say: '';
-      $context.run-part(Part2);
-      $exit &= all($context.passed);
-    } else {
-      $*ERR.say: "EMPTY INPUT FILE: $input-file";
-    }
-    $*ERR.say: '=' x 40;
-  }
-  exit $exit ?? 0 !! 1;
+sub MAIN(Bool :v(:$verbose), *@input-files) {
+  runMain(Day24, @input-files, :$verbose);
 }

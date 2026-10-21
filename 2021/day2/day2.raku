@@ -5,9 +5,18 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 #
-# https://adventofcode.com/2021/day/2
+
+=begin pod
+=head1 Advent of Code 2021 day 2
+Read the puzzle at L<https://adventofcode.com/2021/day/2>
+=end pod
+
 use v6.d;
 use fatal;
+unless %*ENV<RAKULIB> {
+  use lib $?FILE.IO.parent(1).add('../../lang/raku').resolve;
+}
+use Runner;
 
 grammar InputFormat {
   rule TOP { <line>+ }
@@ -32,7 +41,7 @@ class FormatActions {
 
 }
 
-class Day2 {
+class Solver {
   # TODO change template to do something more clever than passing part to new,
   # maybe make a $*part dynamic variable? Generate a FormatActions base class
   # and empty subclasses for each part? Make each part a separate class?
@@ -69,50 +78,16 @@ class Day2 {
   }
 }
 
-class RunContext {
-  has $.input-file;
-  has $.input;
-  has %.expected is rw;
-  has @.passed;
+class Day2 does Day {
+  method part1(Str @lines --> Str(Cool)) {
+    Solver.new(:input(@lines.join("\n") ~ "\n"), :part(1)).solve-part1();
+  }
 
-  method run-part(Int $part) {
-    my $expected = $.expected«$part» // '';
-    $*ERR.say: "Running Day2 part $part on $!input-file expecting '$expected'";
-    my $solver = Day2.new(:$!input, :$part);
-    my $start = now;
-    my $result = $solver."solve-part$part"();
-    my $end = now;
-    put "part$part: $result";
-    $*ERR.printf("Part $part took %.3fms\n", ($end - $start) * 1000);
-    @!passed.push($result eq 'TODO' || $expected && $expected eq $result);
-    if $expected {
-      if $expected eq $result {
-        $*ERR.say: "\c[CHECK MARK] PASS with expected value '$result'";
-      } else {
-        $*ERR.say: "\c[CROSS MARK] FAIL expected '$expected' but got '$result'";
-      }
-    }
+  method part2(Str @lines --> Str(Cool)) {
+    Solver.new(:input(@lines.join("\n") ~ "\n"), :part(2)).solve-part2();
   }
 }
 
-sub MAIN(*@input-files) {
-  my $exit = all();
-  for @input-files -> $input-file {
-    if $input-file.IO.slurp -> $input {
-      my $context = RunContext.new(:$input, :$input-file);
-      if (my $expected-file = $input-file.IO.extension('expected')).f {
-        for $expected-file.lines {
-          $context.expected«$0» = $1.trim if m/part (\d+) \: \s* (.*)/;
-        }
-      }
-      $context.run-part(1);
-      $*ERR.say: '';
-      $context.run-part(2);
-      $exit &= all($context.passed);
-    } else {
-      $*ERR.say: "EMPTY INPUT FILE: $input-file";
-    }
-    $*ERR.say: '=' x 40;
-  }
-  exit $exit ?? 0 !! 1;
+sub MAIN(Bool :v(:$verbose), *@input-files) {
+  runMain(Day2, @input-files, :$verbose);
 }
