@@ -4,6 +4,7 @@ Use of this source code is governed by an MIT-style
 license that can be found in the LICENSE file or at
 https://opensource.org/licenses/MIT.
 */
+
 // https://adventofcode.com/2021/day/19 implementation in Go because day19.raku
 // was really slow and nondeterministically got the wrong answer.  The Go
 // implementation also nondeterministically got the wrong answer because
@@ -12,12 +13,10 @@ https://opensource.org/licenses/MIT.
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
+	"strconv"
 	"strings"
-	"time"
 )
 
 type Direction int
@@ -220,8 +219,14 @@ func align(devices []*Device) map[int]*Pointset {
 	return found
 }
 
+type Day19 struct{}
+
 // part1 counts the number of distinct points after aligning all scanner devices.
-func part1(devices []*Device) int {
+func (_ Day19) Part1(lines []string) string {
+	return strconv.Itoa(solvePart1(parseDevices(lines)))
+}
+
+func solvePart1(devices []*Device) int {
 	found := align(devices)
 	all := make(map[Point]int)
 	for _, s := range found {
@@ -232,8 +237,12 @@ func part1(devices []*Device) int {
 	return len(all)
 }
 
-// part1 counts the maximum Manhattan distance between two scanner devices.
-func part2(devices []*Device) int {
+// part2 counts the maximum Manhattan distance between two scanner devices.
+func (_ Day19) Part2(lines []string) string {
+	return strconv.Itoa(solvePart2(parseDevices(lines)))
+}
+
+func solvePart2(devices []*Device) int {
 	found := align(devices)
 	max := 0
 	for _, ps1 := range found {
@@ -244,6 +253,8 @@ func part2(devices []*Device) int {
 	}
 	return max
 }
+
+func (_ Day19) String() string { return "day19" }
 
 func absInt(a int) int {
 	if a >= 0 {
@@ -258,17 +269,10 @@ func maxInt(a, b int) int {
 	return a
 }
 
-func runFile(fname string) {
-	f, err := os.Open(fname)
-	if err != nil {
-		log.Fatalf("Error opening %s: %v", fname, err)
-	}
-	defer f.Close()
+func parseDevices(lines []string) []*Device {
 	devices := make([]*Device, 0)
 	var dev *Device
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range lines {
 		if strings.Contains(line, "scanner") {
 			dev = &Device{name: line, pointset: &Pointset{points: make(map[Point]bool)}}
 			devices = append(devices, dev)
@@ -284,26 +288,9 @@ func runFile(fname string) {
 	for _, d := range devices {
 		d.orientations = d.pointset.allOrientations()
 	}
-	fmt.Printf("Running Part 1 on %s\n", fname)
-	start := time.Now()
-	res1 := part1(devices)
-	dur := time.Since(start)
-	fmt.Printf("Part 1 got %d\n", res1)
-	fmt.Printf("Part 1 took %s\n", dur)
-	fmt.Printf("Running Part 2 on %s\n", fname)
-	start = time.Now()
-	res2 := part2(devices)
-	dur = time.Since(start)
-	fmt.Printf("Part 2 got %d\n", res2)
-	fmt.Printf("Part 2 took %s\n", dur)
+	return devices
 }
 
 func main() {
-	for _, fname := range os.Args[1:] {
-		fmt.Printf("Running day19 on %s\n", fname)
-		start := time.Now()
-		runFile(fname)
-		dur := time.Since(start)
-		fmt.Printf("%s took %s\n", fname, dur)
-	}
+	runDay(Day19{})
 }
