@@ -19,6 +19,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -26,7 +27,6 @@ import (
 type Part func(lines []string) string
 
 type Day interface {
-	fmt.Stringer
 	Part1(lines []string) string
 	Part2(lines []string) string
 }
@@ -57,10 +57,11 @@ func runFile(fname string, day Day) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
+	dayName := strings.TrimPrefix(reflect.TypeOf(day).String(), "main.")
 	expect := readExpected(fname)
-	p1 := execution{part: day.Part1, partName: "part1", dayName: day.String(),
+	p1 := execution{part: day.Part1, partName: "part1", dayName: dayName,
 		fileName: fname, lines: lines, expected: expect[0]}
-	p2 := execution{part: day.Part2, partName: "part2", dayName: day.String(),
+	p2 := execution{part: day.Part2, partName: "part2", dayName: dayName,
 		fileName: fname, lines: lines, expected: expect[1]}
 	success := p1.run()
 	success = p2.run() && success

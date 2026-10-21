@@ -29,8 +29,6 @@ import (
 
 type Day21 struct{}
 
-func (_ Day21) String() string { return "day21" }
-
 type pad map[rune]map[rune][]string
 
 var (

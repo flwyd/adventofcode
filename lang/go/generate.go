@@ -37,8 +37,6 @@ package main
 
 type DayDAYNUM struct{}
 
-func (_ DayDAYNUM) String() string { return "dayDAYNUM" }
-
 func (_ DayDAYNUM) Part1(lines []string) string {
 	return "TODO"
 }
@@ -50,8 +48,6 @@ func (_ DayDAYNUM) Part2(lines []string) string {
 func main() {
 	runDay(DayDAYNUM{})
 }
-
-const dayName = "dayDAYNUM"
 `
 
 const expectedContent = "part1: \npart2: \n"

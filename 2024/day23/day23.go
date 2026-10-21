@@ -26,8 +26,6 @@ import (
 
 type Day23 struct{}
 
-func (_ Day23) String() string { return "day23" }
-
 type stringset map[string]bool
 
 func (s stringset) add(v string) stringset {

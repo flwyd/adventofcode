@@ -30,8 +30,6 @@ https://www.reddit.com/r/adventofcode/comments/zrggym/2022_day_20_alice_in_wonde
 
 type Day20 struct{}
 
-func (_ Day20) String() string { return "day20" }
-
 type Node struct {
 	value      int
 	prev, next *Node

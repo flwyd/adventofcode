@@ -254,8 +254,6 @@ func solvePart2(devices []*Device) int {
 	return max
 }
 
-func (_ Day19) String() string { return "day19" }
-
 func absInt(a int) int {
 	if a >= 0 {
 		return a

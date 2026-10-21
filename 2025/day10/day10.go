@@ -29,8 +29,6 @@ import (
 
 type Day10 struct{}
 
-func (_ Day10) String() string { return "day10" }
-
 type machine struct {
 	desired uint
 	buttons []uint

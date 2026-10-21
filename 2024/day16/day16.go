@@ -23,8 +23,6 @@ import (
 
 type Day16 struct{}
 
-func (_ Day16) String() string { return "day16" }
-
 const (
 	dot  = '.'
 	end  = 'E'
