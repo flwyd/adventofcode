@@ -27,7 +27,6 @@ const TEMPLATE: &str = r##"// Copyright 2026 Trevor Stone
 
 mod runner;
 
-use runner::*;
 use std::process::ExitCode;
 
 pub struct DayDAYNUM {}
