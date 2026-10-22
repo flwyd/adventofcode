@@ -115,17 +115,18 @@ function runner_print_results {
 function runner_print_status {
   local actual=$1
   local expect=$2
+  NORM=$(tput sgr0)
   if [[ $actual == $expect ]] then
-    print -u2 "✅ SUCCESS got $actual"
+    print -u2 "✅ $(tput setab 10)SUCCESS${NORM} got $actual"
   elif [[ $actual == "TODO" ]] then
     if [[ $expect == "" ]] then
-      print -u2 "❗ TODO implement it"
+      print -u2 "❗ $(tput setab 14)TODO${NORM} implement it"
     else
-      print -u2 "❗ TODO implement it, want $expect"
+      print -u2 "❗ $(tput setab 14)TODO${NORM} implement it, want $expect"
     fi
   elif [[ $expect != "" ]] then
-    print -u2 "❌ FAIL got $actual wanted $expect"
+    print -u2 "❌ $(tput setab 9)FAIL${NORM} got $actual wanted $expect"
   else
-    print -u2 "❓ UNKNOWN got $actual"
+    print -u2 "❓ $(tput setab 11)UNKNOWN${NORM} got $actual"
   fi
 }
