@@ -12,12 +12,12 @@ if (($# == 0)); then
   print -u 2 "Usage: watch day1"
   exit 1
 fi
-DIR="${0:h}/$1"
+DIR=$1
 if [[ ! -d $DIR ]]; then
   print -u 2 "No such directory: $DIR"
   exit 1
 fi
-CMD=("${0:h}/runday" $1)
+CMD=(${0:h}/runday $DIR)
 $CMD
 fswatch -0 -o -m poll_monitor -e '.*log$' $DIR | \
   while read -d "" event ; do
