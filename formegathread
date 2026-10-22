@@ -15,20 +15,44 @@ fi
 year=$(date +%Y)
 solution=$1
 outdir=${TMPDIR-/tmp}/aoc
-mdfile=$outdir/${solution:t}.md
 mkdir -p $outdir
 ext=${solution:e}
 typeset -A names
-names=(awk AWK exs Elixir jl Julia jq jq kt Kotlin pl Perl ps PostScript py Python rb Ruby sql SQL zsh 'Z shell')
+# Language names which aren't the file extension in title case
+names=(
+  awk AWK exs Elixir jl Julia jq jq kt Kotlin
+  pl Perl ps PostScript py Python rb Ruby rs Rust
+  sql SQL zsh 'Z shell')
 langname=${names[$ext]-${(C)ext}}
+noblockcomments=(
+  -e '\#[ \t]*/\*.*\*/[ \t]*$#d' -e '\#^[ \t]*/\*#,\#^[ \t]*\*/[ \t]*$#d')
 case $ext in
-  (lua) skip=(-e '/^\s*\(#|--\)/d') ;;
-  (go|jsonnet|kt) skip=(-e '/^\s*\/\//d') ;;
-  (ps) skip=(-e '/^\s*%/d' -e '/cob\.require/d') ;;
-  (sql) skip=(-e '/^\s*--/d') ;;
-  (*) skip=(-e '/^\s*#/d')
+  (go) skip=(-e '\#^\t*//#d' -e '/^package /d' -e '/^import \(/,/^)$/d'
+    $noblockcomments
+    -e '/^type Day[0-9]+ struct\{\}/d' -e '/^func main\(\)/,/^\}/d') ;;
+  (java|kt) skip=(-e '\#^ *//#d' -e '/^import /d' -e '/^package /d'
+    $noblockcomments
+    -e '/^fun main\(/,/^\}/d' -e '/^ *public static void main\(/,/^ *\}/d') ;;
+  (jl) skip=(-e '/^ *#/d' -e '/^"""/,/^"""/d' -e '/^using /d'
+    -e '/^include.*Runner.jl/,/^@run_if_main/d') ;;
+  (jsonnet) skip=(-e '/^ *\/\//d') ;;
+  (lua) skip=(-e '/^ *--\[\[/,/^ *\]\]--/d' -e '/^ *(--|#)/d'
+    -e '/^local function require_relative/,/^require_relative.*runner/d') ;;
+  (ps) skip=(-e '/^ *%/d' -e '/cob\.require/d') ;;
+  (py) skip=(-e '/^ *#/d' -e '/^"""/,/^"""/d' -e '/^import /d') ;;
+  (raku,pl) skip=(-e '/^ *#/d' -e '/^=begin pod/,/^=end/d' -e '/^ *use /') ;;
+  (rs) skip=(-e '/^ *\/\//d' -e '/^(use|mod) /d' $noblockcomments
+    -e '/^pub struct Day[0-9]+ \{\}/d'
+    -e '/^ *fn day_name\(\)/d' -e '/^pub fn main\(\)/,/^\}/d') ;;
+  (sql) skip=(-e '/^ *--/d') ;;
+  (*) skip=(-e '/^[ \t]*#/d')
 esac
-code=$(sed -e '/^#!/d' $skip -e '/^$/d' $solution | pr -to 4)
+code=$(sed -E -e '/^#!/d' $skip -e '/^$/d' $solution | pr -to 4)
+if [[ -z $code ]]; then
+  print -u 2 "Error formatting code"
+  exit 1
+fi
+mdfile=$outdir/${solution:t}.md
 echo "Writing $solution to $mdfile"
 cat > $mdfile <<EOT
 [LANGUAGE: $langname] ([on GitHub](https://github.com/flwyd/adventofcode/blob/main/$year/${solution:h:t}/${solution:t}))
