@@ -1,3 +1,4 @@
+#!/usr/bin/env sed -n -f
 # Copyright 2026 Trevor Stone
 #
 # Use of this source code is governed by an MIT-style
@@ -13,11 +14,14 @@
 # This script uses base one character repetition to count the size of the answer
 # and then converts to base ten.  To run part 1:
 # sed -n -f day1.sed input.example.txt
-# For part 2, the input needs to start with "__part2__", so run
-# {echo __part2__; cat input.example.txt} | sed -n -f day1.sed
+# For part 2, add an extra instruction to jump to the part2 label:
+# sed -n -e 'bpart2' -f day1.sed input.example.txt
 
 # In part 2, replace digit names while allowing for overlap.
-/^__part2__$/,$ {
+# ! makes this block not run, unless the branch function jumps to :part2.
+!{
+# Useless one-step jump to avoid "unused label" warning in part1.
+:part2
 s/one/o1e/g
 s/two/t2o/g
 s/three/th3ee/g
@@ -28,16 +32,13 @@ s/seven/se7en/g
 s/eight/ei8ht/g
 s/nine/ni9e/g
 }
-/^__part2__$/d
 
-# Delete everything between first and last digit and after the last.
-s/\([0-9]\).*\([0-9]\).*$/\1\2/
+# Delete any non-digits.  Empty lines will be collapsed later.
+s/[^0-9]//g
+# Delete everything between first and last digit.
+s/\([0-9]\).*\([0-9]\)/\1\2/
 # Replace single-digit lines with that digit repeated.
-s/^[^0-9]*\([0-9]\)[^0-9]*$/\1\1/
-# Delete any non-leading digits.
-s/^[^0-9]*//
-# If a line has no digits, treat it as 0.
-s/^[^0-9]*$//
+s/^[0-9]$/&&/
 # Repeat the tens place ten times.
 s/^\([0-9]\)/\1\1\1\1\1\1\1\1\1\1/
 
@@ -63,6 +64,7 @@ s/\n//g
 
 # Repeatedly replace ten base one sequences by the next largest letter.
 # When this is done the number 1234 is DCCBBAAAA.
+# Going up to T supports any 64-bit number, much larger than the actual output.
 s/A\{10\}/B/g
 s/B\{10\}/C/g
 s/C\{10\}/D/g
@@ -85,7 +87,7 @@ s/S\{10\}/T/g
 
 # Mark base ten digit positions so zero digits can be found.
 # 1234 becomes D,CC,BBB,AAA and 2048 becomes DD,,CCCC,AAAAAAAA.
-s/^T*/,/
+s/^T*/&,/
 s/.*,S*/&,/
 s/.*,R*/&,/
 s/.*,Q*/&,/
