@@ -1,0 +1,30 @@
+#!/bin/zsh
+# Copyright 2026 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Advent of Code 2023 day 1
+# Read the puzzle at https://adventofcode.com/2023/day/1
+# Wrapper for day1.sed, which outputs a list of numbers preceded by + signs.
+# Prepends "__part2__" to the input for part2.
+
+source ${0:a:h:h:h}/lang/zsh/runner.zsh
+((VERBOSE=0))
+if [[ $1 == "-v" ]]; then
+  ((VERBOSE=1))
+  shift
+fi
+DAY=day1
+DAYDIR=${0:h}
+
+function solve {
+  local inputfile=$1
+  prog=$DAYDIR/day1baseone.sed
+  PART1=$(sed -n -f $prog $inputfile)
+  PART2=$({echo __part2__; cat $inputfile} | sed -n -f $prog)
+}
+
+runner_solve_files $@
+exit $(($FAILURES > 0))
