@@ -4,7 +4,7 @@
 # license that can be found in the LICENSE file or at
 # https://opensource.org/licenses/MIT.
 
-# Advent of Code 2023 day 3
+# Advent of Code 2023 day 1
 # Read the puzzle at https://adventofcode.com/2023/day/1
 # Input is a mix of letters and digits which are transformed into 2-digit
 # numbers.  In part 1, use the first and last digit, if there's just one digit
