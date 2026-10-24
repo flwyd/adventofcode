@@ -1,0 +1,54 @@
+#!/bin/zsh
+# Copyright 2026 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Advent of Code 2023 day 25
+# Read the puzzle at https://adventofcode.com/2023/day/25
+# Input is `source: target1 target2…` edges in an undirected graph.  If three
+# edges are cut, the graph will have two connected components.  Result is the
+# product of the sizes of those two components.
+# This script prompts the user to open an SVG from graphgiz and visually
+# identify the three edges connecting the two subgraphs, then counts with gvpr.
+
+source ${0:a:h:h:h}/lang/zsh/runner.zsh
+((VERBOSE=0))
+if [[ $1 == "-v" ]]; then
+  ((VERBOSE=1))
+  shift
+fi
+DAY=day25
+DAYDIR=${0:h}
+OUTDIR=$DAYDIR/out
+
+function solve {
+  local inputfile=$1
+  local dot=$OUTDIR/${inputfile:t}.dot
+  local svg=$OUTDIR/${inputfile:t}.svg
+  mkdir -p $OUTDIR
+  sed -f $DAYDIR/visualday25.sed $inputfile > $dot
+  neato -Tsvg $dot > $svg
+  print -u 2 "Find the three obvious edges to cut in $svg"
+  print -u 2 "file://${svg:a}"
+  print -n -u 2 'Edges to remove (e.g. abc-def ghi-jkl mno-pqr): '
+  read -A edges
+  if (( ${#edges} != 3 )); then
+    print -u 2 "Expected 3 edges, got ${#edges}"
+    exit 1
+  fi
+  # turn abc-def ghi-jkl... to abc -- def|def -- abc|ghi -- jkl|jkl -- ghi...
+  exclude=$(sed -e 's/  */|/g' -e 's/--*/ -- /g' \
+    -e 's/\([a-z]*\) -- \([a-z]*\)/&|\2 -- \1/g') <<<$edges
+  PART1=$(
+    egrep -v $exclude $dot \
+      | gvpr -a "${edges[1]//-/ }" 'BEG_G {
+          printf("%d", nNodes(compOf($G, isNode($G, ARGV[0])))
+          * nNodes(compOf($G, isNode($G, ARGV[1]))))
+        }')
+  PART2='Merry Christmas'
+}
+
+runner_solve_files $@
+exit $(($FAILURES > 0))
