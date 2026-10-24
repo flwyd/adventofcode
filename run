@@ -33,6 +33,10 @@ daydir=${program:h}
 langdir=${0:h}/lang
 runner=${program:t:r}${program:e}
 
+# Environment variables for some languages
+export RAKULIB=${0:h:a}/lang/raku
+export RUST_BACKTRACE=1
+
 # make if needed
 if [[ -f $daydir/Makefile ]]; then
   case $program in
@@ -53,7 +57,6 @@ case "$program" in
   (*.go) cmd=(go run $program ${program:h}/runner.go $verbose) ;;
   (*.jq) cmd=($langdir/jq/runjq $verbose $program) ;;
   (*.jsonnet) cmd=($langdir/jsonnet/runjsonnet $verbose $program) ;;
-  (*.rs) export RUST_BACKTRACE=1 ; cmd=($daydir/bin/$runner $verbose) ;;
   (*)
     if [[ -x "$daydir/$runner" ]]; then
       cmd=("$daydir/$runner" $verbose)
