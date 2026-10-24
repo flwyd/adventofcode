@@ -21,6 +21,7 @@
 # ! makes this block not run, unless the branch function jumps to :part2.
 !{
 # Useless one-step jump to avoid "unused label" warning in part1.
+bpart2
 :part2
 s/one/o1e/g
 s/two/t2o/g
