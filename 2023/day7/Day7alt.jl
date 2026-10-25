@@ -15,7 +15,8 @@ All inputs are ordered by their rank (1 is the worst hand), then position * bid 
 Part 2 changes J from Jack to Joker.  Joker takes on the identity of any card for ranking but when
 comparing within a rank it is the lowest card (less than 2).
 """
-module Day7
+module Day7alt
+import Base:Char
 
 primitive type Card <: AbstractChar 32 end
 Card(c::Char) = reinterpret(Card, c)
