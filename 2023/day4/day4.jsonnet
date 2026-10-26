@@ -12,8 +12,10 @@
 // winners and the answer is the total number of cards, including duplicates
 // and originals.
 
+// Added in Jsonnet 0.21
+local trim(str) = std.stripChars(str, ' \t\n\f\r\u0085 ');
 local parseInts(str) =
-  [std.parseInt(std.trim(x)) for x in std.split(str, ' ') if std.trim(x) != ''];
+  [std.parseInt(trim(x)) for x in std.split(str, ' ') if trim(x) != ''];
 
 function(lines) {
   local outer = self,
