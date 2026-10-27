@@ -106,7 +106,8 @@ end } bind def %/part1
     0 { %loop
       1 add
       [ robots { 1 moverobot } forall ] /robots exch def
-      hastree? { log.Enabled { robots centerart = } if exit } if
+      % hastree? { log.Enabled { robots centerart = } if exit } if
+      hastree? { exit } if
       maxiters 1 index eq { (got to 101*103 without a tree :-/) = exit } if
     } loop
   } ifelse

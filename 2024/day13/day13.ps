@@ -63,7 +63,7 @@ Day13 begin
 } bind def %/parseprize
 
 /priceq { % price priceq arraylist
-  % (priceq) = pstack 
+  % (priceq) = pstack
   dup pq allength ge { %ifelse
     alist pq abc:acab alput
   } { %else
@@ -95,7 +95,8 @@ Day13 begin
   divmod 0 ne { pop false } { %else
     % a (prize diff divided by a diff) is on the stack
     prize_x 1 index a_x mul sub b_x divmod 0 eq { true } { %else
-      [ (a) 2 indexfrommark (evenly divides but b) 2 indexfrommark b_x div (does not on prize) prize_x prize_y ] log.info
+      % my input hits this branch twice in part 2 out of 320 entries
+      % [ (a) 2 indexfrommark (evenly divides but b) 2 indexfrommark b_x div (does not on prize) prize_x prize_y ] log.info
       pop pop false
     } ifelse
   } ifelse

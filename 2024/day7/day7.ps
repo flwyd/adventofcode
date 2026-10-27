@@ -49,15 +49,15 @@ Day7 begin
 
 /buildprocs { % proclength buildprocs -
   /BYLENGTH exch array def
-  timing.start
+  % timing.start
   1 1 BYLENGTH lastindex {
     BYLENGTH 1 index NUMOPS 1 index exp cvi array put
     0 1 NUMOPS 3 index exp cvi 1 sub {
       2 copy procfor bind BYLENGTH 3 index get 3 1 roll put
     } for pop
   } for
-  dup timing.finish
-  [ BYLENGTH length (length procs created in) 1 -1 rollfrommark /fmttime get ] log.info
+  % dup timing.finish
+  % [ BYLENGTH length (length procs created in) 1 -1 rollfrommark /fmttime get ] log.info
 } bind def %/buildprocs
 
 /valid? { % [val [ops]] valid? bool

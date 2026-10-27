@@ -6,7 +6,7 @@
 % https://opensource.org/licenses/MIT.
 
 % Advent of Code 2024 day 12 https://adventofcode.com/2024/day/12
-% 
+%
 % Input is a grid of letters.  Each connected (horizontal/vertical) region of
 % must be fenced in on all sides.  The same letter may appear in multiple
 % disconnected regions.  Part 1 answer is the sum of (area * perimeter).
@@ -72,7 +72,7 @@ Day12 begin
   regionids { %forup
     /i exch def regionids i get { %forup
       /j exch def i j tokey regionidat id eq { %if
-        DIRECTIONS { i j tokey add regionidat id ne { /perim inc } if } forall 
+        DIRECTIONS { i j tokey add regionidat id ne { /perim inc } if } forall
       } if
     } forup
   } forup
@@ -150,7 +150,7 @@ Day12 begin
 % to be found first, and that can't be guaranteed from the initial walk.
 /numsidesleftshoulder { % regionid numsides int
   /id exch def regionstarts id alget /startpos exch def /curpos startpos def
-  /startdir 2 def /curdir startdir def % region starts at top left, so start going right  
+  /startdir 2 def /curdir startdir def % region starts at top left, so start going right
   /sides 0 def
   seen id true put
   { %while
@@ -160,7 +160,7 @@ Day12 begin
       curpos curdir turnleft regionindir id eq { %if
         /curdir curdir turnleft def
         curpos DIRECTIONS curdir get add /curpos exch def
-        exit 
+        exit
       } if
       curpos curdir regionindir id ne { /curdir curdir turnright def exit } if
       curpos DIRECTIONS curdir get add /curpos exch def
@@ -176,7 +176,7 @@ Day12 begin
 
 /setupinput { % [lines] setupinput -
   /input exch def /regionstarts alist def
-  timing.start
+  % timing.start
   [ input { [ exch length { -1 } repeat ] } forall ] /regionids exch def
   input { %forup
     % (i is) = pstack
@@ -188,7 +188,7 @@ Day12 begin
       } if
     } forup
   } forup
-  [ exch dup timing.finish /fmttime get (time to floodfill) ] log.info
+  % [ exch dup timing.finish /fmttime get (time to floodfill) ] log.info
 } bind def %/setupinput
 
 /part1 { 8 dict begin % [lines] part1 result
