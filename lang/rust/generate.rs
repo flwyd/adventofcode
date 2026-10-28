@@ -33,17 +33,23 @@ use std::process::ExitCode;
 pub struct DayDAYNUM {}
 
 impl Day for DayDAYNUM {
-  fn part1(#[allow(unused_variables)] lines: &[&str]) -> String {
-    // let nums = input.into_iter().map(|line| line.parse::<i64>().unwrap());
+  fn part1(lines: &[&str]) -> String {
+    #[allow(unused_variables)]
+    let parsed = lines.into_iter().map(|line| parse_line(line));
     format!("{}", "TODO")
   }
 
-  fn part2(#[allow(unused_variables)] lines: &[&str]) -> String {
-    // let nums = input.into_iter().map(|line| line.parse::<i64>().unwrap());
+  fn part2(lines: &[&str]) -> String {
+    #[allow(unused_variables)]
+    let parsed = lines.into_iter().map(|line| parse_line(line));
     format!("{}", "TODO")
   }
 
   fn day_name() -> &'static str { "DayDAYNUM" }
+}
+
+fn parse_line(line: &str) -> &str { // Vec<i64> {
+  line // line.split(",").map(|s| s.parse::<i64>().unwrap()).collect()
 }
 
 pub fn main() -> ExitCode { runner::run_day::<DayDAYNUM>() }
