@@ -1,0 +1,11 @@
+# Skeletal Cargo.toml so tools like rust-analyzer know about Advent of Code
+# solution files.  Prefer `../run day1` to `cargo run --bin day1`.  Build with
+# `make -C day1` rather than `cargo build` which puts everything in targets/*
+
+[[bin]]
+name = "day1"
+path = "day1/day1.rs"
+
+[[bin]]
+name = "day2"
+path = "day2/day2.rs"
