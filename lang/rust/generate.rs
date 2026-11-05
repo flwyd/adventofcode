@@ -49,7 +49,7 @@ impl Day for DayDAYNUM {
 }
 
 fn parse_line(line: &str) -> &str { // Vec<i64> {
-  line // line.split(",").map(|s| s.parse::<i64>().unwrap()).collect()
+  line // line.split(',').map(|s| s.parse::<i64>().unwrap()).collect()
 }
 
 pub fn main() -> ExitCode { runner::run_day::<DayDAYNUM>() }

@@ -8,7 +8,7 @@
 //! the Day trait by providing two functions which take a vector of String, one
 //! per input line, and return an owned String with the answer.  The dayX.rs
 //! file should have a main function which returns the ExitCode result of
-//! runner::run_day::<DayX>().
+//! `runner::run_day::<DayX>()`.
 
 use std::collections::HashMap;
 use std::fmt;
