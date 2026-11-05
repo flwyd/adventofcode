@@ -169,6 +169,10 @@ out the repository with your code, follow these steps:
     If it’s already checked out, run `git submodule init && git submodule update`
     Git may prompt you for your GitHub credentials when checking out the submodule
     if [your credentials aren’t cached](https://docs.github.com/en/get-started/getting-started-with-git/caching-your-github-credentials-in-git)
+1.  The submodule may be in “detached HEAD” state.  If you plan to commit from
+    the submodule, make sure to `cd input && git checkout main` so you don’t
+    forget later and need to
+    [recover a detached head commit](https://stackoverflow.com/questions/7124486/what-to-do-with-commit-made-in-a-detached-head).
 1.  Although the submodule is really a separate git repository, locally it looks
     like a single file tree.  As you work on AoC problems, put your personal
     input files in the submodule, e.g. in `input/2023/1/input.actual.txt`.  Your
