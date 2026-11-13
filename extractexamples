@@ -16,19 +16,23 @@ fi
 daydir=$1
 puzzle=${2-$daydir/puzzle/puzzle.html}
 ((exnum=0))
-read -r -d '' awkscript <<ENDAWK
+read -r -d '' awkscript <<'ENDAWK'
 /<pre><code>/, /<\/code><\/pre>/ {
+  ends = match($0, "</code></pre>");
   sub("<pre><code>", "");
-  sub("</code></pre>", "\0");
+  sub("</code></pre>", "");
   gsub("&lt;", "<");
   gsub("&gt;", ">");
   gsub("&amp;", "&");
-  print;
+  # See https://stackoverflow.com/a/32302711 for printf reason
+  if (ends) { printf("%s%c", $0, 0); } else { print; }
 }
 ENDAWK
 
 awk "$awkscript" $puzzle \
-| while read -r -d '' ex ; do
+| while IFS='' read -r -d '' ex ; do
+  # remove trailing newlines, but use IFS='' to keep leading space
+  ex=$(printf "%s" $ex)
   ((exnum++))
   print -u 2 -f "Example %d is\n\e[1m%s\e[0m\n" $exnum $ex
   ((doit=1))
@@ -56,6 +60,6 @@ awk "$awkscript" $puzzle \
       done
     fi
     print -u 2 "Writing example $exnum to $exfile"
-    cat <<< $ex > $exfile
+    printf "%s" $ex > $exfile
   fi
 done
