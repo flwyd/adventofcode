@@ -49,9 +49,10 @@ fi
 mkdir -p ${PUZZLE:h}
 URL="https://adventofcode.com/$YEAR/day/$DAY"
 print -u 2 "Saving $URL to $PUZZLE"
+adblock='/<head>/a\
+<style type="text/css">#sponsor { display:none }</style>'
 curl $VERBOSE -f -b $COOKIES -A $USER_AGENT -o $PUZZLE $URL
-sed -i -e 's#href="/#href="https://adventofcode.com/#g' \
+sed -e 's#href="/#href="https://adventofcode.com/#g' \
   -e "s#action=\"\\([0-9]*/answer\\)\"#action=\"https://adventofcode.com/$YEAR/day/\1\"#" \
-  -e '/<head>/a\
-<style type="text/css">#sponsor { display:none }</style>' \
-  $PUZZLE
+  -e $adblock \
+  -i '' $PUZZLE
