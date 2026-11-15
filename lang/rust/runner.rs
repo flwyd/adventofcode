@@ -144,7 +144,8 @@ impl<'a> Input<'a> {
     let elapsed = now.elapsed();
     println!("{part}: {result}");
     let empty = &String::new();
-    let outcome = Outcome::from(&result, self.expected.get(part.name()).unwrap_or(empty));
+    let escaped = result.replace("\n", "\\n");
+    let outcome = Outcome::from(&escaped, self.expected.get(part.name()).unwrap_or(empty));
     if verbose {
       eprintln!("{}", outcome.message());
       let dur = if elapsed > Duration::from_secs(60) {
