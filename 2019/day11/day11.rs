@@ -28,71 +28,14 @@ pub struct Day11 {}
 
 impl Day for Day11 {
   fn part1(lines: &[&str]) -> String {
-    if lines.len() == 0 {
-      return 0.to_string();
-    }
-    let program = parse_line(lines[0]);
-    let (mut comp, input, output) = Computer::for_program(program);
-    let visitor = thread::spawn(move || {
-      let mut visited = HashSet::new();
-      let mut changed = HashSet::new();
-      let mut cur = Point { x: 0, y: 0 };
-      let mut heading = Heading::Up;
-      loop {
-        let cur_color = if changed.contains(&cur) { 1 } else { 0 };
-        if let Err(_) = input.send(cur_color) {
-          break;
-        }
-        let new_color = output.recv().expect("output should have color");
-        if new_color == 1 {
-          changed.insert(cur.clone());
-        } else {
-          changed.remove(&cur);
-        }
-        visited.insert(cur.clone());
-        let turn = output.recv().expect("output should have turn");
-        heading = heading.turn(turn == 1);
-        cur = heading.advance(&cur);
-      }
-      (visited, changed)
-    });
-    comp.run();
-    let (visited, _) = visitor.join().unwrap();
+    assert_eq!(1, lines.len());
+    let (visited, _) = run_program(lines[0], false);
     visited.len().to_string()
   }
 
   fn part2(lines: &[&str]) -> String {
-    if lines.len() == 0 {
-      return 0.to_string();
-    }
-    let program = parse_line(lines[0]);
-    let (mut comp, input, output) = Computer::for_program(program);
-    let visitor = thread::spawn(move || {
-      let mut visited = HashSet::new();
-      let mut changed = HashSet::new();
-      let mut cur = Point { x: 0, y: 0 };
-      changed.insert(cur.clone());
-      let mut heading = Heading::Up;
-      loop {
-        let cur_color = if changed.contains(&cur) { 1 } else { 0 };
-        if let Err(_) = input.send(cur_color) {
-          break;
-        }
-        let new_color = output.recv().expect("output should have color");
-        if new_color == 1 {
-          changed.insert(cur.clone());
-        } else {
-          changed.remove(&cur);
-        }
-        visited.insert(cur.clone());
-        let turn = output.recv().expect("output should have turn");
-        heading = heading.turn(turn == 1);
-        cur = heading.advance(&cur);
-      }
-      (visited, changed)
-    });
-    comp.run();
-    let (_, changed) = visitor.join().unwrap();
+    assert_eq!(1, lines.len());
+    let (_, changed) = run_program(lines[0], true);
     let minx = changed.iter().min_by_key(|p| p.x).unwrap().x;
     let maxx = changed.iter().max_by_key(|p| p.x).unwrap().x;
     let miny = changed.iter().min_by_key(|p| p.y).unwrap().y;
@@ -101,7 +44,7 @@ impl Day for Day11 {
     for y in miny..=maxy {
       lines.push('\n');
       for x in minx..=maxx {
-        lines.push(if changed.contains(&Point { x: x, y: y }) { FOREGROUND } else { BACKGROUND });
+        lines.push(if changed.contains(&Point { x, y }) { FOREGROUND } else { BACKGROUND });
       }
     }
     lines
@@ -112,6 +55,37 @@ impl Day for Day11 {
 
 const BACKGROUND: char = '░';
 const FOREGROUND: char = '▓';
+
+fn run_program(program: &str, initial_white: bool) -> (HashSet<Point>, HashSet<Point>) {
+  let (mut comp, input, output) = Computer::for_program(parse_line(program));
+  let visitor = thread::spawn(move || {
+    let mut visited = HashSet::new();
+    let mut changed = HashSet::new();
+    let mut cur = Point { x: 0, y: 0 };
+    let mut heading = Heading::Up;
+    if initial_white {
+      changed.insert(cur.clone());
+    }
+    loop {
+      let cur_color = if changed.contains(&cur) { 1 } else { 0 };
+      if let Err(_) = input.send(cur_color) {
+        break (visited, changed);
+      }
+      let new_color = output.recv().expect("output should have color");
+      if new_color == 1 {
+        changed.insert(cur.clone());
+      } else {
+        changed.remove(&cur);
+      }
+      visited.insert(cur.clone());
+      let turn = output.recv().expect("output should have turn");
+      heading = heading.turn(turn == 1);
+      cur = heading.advance(&cur);
+    }
+  });
+  comp.run();
+  visitor.join().unwrap()
+}
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 struct Point {
@@ -383,4 +357,5 @@ impl Computer {
     position
   }
 }
+
 pub fn main() -> ExitCode { runner::run_day::<Day11>() }
