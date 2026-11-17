@@ -64,7 +64,7 @@ fn run_program(program: &str, initial_white: bool) -> (HashSet<Point>, HashSet<P
     let mut cur = Point { x: 0, y: 0 };
     let mut heading = Heading::Up;
     if initial_white {
-      changed.insert(cur.clone());
+      changed.insert(cur);
     }
     loop {
       let cur_color = if changed.contains(&cur) { 1 } else { 0 };
@@ -73,14 +73,14 @@ fn run_program(program: &str, initial_white: bool) -> (HashSet<Point>, HashSet<P
       }
       let new_color = output.recv().expect("output should have color");
       if new_color == 1 {
-        changed.insert(cur.clone());
+        changed.insert(cur);
       } else {
         changed.remove(&cur);
       }
-      visited.insert(cur.clone());
+      visited.insert(cur);
       let turn = output.recv().expect("output should have turn");
       heading = heading.turn(turn == 1);
-      cur = heading.advance(&cur);
+      cur = heading.advance(cur);
     }
   });
   comp.run();
@@ -119,7 +119,7 @@ impl Heading {
     Heading::from(((*self as i8) + delta).rem_euclid(4))
   }
 
-  fn advance(&self, cur: &Point) -> Point {
+  fn advance(&self, cur: Point) -> Point {
     match self {
       Heading::Up => Point { x: cur.x, y: cur.y - 1 },
       Heading::Right => Point { x: cur.x + 1, y: cur.y },
