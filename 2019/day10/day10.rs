@@ -36,17 +36,20 @@ impl Day for Day10 {
     let (best, _) = best_point(&field);
     field.sort_by_key(|p| best.distance(p));
     let mut angles: Vec<i32> = Vec::new();
-    let mut by_angle = HashMap::new();
+    let mut by_angle: HashMap<i32, VecDeque<&Point>> = HashMap::new();
     for p in field.iter() {
       if *p == best {
         continue;
       }
       let angle = best.angle(&p);
-      if !by_angle.contains_key(&angle) {
-        by_angle.insert(angle, VecDeque::new());
+      if let Some(q) = by_angle.get_mut(&angle) {
+        q.push_back(p);
+      } else {
+        let mut q = VecDeque::new();
+        q.push_back(p);
+        by_angle.insert(angle, q);
         angles.push(angle);
       }
-      by_angle.get_mut(&angle).unwrap().push_back(p);
     }
     angles.sort();
     let mut zapped = 0;
@@ -111,10 +114,10 @@ impl Point {
     // be numerically stable.  Integer degrees are insufficiently granular for this problem's input,
     // so return millidegrees.  Grid has (0, 0) coordinate in top left, so increasing y is down.
     // Part 2 wants to move counterclockwise from straight up.  Use atan2(x,y) rather than y,x to go
-    // clockwise (atan2(y,x) advances clockwise).  Swap the subtraction order so that 0 is up rather
+    // clockwise (atan2(y,x) goes widdershins).  Swap the subtraction order so that 0 is up rather
     // than down.  And add [-π, -0) to τ so angles are all positive.
     let angle = ((other.x - self.x) as f64).atan2((self.y - other.y) as f64);
-    ((if angle >= 0.0 { angle } else { TAU + angle }).to_degrees() * 1000.0).round() as i32
+    (angle.rem_euclid(TAU).to_degrees() * 1000.0).round() as i32
   }
 
   fn distance(&self, other: &Point) -> i32 { (other.x - self.x).abs() + (other.y - self.y).abs() }
