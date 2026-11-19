@@ -10,10 +10,11 @@
 
 set -e
 DAY=${1:?missing day}
+LANGPATH=${0:a:h:h}/lang/julia
 # ${(C)} is ucfirst
 MODULE=${(C)DAY}
 cd $DAY
-export JULIA_LOAD_PATH=".:..:$JULIA_LOAD_PATH"
+export JULIA_LOAD_PATH=".:$LANGPATH:$JULIA_LOAD_PATH"
 if [[ -z $SSH_TTY && -z $JULIA_EDITOR ]]; then
   vims=($(whence gvim mvim vim || true))
   export JULIA_EDITOR=${vims[1]}

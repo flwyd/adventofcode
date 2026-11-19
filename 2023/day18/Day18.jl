@@ -96,6 +96,7 @@ function fromcolor(i::Instruction)
   Instruction(dirnums[last(i.color)], parse(Int, i.color[1:(end - 1)], base=16), i.color)
 end
 
-include("../Runner.jl")
-@run_if_main
+push!(Base.LOAD_PATH, joinpath(dirname(PROGRAM_FILE), "../../lang/julia"))
+using Runner
+@Runner.run_if_main
 end

@@ -10,8 +10,9 @@
 
 set -e
 DAY=${1:?missing day}
+LANGPATH=${0:a:h:h}/lang/julia
 cd $DAY
-export JULIA_LOAD_PATH=".:..:$JULIA_LOAD_PATH"
+export JULIA_LOAD_PATH=".:${LANGPATH:a}:$JULIA_LOAD_PATH"
 plutoargs=('notebook="notebook.jl"' 'dismiss_update_notification=true')
 
 if [[ ! -z $SSH_CONNECTION ]]; then

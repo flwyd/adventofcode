@@ -118,6 +118,7 @@ function neighbors(grid::Matrix{Char}, cur::CartesianIndex{2})
   filter(x -> checkbounds(Bool, grid, x) && grid[x] != '#', map(d -> cur + d, DIRS))
 end
 
-include("../Runner.jl")
-@run_if_main
+push!(Base.LOAD_PATH, joinpath(dirname(PROGRAM_FILE), "../../lang/julia"))
+using Runner
+@Runner.run_if_main
 end

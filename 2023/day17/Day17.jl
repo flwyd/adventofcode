@@ -81,6 +81,7 @@ const RIGHT = CartesianIndex(0, 1)
 const LEFT_TURN = Dict(UP => LEFT, DOWN => RIGHT, LEFT => DOWN, RIGHT => UP)
 const RIGHT_TURN = Dict(UP => RIGHT, DOWN => LEFT, LEFT => UP, RIGHT => DOWN)
 
-include("../Runner.jl")
-@run_if_main
+push!(Base.LOAD_PATH, joinpath(dirname(PROGRAM_FILE), "../../lang/julia"))
+using Runner
+@Runner.run_if_main
 end

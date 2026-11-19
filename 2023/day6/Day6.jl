@@ -31,6 +31,7 @@ end
 
 winning_moves(time, dist) = count(i -> (time - i) * i > dist, 1:(time - 1))
 
-include("../Runner.jl")
-@run_if_main
+push!(Base.LOAD_PATH, joinpath(dirname(PROGRAM_FILE), "../../lang/julia"))
+using Runner
+@Runner.run_if_main
 end
