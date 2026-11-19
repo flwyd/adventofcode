@@ -16,6 +16,11 @@
 //! -1 to move left, 1 to move right, and 0 to stay put.  The program terminates if the paddle
 //! misses the ball or when the final block is cleared.  Part 2's answer is the score after clearing
 //! all blocks.
+//!
+//! When run with environment variable `VISUALIZE=ansi` or `VISUALIZE=ascii` the game board will be
+//! shown in the terminal and updated each time the ball moves.  The `REFRESH_MICROS` environment
+//! variable adjusts the refresh rate from the default 35000 (approximately 30 Hertz).  WARNING: if
+//! you interrupt the program during the ANSI visualization your cursor may not be unhidden.
 
 mod runner;
 
@@ -388,7 +393,7 @@ impl Computer {
 
 fn visualizer_from_env() -> Box<dyn Visualizer> {
   if let Ok(vis) = std::env::var("VISUALIZE") {
-    let refresh = std::env::var("REFRESH_MICROS").unwrap_or(String::from("100"));
+    let refresh = std::env::var("REFRESH_MICROS").unwrap_or(String::from("35000"));
     let delay = Duration::from_micros(refresh.parse().expect("REFRESH_MICROS should be a number"));
     if vis.eq_ignore_ascii_case("ansi") {
       Box::new(AnsiVisualizer { delay })
