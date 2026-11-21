@@ -7,6 +7,7 @@
 
 # Script to generate a skeletal Advent of Code solution in Julia.
 
+using Dates
 using UUIDs
 
 function generate_into(daydir)
@@ -21,16 +22,18 @@ function generate_into(daydir)
   if isfile(jlfile)
     println(stderr, "$jlfile already exists, not overwriting")
   else
+    year = basename(dirname(abspath(base)))
+    copyyear = Dates.year(Dates.now(UTC))
     code = """
     #!/usr/bin/env julia
-    # Copyright 2023 Google LLC
+    # Copyright $copyyear Google LLC
     #
     # Use of this source code is governed by an MIT-style
     # license that can be found in the LICENSE file or at
     # https://opensource.org/licenses/MIT.
 
-    \"""# Advent of Code 2023 day $daynum
-    [Read the puzzle](https://adventofcode.com/2023/day/$daynum)
+    \"""# Advent of Code $year day $daynum
+    [Read the puzzle](https://adventofcode.com/$year/day/$daynum)
     \"""
     module Day$daynum
 
@@ -50,8 +53,9 @@ function generate_into(daydir)
       end
     end
 
-    include("../Runner.jl")
-    @run_if_main
+    push!(Base.LOAD_PATH, joinpath(dirname(PROGRAM_FILE), "../../lang/julia"))
+    using Runner
+    @Runner.run_if_main
     end
     """
     write(jlfile, code)
@@ -68,15 +72,10 @@ function generate_into(daydir)
     vars_uuid = UUIDs.uuid4()
     resultshead_uuid = UUIDs.uuid4()
     results_uuid = UUIDs.uuid4()
+    copyright_uuid = UUIDs.uuid4()
     code = """
     ### A Pluto.jl notebook ###
-    # v0.19.32
-    #
-    # Copyright 2023 Google LLC
-    #
-    # Use of this source code is governed by an MIT-style
-    # license that can be found in the LICENSE file or at
-    # https://opensource.org/licenses/MIT.
+    # v1.1.0
 
     using Markdown
     using InteractiveUtils
@@ -136,6 +135,15 @@ function generate_into(daydir)
     inputactual,
     ], verbose=true)
 
+    # ╔═╡ $copyright_uuid
+    \"""
+    Copyright $copyyear Trevor Stone
+
+    Use of this source code is governed by an MIT-style
+    license that can be found in the LICENSE file or at
+    https://opensource.org/licenses/MIT.
+    \"""
+
     # ╔═╡ Cell order:
     # ╟─$header_uuid
     # ╟─$preamble_uuid
@@ -144,12 +152,13 @@ function generate_into(daydir)
     # ╠═$vars_uuid
     # ╟─$resultshead_uuid
     # ╠═$results_uuid
+    # ╠═$copyright_uuid
     """
     write(notebook, code)
   end
 
   mkinput(base, "example")
-  inputdir = joinpath(@__DIR__, "input", daynum)
+  inputdir = joinpath(dirname(base), "input", daynum)
   mkpath(inputdir)
   mkinput(inputdir, "actual")
   for name in readdir(inputdir)

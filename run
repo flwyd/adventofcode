@@ -35,6 +35,7 @@ runner=${program:t:r}${program:e}
 
 # Environment variables for some languages
 export RAKULIB=${0:h:a}/lang/raku
+export JULIA_LOAD_PATH="${0:h:a}/lang/julia:$JULIA_LOAD_PATH"
 export RUST_BACKTRACE=1
 
 # make if needed

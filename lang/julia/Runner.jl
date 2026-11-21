@@ -133,8 +133,6 @@ function outcome(res::Result)
   end
 end
 
-end
-
 macro run_if_main()
   srcfile = QuoteNode(__source__.file)
   mod = __module__
@@ -150,4 +148,6 @@ macro run_if_main()
     ok = Runner.run_module($mod, args, verbose=verbose)
     exit(ok ? 0 : 1)
   end)
+end
+
 end
