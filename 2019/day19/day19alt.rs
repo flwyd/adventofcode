@@ -30,7 +30,7 @@ impl Day for Day19Alt {
   fn part1(lines: &[&str]) -> String {
     let visualize = std::env::var("VISUALIZE").is_ok();
     if lines.is_empty() {
-      return String::from("empty");
+      return String::from("");
     }
     let program = parse_line(lines[0]);
     let mut answer = 0;
@@ -62,7 +62,7 @@ impl Day for Day19Alt {
 
   fn part2(lines: &[&str]) -> String {
     if lines.is_empty() {
-      return String::from("empty");
+      return String::from("");
     }
     let program = parse_line(lines[0]);
     let check_point = |x: i64, y: i64| -> i64 {

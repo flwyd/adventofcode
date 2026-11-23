@@ -29,7 +29,7 @@ impl Day for Day19 {
   fn part1(lines: &[&str]) -> String {
     let visualize = std::env::var("VISUALIZE").is_ok();
     if lines.is_empty() {
-      return String::from("empty");
+      return String::from("");
     }
     let program = parse_line(lines[0]);
     let mut answer = 0;
@@ -58,7 +58,7 @@ impl Day for Day19 {
 
   fn part2(lines: &[&str]) -> String {
     if lines.is_empty() {
-      return String::from("empty");
+      return String::from("");
     }
     let program = parse_line(lines[0]);
     let mut hundreds = HashSet::new();

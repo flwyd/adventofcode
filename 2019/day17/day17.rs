@@ -36,7 +36,7 @@ pub struct Day17 {}
 impl Day for Day17 {
   fn part1(lines: &[&str]) -> String {
     if lines.is_empty() {
-      return String::from("empty");
+      return String::from("");
     }
     let text = explore_space(&parse_line(lines[0]));
     let lines: Vec<Vec<_>> = text.lines().map(|l| l.chars().collect()).collect();
@@ -60,7 +60,7 @@ impl Day for Day17 {
 
   fn part2(lines: &[&str]) -> String {
     if lines.is_empty() {
-      return String::from("empty");
+      return String::from("");
     }
     let program = parse_line(lines[0]);
     let text = explore_space(&program);

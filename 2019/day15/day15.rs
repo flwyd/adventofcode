@@ -32,7 +32,7 @@ pub struct Day15 {}
 impl Day for Day15 {
   fn part1(lines: &[&str]) -> String {
     if lines.is_empty() {
-      return String::from("empty");
+      return String::from("");
     }
     assert_eq!(1, lines.len());
     let program = parse_line(lines[0]);
@@ -77,7 +77,7 @@ impl Day for Day15 {
 
   fn part2(lines: &[&str]) -> String {
     if lines.is_empty() {
-      return String::from("empty");
+      return String::from("");
     }
     assert_eq!(1, lines.len());
     let program = parse_line(lines[0]);
