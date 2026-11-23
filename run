@@ -58,6 +58,8 @@ case "$program" in
   (*.go) cmd=(go run $program ${program:h}/runner.go $verbose) ;;
   (*.jq) cmd=($langdir/jq/runjq $verbose $program) ;;
   (*.jsonnet) cmd=($langdir/jsonnet/runjsonnet $verbose $program) ;;
+  (*.[Rr]) cmd=(Rscript -e "source('$langdir/R/runner.R')"
+    -e "source('$program')" -e "run_main()" $verbose) ;;
   (*)
     if [[ -x "$daydir/$runner" ]]; then
       cmd=("$daydir/$runner" $verbose)
