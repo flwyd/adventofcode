@@ -31,13 +31,11 @@ ENDAWK
 
 awk "$awkscript" $puzzle \
 | while IFS='' read -r -d '' ex ; do
-  # remove trailing newlines, but use IFS='' to keep leading space
-  ex=$(printf "%s" $ex)
   ((exnum++))
-  print -u 2 -f "Example %d is\n\e[1m%s\e[0m\n" $exnum $ex
+  print -u 2 -f "Example %d is\n\e[1m%s\e[0m" $exnum $ex
   ((doit=1))
   foreach existing ($daydir/input.example*.txt) do
-    if diff -s -q $existing <(<<<$ex) > /dev/null ; then
+    if diff -s -q -B $existing <(<<<$ex) > /dev/null ; then
       print -u 2 "Example $exnum is already $existing"
       ((doit=0))
     fi
