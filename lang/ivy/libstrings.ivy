@@ -1,0 +1,22 @@
+# Copyright 2026 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# A stab at some string utility functions for Ivy.
+# Working with vectors of strings of different lengths can be challenging, see
+# https://github.com/robpike/ivy/issues/205
+
+# diag returns the diagonal of a matrix, useful for simulating an element-wise
+# each by using an outer-product.
+op diag a = dim=rho a[1]; (,a)[1+(dim+1)* -1+iota dim]
+
+# strsplit splits string str on delimiter delim.
+# issue#205 need element-wise each
+op delim strsplit str = (not delim iota str) part str
+
+# trimprefix returns x with prefix pfx removed, or x unchanged if it does not
+# start with pfx.
+op pfx trimprefix x =
+  :if pfx == (count pfx) take x; (count pfx) drop x; :else; x; :end

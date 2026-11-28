@@ -52,10 +52,25 @@ if [[ -f $daydir/Makefile ]]; then
   fi
 fi
 
+files=($@)
+
 case "$program" in
   (*.awk) cmd=(gawk --lint=no-ext -i $langdir/awk/runner.gawk -f $program -- $verbose) ;;
   (*.fs) cmd=(gforth -e "${#verbose} constant verbose" $program -e bye) ;;
   (*.go) cmd=(go run $program ${program:h}/runner.go $verbose) ;;
+  (*.ivy)
+    # Ivy doesn't have an argv feature, so pass files in an expression
+    if (( ${#files} == 1 )) ; then
+      # don't try to run each character as a separate file
+      filesarg="box "
+    else
+      filesarg=""
+    fi
+    for f in $files ; filesarg+=" '${(q)f}'"
+    cmd=(ivy -i "VERBOSE = ${#verbose}; INPUTFILES = $filesarg"
+      $langdir/ivy/lib*.ivy $program $langdir/ivy/runner.ivy)
+    files=()
+    ;;
   (*.jq) cmd=($langdir/jq/runjq $verbose $program) ;;
   (*.jsonnet) cmd=($langdir/jsonnet/runjsonnet $verbose $program) ;;
   (*.[Rr]) cmd=(Rscript -e "source('$langdir/R/runner.R')"
@@ -74,4 +89,4 @@ case "$program" in
     ;;
 esac
 
-exec $cmd "$@"
+exec $cmd $files

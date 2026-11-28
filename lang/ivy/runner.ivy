@@ -1,0 +1,69 @@
+#!/bin/zsh
+# Copyright 2026 Trevor Stone
+#
+# Use of this source code is governed by an MIT-style
+# license that can be found in the LICENSE file or at
+# https://opensource.org/licenses/MIT.
+
+# Advent of Code runner in Ivy.
+# Some things are awkward:
+# * There's no facility to print to stderr, so verbose messages to go stdout.
+# * Working with vectors of heterogenous strings is hard.
+# * There's no way to terminate the program and no way to set exit status.
+
+VERBOSE_error = trap VERBOSE
+VERBOSE = :if VERBOSE_error[1] !== (); VERBOSE; :else; 0; :end
+
+op maybelog message = :if VERBOSE; print message; :end
+
+op runfile fname =
+  lines = sys 'read' fname
+  exp = expectedfor fname
+  maybelog 'Running' DAYNAME 'part 1 on' fname ('(%d lines)' text rho lines)
+  p1start = sys 'sec'
+  p1 = part1 lines
+  p1end = sys 'sec'
+  print 'part1:' p1
+  maybelog (text p1) outcome exp[1]
+  maybelog ('part1 took %.3fs on', fname) text p1end - p1start
+  maybelog 40 rho '='
+  maybelog 'Running' DAYNAME 'part 2 on' fname ('(%d lines)' text rho lines)
+  p2start = sys 'sec'
+  p2 = part2 lines
+  p2end = sys 'sec'
+  print 'part2:' p2
+  maybelog (text p2) outcome exp[2]
+  maybelog ('part2 took %.3fs on', fname) text p2end - p2start
+  maybelog 40 rho '='
+  1
+
+op expectedfor infile =
+  # replace .txt with .expected or just append .expected
+  expfile = (:if '.txt' === -4 take infile; (-4 drop infile); :else; infile; :end) , '.expected'
+  lineserr = trap sys 'read' expfile
+  :if count lineserr[1] == 2
+    ' ' trimprefix@ (mix ':' strsplit@ lineserr[1])[;2]
+  :else
+    '' ''
+  :end
+
+op got outcome want =
+  :if got === want
+    '✅ \x1b[30;102mSUCCESS\x1b[0m got ', got
+  :elif (got === 'TODO') and want === ''
+    '❗ \x1b[30;106mTODO\x1b[0m'
+  :elif got === 'TODO'
+    '❗ \x1b[30;106mTODO\x1b[0m want ', want
+  :elif want === ''
+    '❓ \x1b[30;103mUNKNOWN\x1b[0m got ', got
+  :else
+    '❌ \x1b[30;101mFAILURE\x1b[0m got ', got, ' want ', want
+  :end
+
+op runmain files =
+  results = runfile@ files
+  :if not */ results
+    print 'some parts failed' results
+  :end
+
+runmain INPUTFILES
